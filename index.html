@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inversiones Isukiza vFinal_PRO</title>
+    <title>Inversiones Isukiza vFinal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
@@ -12,10 +12,10 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400">Patrimonio Isukiza</h1>
-                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Mercados en línea ✓</p>
+                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Sincronizando mercados...</p>
             </div>
             <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 italic text-center">Total Estimado</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 italic text-center">Patrimonio Estimado</p>
                 <p id="totalPatrimonio" class="text-3xl font-mono text-green-400 font-bold text-center">0.00 €</p>
             </div>
         </header>
@@ -24,7 +24,8 @@
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
                 <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic">📈 Bolsa (Acciones)</h2>
                 <div id="listaAcciones" class="space-y-4">
-                    </div>
+                    <p class="text-xs text-slate-500 italic">Cargando cotizaciones...</p>
+                </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
@@ -38,28 +39,24 @@
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm md:col-span-2 shadow-xl border-l-4 border-l-orange-500">
                 <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-orange-400 italic">🛡️ SAN ASG RV NORTEAM</h2>
-                        <p class="text-[10px] text-slate-500 mt-1">Busca el "Valor Liquidativo" en estos enlaces:</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="https://www.morningstar.es/es/funds/snapshot/snapshot.aspx?id=F000010S91" target="_blank" class="text-[10px] font-bold bg-orange-500/10 hover:bg-orange-500/30 text-orange-300 px-3 py-2 rounded-lg border border-orange-500/20 transition">MORNINGSTAR</a>
-                        <a href="https://www.finect.com/planes-pensiones/santander_asg_renta_variable_norteamerica-N3681" target="_blank" class="text-[10px] font-bold bg-blue-500/10 hover:bg-blue-500/30 text-blue-300 px-3 py-2 rounded-lg border border-blue-500/20 transition">FINECT</a>
-                    </div>
+                    <h2 class="text-xl font-semibold text-orange-400 italic font-mono">🛡️ SAN ASG RV NORTEAM</h2>
+                    <a href="https://www.quefondos.com/es/planes/ficha/index.html?is=$N3681" target="_blank" class="text-[11px] font-bold bg-orange-500/20 hover:bg-orange-500/40 text-orange-300 px-4 py-2 rounded-full border border-orange-500/30 transition shadow-lg flex items-center gap-1">
+                        🔍 CONSULTAR VLP REAL
+                    </a>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end bg-slate-900/40 p-6 rounded-2xl border border-slate-700/50">
                     <div>
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider">Participaciones</label>
-                        <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-white outline-none focus:ring-1 focus:ring-orange-500">
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono italic">Participaciones</label>
+                        <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-white outline-none focus:ring-1 focus:ring-orange-500" placeholder="Ej: 1376.6933">
                     </div>
                     <div>
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono">VLP (Valor Unitario)</label>
-                        <input type="number" id="vlp" oninput="save()" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-orange-200 outline-none focus:ring-1 focus:ring-orange-500">
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono italic">Valor Liquidativo (VLP)</label>
+                        <input type="number" id="vlp" oninput="save()" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-orange-200 outline-none focus:ring-1 focus:ring-orange-500" placeholder="Ej: 20.2481">
                     </div>
                     <div class="bg-orange-500/10 p-3 rounded-lg border border-orange-500/20 text-right min-h-[68px] flex flex-col justify-center">
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-1 block">VALOR TOTAL</label>
-                        <p id="totalPension" class="text-2xl font-mono font-bold text-orange-400">0,00 €</p>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-1 block">VALOR TOTAL INVERSIÓN</label>
+                        <p id="totalPension" class="text-2xl font-mono font-bold text-orange-400 leading-none">0,00 €</p>
                     </div>
                 </div>
             </div>
@@ -73,10 +70,11 @@
             { ticker: "OHLA.MC", nombre: "OHLA", cantidad: 300, moneda: "EUR" }
         ];
 
-        let precios = { "AMZN": 180.10, "SAN.MC": 4.60, "OHLA.MC": 0.42 }; 
+        let precios = { "AMZN": 175.20, "SAN.MC": 4.55, "OHLA.MC": 0.41 }; // Valores por defecto
         const TIPO_CAMBIO_EURUSD = 0.92;
 
         async function getLivePrices() {
+            document.getElementById('status').innerText = "Sincronizando bolsa...";
             for (let accion of acciones) {
                 try {
                     const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${accion.ticker}`)}`);
@@ -85,22 +83,24 @@
                     if(data.chart.result[0].meta.regularMarketPrice) {
                         precios[accion.ticker] = data.chart.result[0].meta.regularMarketPrice;
                     }
-                } catch (e) { console.log("Error en bolsa: " + accion.ticker); }
+                } catch (e) { console.error("Error " + accion.ticker); }
             }
+            document.getElementById('status').innerText = "Precios mercado OK ✓";
             render();
         }
 
         function render() {
-            document.getElementById('listaAcciones').innerHTML = acciones.map(a => {
+            const list = document.getElementById('listaAcciones');
+            list.innerHTML = acciones.map(a => {
                 const cotiz = precios[a.ticker] || 0;
                 const total = (cotiz * a.cantidad).toLocaleString('es-ES', { minimumFractionDigits: 2 });
                 return `
                     <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30">
                         <div class="flex justify-between items-center mb-1">
                             <p class="font-bold text-slate-200">${a.nombre}</p>
-                            <p class="font-mono text-blue-300 font-bold">${total} <span class="text-[9px] font-normal">${a.moneda}</span></p>
+                            <p class="font-mono text-blue-300 font-bold">${total} <span class="text-[9px]">${a.moneda}</span></p>
                         </div>
-                        <div class="flex justify-between text-[10px] text-slate-500 font-mono italic">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono">
                             <span>${a.cantidad} títulos</span>
                             <span>${cotiz.toFixed(2)} ${a.moneda}/ud</span>
                         </div>
@@ -118,12 +118,12 @@
                 parts: document.getElementById('p_parts').value,
                 vlp: document.getElementById('vlp').value
             };
-            localStorage.setItem('isukiza_vFinal_v3', JSON.stringify(data));
+            localStorage.setItem('isukiza_vFinal_v2', JSON.stringify(data));
             calc();
         }
 
         function load() {
-            const data = JSON.parse(localStorage.getItem('isukiza_vFinal_v3'));
+            const data = JSON.parse(localStorage.getItem('isukiza_vFinal_v2'));
             if (data) {
                 document.getElementById('f1').value = data.f1 || "";
                 document.getElementById('f2').value = data.f2 || "";
@@ -133,8 +133,8 @@
             } else {
                 document.getElementById('p_parts').value = "1376.6933";
             }
-            render(); 
-            getLivePrices(); 
+            render(); // Render inicial con precios por defecto
+            getLivePrices(); // Intento de actualizar
         }
 
         function calc() {
@@ -146,6 +146,7 @@
             totalEur += parseFloat(document.getElementById('f1').value || 0);
             totalEur += parseFloat(document.getElementById('f2').value || 0);
             totalEur += parseFloat(document.getElementById('indie').value || 0);
+            
             const p = parseFloat(document.getElementById('p_parts').value || 0);
             const v = parseFloat(document.getElementById('vlp').value || 0);
             const totalP = p * v;
