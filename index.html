@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inversiones Isukiza vFinal_PRO</title>
+    <title>Inversiones Isukiza vFinal_FIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
@@ -12,53 +12,51 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400">Patrimonio Isukiza</h1>
-                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Mercados en línea ✓</p>
+                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic font-bold">Estado: Conectado ✓</p>
             </div>
             <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 italic text-center">Total Estimado</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 text-center">Total Cartera</p>
                 <p id="totalPatrimonio" class="text-3xl font-mono text-green-400 font-bold text-center">0.00 €</p>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic">📈 Bolsa (Acciones)</h2>
+                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic underline decoration-blue-900">Bolsa (Acciones)</h2>
                 <div id="listaAcciones" class="space-y-4">
                     </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300 italic">🏦 Fondos y Gestión</h2>
+                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300 italic underline decoration-purple-900">Fondos y Gestión</h2>
                 <div class="space-y-3">
-                    <input type="number" id="f1" oninput="save()" placeholder="Fondo IE000ZYRH0Q7 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-                    <input type="number" id="f2" oninput="save()" placeholder="Fondo IE000QAZP7L2 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-                    <input type="number" id="indie" oninput="save()" placeholder="Cartera Indie MyInvestor (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="f1" oninput="save()" placeholder="Fondo 1 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="f2" oninput="save()" placeholder="Fondo 2 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="indie" oninput="save()" placeholder="Cartera Indie (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
                 </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm md:col-span-2 shadow-xl border-l-4 border-l-orange-500">
-                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-orange-400 italic">🛡️ SAN ASG RV NORTEAM</h2>
-                        <p class="text-[10px] text-slate-500 mt-1">Busca el "Valor Liquidativo" en estos enlaces:</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="https://www.morningstar.es/es/funds/snapshot/snapshot.aspx?id=F000010S91" target="_blank" class="text-[10px] font-bold bg-orange-500/10 hover:bg-orange-500/30 text-orange-300 px-3 py-2 rounded-lg border border-orange-500/20 transition">MORNINGSTAR</a>
-                        <a href="https://www.finect.com/planes-pensiones/santander_asg_renta_variable_norteamerica-N3681" target="_blank" class="text-[10px] font-bold bg-blue-500/10 hover:bg-blue-500/30 text-blue-300 px-3 py-2 rounded-lg border border-blue-500/20 transition">FINECT</a>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-orange-400 italic">🛡️ Plan: SAN ASG RV NORTEAM</h2>
+                    <div class="mt-2 flex gap-4 text-[11px] font-bold">
+                        <span class="text-slate-500">VER VALOR EN:</span>
+                        <a href="https://www.finect.com/planes-pensiones/santander_asg_renta_variable_norteamerica-N3681" target="_blank" class="text-orange-300 underline hover:text-orange-100">FINECT (Click aquí)</a>
+                        <a href="https://www.morningstar.es/es/funds/snapshot/snapshot.aspx?id=F000010S91" target="_blank" class="text-orange-300 underline hover:text-orange-100">MORNINGSTAR (Click aquí)</a>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end bg-slate-900/40 p-6 rounded-2xl border border-slate-700/50">
                     <div>
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider">Participaciones</label>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono">Participaciones</label>
                         <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-white outline-none focus:ring-1 focus:ring-orange-500">
                     </div>
                     <div>
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono">VLP (Valor Unitario)</label>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block tracking-wider font-mono">Valor Unitario (VLP)</label>
                         <input type="number" id="vlp" oninput="save()" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-orange-200 outline-none focus:ring-1 focus:ring-orange-500">
                     </div>
                     <div class="bg-orange-500/10 p-3 rounded-lg border border-orange-500/20 text-right min-h-[68px] flex flex-col justify-center">
-                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-1 block">VALOR TOTAL</label>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-1 block">VALOR EN EUROS</label>
                         <p id="totalPension" class="text-2xl font-mono font-bold text-orange-400">0,00 €</p>
                     </div>
                 </div>
@@ -118,12 +116,12 @@
                 parts: document.getElementById('p_parts').value,
                 vlp: document.getElementById('vlp').value
             };
-            localStorage.setItem('isukiza_vFinal_v3', JSON.stringify(data));
+            localStorage.setItem('isukiza_vFinal_v4', JSON.stringify(data));
             calc();
         }
 
         function load() {
-            const data = JSON.parse(localStorage.getItem('isukiza_vFinal_v3'));
+            const data = JSON.parse(localStorage.getItem('isukiza_vFinal_v4'));
             if (data) {
                 document.getElementById('f1').value = data.f1 || "";
                 document.getElementById('f2').value = data.f2 || "";
@@ -145,4 +143,17 @@
             });
             totalEur += parseFloat(document.getElementById('f1').value || 0);
             totalEur += parseFloat(document.getElementById('f2').value || 0);
-            totalEur += parseFloat
+            totalEur += parseFloat(document.getElementById('indie').value || 0);
+            const p = parseFloat(document.getElementById('p_parts').value || 0);
+            const v = parseFloat(document.getElementById('vlp').value || 0);
+            const totalP = p * v;
+            totalEur += totalP;
+
+            document.getElementById('totalPension').innerText = totalP.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + " €";
+            document.getElementById('totalPatrimonio').innerText = totalEur.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
+
+        window.onload = load;
+    </script>
+</body>
+</html>
