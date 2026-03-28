@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Inversiones Personal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4">
+
+    <div class="max-w-5xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-slate-700 pb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-blue-400">Mi Patrimonio</h1>
+                <p class="text-slate-400 text-sm">Seguimiento de Fondos, Acciones y Pensiones</p>
+            </div>
+            <div class="mt-4 md:mt-0 text-right">
+                <p class="text-xs uppercase text-slate-500 font-bold">Total Estimado</p>
+                <p id="totalPatrimonio" class="text-3xl font-mono text-green-400">Calculando...</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="mr-2">📈</span> Acciones Individuales
+                </h2>
+                <div id="listaAcciones" class="space-y-4">
+                    </div>
+            </div>
+
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="mr-2">🏦</span> Fondos y Gestión
+                </h2>
+                <div id="listaFondos" class="space-y-4 text-sm">
+                    </div>
+            </div>
+
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 md:col-span-2">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="mr-2">🛡️</span> Jubilación y Otros Activos
+                </h2>
+                <div id="listaPensiones" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <button onclick="actualizarPrecios()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-full font-bold transition-all shadow-lg">
+                🔄 Sincronizar Precios
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Tus datos reales
+        const cartera = {
+            acciones: [
+                { nombre: "Amazon (AMZN)", ticker: "AMZN", cantidad: 20, isin: "US0231351067", precio: 175.00, moneda: "USD" },
+                { nombre: "Santander (SAN)", ticker: "SAN.MC", cantidad: 1080, isin: "ES011390J37", precio: 3.90, moneda: "EUR" },
+                { nombre: "OHLA (OHLA)", ticker: "OHLA.MC", cantidad: 300, isin: "ES0142090317", precio: 0.45, moneda: "EUR" }
+            ],
+            fondos: [
+                { nombre: "Fondo IE...RH0Q7", isin: "IE000ZYRH0Q7", valor: 0 }, // Introducir valor actual
+                { nombre: "Fondo IE...P7L2", isin: "IE000QAZP7L2", valor: 0 },
+                { nombre: "MyInvestor Cartera Indie", id: "INDIE", valor: 0 }
+            ],
+            pensiones: [
+                { nombre: "Plan SAN ASG RV NORTEAM", participaciones: 1376.6933, precioVLP: 0 } // El VLP lo actualizas tú
+            ]
+        };
+
+        function render() {
+            // Render Acciones
+            const containerAcciones = document.getElementById('listaAcciones');
+            containerAcciones.innerHTML = cartera.acciones.map(a => `
+                <div class="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+                    <div>
+                        <p class="font-bold">${a.nombre}</p>
+                        <p class="text-xs text-slate-400">${a.cantidad} títulos</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-mono text-blue-300">${(a.precio * a.cantidad).toLocaleString()} ${a.moneda}</p>
+                        <p class="text-[10px] text-slate-500">${a.precio} / ud</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Render Fondos
+            const containerFondos = document.getElementById('listaFondos');
+            containerFondos.innerHTML = `
+                <div class="p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                    <p class="font-semibold text-blue-200">ℹ️ Fondos e Indexados</p>
+                    <p class="text-xs text-slate-400 mt-1 italic">Para fondos ISIN, introduce el valor total de tu posición actual:</p>
+                    <div class="mt-3 space-y-2">
+                        <input type="number" onchange="actualizarValorFondo(0, this.value)" placeholder="Valor ${cartera.fondos[0].isin}" class="w-full bg-slate-900 p-2 rounded border border-slate-600">
+                        <input type="number" onchange="actualizarValorFondo(1, this.value)" placeholder="Valor ${cartera.fondos[1].isin}" class="w-full bg-slate-900 p-2 rounded border border-slate-600">
+                        <input type="number" onchange="actualizarValorFondo(2, this.value)" placeholder="Valor Cartera Indie" class="w-full bg-slate-900 p-2 rounded border border-slate-600">
+                    </div>
+                </div>
+            `;
+
+            // Render Pensiones
+            const containerPensiones = document.getElementById('listaPensiones');
+            containerPensiones.innerHTML = `
+                <div class="bg-blue-900/20 p-4 rounded-xl border border-blue-500/30">
+                    <p class="text-sm font-bold">${cartera.pensiones[0].nombre}</p>
+                    <p class="text-xs text-slate-400 mb-2">${cartera.pensiones[0].participaciones} participaciones</p>
+                    <input type="number" onchange="actualizarPensión(0, this.value)" placeholder="Introduce Valor Liquidativo (VLP)" class="w-full bg-slate-900 p-2 rounded border border-slate-600 text-sm">
+                </div>
+            `;
+        }
+
+        function actualizarValorFondo(index, valor) {
+            cartera.fondos[index].valor = parseFloat(valor) || 0;
+            calcularTotal();
+        }
+
+        function actualizarPensión(index, vlp) {
+            cartera.pensiones[index].precioVLP = parseFloat(vlp) || 0;
+            calcularTotal();
+        }
+
+        function calcularTotal() {
+            let total = 0;
+            // Sumar acciones (asumiendo cambio EUR/USD 1.08 aprox)
+            cartera.acciones.forEach(a => {
+                let subtotal = a.cantidad * a.precio;
+                if(a.moneda === "USD") subtotal = subtotal / 1.08;
+                total += subtotal;
+            });
+            // Sumar fondos
+            cartera.fondos.forEach(f => total += f.valor);
+            // Sumar pensiones
+            cartera.pensiones.forEach(p => total += (p.participaciones * p.precioVLP));
+
+            document.getElementById('totalPatrimonio').innerText = total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
+
+        // Simulación de actualización de precios de bolsa (puedes usar una API Real de Yahoo aquí)
+        async function actualizarPrecios() {
+            alert("Consultando cotizaciones de Amazon, Santander y OHLA...");
+            // Aquí iría el fetch a la API
+            // Por ahora, refrescamos el cálculo
+            calcularTotal();
+        }
+
+        render();
+        calcularTotal();
+    </script>
+</body>
+</html>
