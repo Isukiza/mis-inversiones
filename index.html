@@ -3,60 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inversiones Isukiza</title>
+    <title>Inversiones Isukiza v4</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
 
     <div class="max-w-4xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4 text-center md:text-left">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400">Patrimonio Isukiza</h1>
-                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Conectando con mercados...</p>
+                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic italic">Sincronizando mercados...</p>
             </div>
             <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 italic">Patrimonio Neto Estimado</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 italic">Total Estimado</p>
                 <p id="totalPatrimonio" class="text-3xl font-mono text-green-400 font-bold">0.00 €</p>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300">
-                    📈 Bolsa (Acciones)
-                </h2>
-                <div id="listaAcciones" class="space-y-4">
-                    </div>
+                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic">📈 Acciones en Vivo</h2>
+                <div id="listaAcciones" class="space-y-4"></div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300">
-                    🏦 Fondos y Gestión
-                </h2>
-                <div class="space-y-4">
-                    <div class="bg-slate-900/30 p-4 rounded-xl">
-                        <label class="text-[10px] text-slate-500 font-bold uppercase block mb-3">Valor actual de tus posiciones (€)</label>
-                        <div class="space-y-3">
-                            <input type="number" id="f1" oninput="save()" placeholder="Fondo IE000ZYRH0Q7" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-                            <input type="number" id="f2" oninput="save()" placeholder="Fondo IE000QAZP7L2" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-                            <input type="number" id="indie" oninput="save()" placeholder="Cartera Indie MyInvestor" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
-                        </div>
-                    </div>
+                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300 italic">🏦 Fondos y Gestión</h2>
+                <div class="space-y-3">
+                    <input type="number" id="f1" oninput="save()" placeholder="Fondo IE000ZYRH0Q7 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="f2" oninput="save()" placeholder="Fondo IE000QAZP7L2 (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="indie" oninput="save()" placeholder="Cartera Indie MyInvestor (€)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
                 </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm md:col-span-2">
-                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-orange-400">
-                    🛡️ Plan de Pensiones
-                </h2>
-                <div class="flex flex-col md:flex-row gap-6 items-center bg-orange-900/10 p-5 rounded-2xl border border-orange-500/10">
-                    <div class="flex-1">
-                        <p class="text-sm font-bold">SAN ASG RV NORTEAM</p>
-                        <p class="text-xs text-slate-400 font-mono">Participaciones: 1.376,6933</p>
+                <h2 class="text-xl font-semibold mb-4 text-orange-400 italic">🛡️ Plan de Pensiones: SAN ASG RV NORTEAM</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-950/20 p-5 rounded-2xl border border-orange-500/20">
+                    <div>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block">Mis Participaciones</label>
+                        <input type="number" id="p_parts" oninput="save()" step="0.0001" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm font-mono text-white outline-none focus:border-orange-500" placeholder="Ej: 1376.6933">
                     </div>
-                    <div class="w-full md:w-64">
-                        <label class="text-[10px] text-slate-500 uppercase font-bold">Valor Liquidativo (VLP)</label>
-                        <input type="number" id="vlp" oninput="save()" step="0.0001" placeholder="Ej: 12.4532" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-orange-200 focus:ring-1 focus:ring-orange-500 outline-none">
+                    <div>
+                        <label class="text-[10px] text-orange-300/60 uppercase font-bold mb-2 block">Valor Liquidativo (VLP)</label>
+                        <input type="number" id="vlp" oninput="save()" step="0.0001" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm font-mono text-orange-200 outline-none focus:border-orange-500" placeholder="Introduce el VLP del día">
+                    </div>
+                    <div class="md:col-span-2 border-t border-orange-500/10 pt-3 flex justify-between items-center">
+                        <span class="text-xs text-slate-400 italic">Cálculo: <span id="label_parts">0</span> x <span id="label_vlp">0</span></span>
+                        <span id="totalPension" class="text-lg font-bold text-orange-300">0.00 €</span>
                     </div>
                 </div>
             </div>
@@ -81,31 +73,26 @@
                     const json = await response.json();
                     const data = JSON.parse(json.contents);
                     precios[accion.ticker] = data.chart.result[0].meta.regularMarketPrice;
-                } catch (e) {
-                    console.error("Error " + accion.ticker, e);
-                    if(accion.ticker === "AMZN") precios[accion.ticker] = 185.00; // Respaldo
-                    if(accion.ticker === "SAN.MC") precios[accion.ticker] = 4.50;
-                    if(accion.ticker === "OHLA.MC") precios[accion.ticker] = 0.40;
-                }
+                } catch (e) { console.error("Error " + accion.ticker); }
             }
-            document.getElementById('status').innerText = "Precios de mercado OK ✓";
+            document.getElementById('status').innerText = "Precios mercado OK ✓";
             render();
         }
 
         function render() {
             const list = document.getElementById('listaAcciones');
             list.innerHTML = acciones.map(a => {
-                const cotizacion = precios[a.ticker] || 0;
-                const totalActivo = (cotizacion * a.cantidad).toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                const cotiz = precios[a.ticker] || 0;
+                const total = (cotiz * a.cantidad).toLocaleString('es-ES', { minimumFractionDigits: 2 });
                 return `
-                    <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-700/30">
-                        <div class="flex justify-between items-start mb-1">
-                            <p class="font-bold text-slate-100">${a.nombre}</p>
-                            <p class="font-mono text-blue-400 font-bold text-lg">${totalActivo} <span class="text-[10px]">${a.moneda}</span></p>
+                    <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="font-bold text-slate-200">${a.nombre}</p>
+                            <p class="font-mono text-blue-300 font-bold">${total} <span class="text-[9px]">${a.moneda}</span></p>
                         </div>
-                        <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+                        <div class="flex justify-between text-[10px] text-slate-500 font-mono">
                             <span>${a.cantidad} títulos</span>
-                            <span>Cotización: ${cotizacion.toFixed(2)} ${a.moneda}</span>
+                            <span>${cotiz.toFixed(2)} ${a.moneda}/ud</span>
                         </div>
                     </div>
                 `;
@@ -118,34 +105,48 @@
                 f1: document.getElementById('f1').value,
                 f2: document.getElementById('f2').value,
                 indie: document.getElementById('indie').value,
+                parts: document.getElementById('p_parts').value,
                 vlp: document.getElementById('vlp').value
             };
-            localStorage.setItem('isukiza_v3', JSON.stringify(data));
+            localStorage.setItem('isukiza_v4', JSON.stringify(data));
             calc();
         }
 
         function load() {
-            const data = JSON.parse(localStorage.getItem('isukiza_v3'));
+            const data = JSON.parse(localStorage.getItem('isukiza_v4'));
             if (data) {
                 document.getElementById('f1').value = data.f1 || "";
                 document.getElementById('f2').value = data.f2 || "";
                 document.getElementById('indie').value = data.indie || "";
+                document.getElementById('p_parts').value = data.parts || "1376.6933";
                 document.getElementById('vlp').value = data.vlp || "";
+            } else {
+                document.getElementById('p_parts').value = "1376.6933";
             }
             getLivePrices();
         }
 
         function calc() {
             let totalEur = 0;
+            // Cálculo Bolsa
             acciones.forEach(a => {
                 let sub = (precios[a.ticker] || 0) * a.cantidad;
                 totalEur += (a.moneda === "USD") ? sub * TIPO_CAMBIO_EURUSD : sub;
             });
+            // Fondos
             totalEur += parseFloat(document.getElementById('f1').value || 0);
             totalEur += parseFloat(document.getElementById('f2').value || 0);
             totalEur += parseFloat(document.getElementById('indie').value || 0);
-            totalEur += (parseFloat(document.getElementById('vlp').value || 0) * 1376.6933);
+            
+            // Pensión
+            const p = parseFloat(document.getElementById('p_parts').value || 0);
+            const v = parseFloat(document.getElementById('vlp').value || 0);
+            const totalP = p * v;
+            totalEur += totalP;
 
+            document.getElementById('label_parts').innerText = p.toLocaleString('es-ES');
+            document.getElementById('label_vlp').innerText = v.toFixed(4);
+            document.getElementById('totalPension').innerText = totalP.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
             document.getElementById('totalPatrimonio').innerText = totalEur.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
         }
 
