@@ -2,185 +2,627 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Patrimonio Familiar Isukiza - LIVE PRO</title>
+    <title>Patrimonio Familiar Isukiza - LIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
+        body { font-family: 'Syne', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .gain { color: #4ade80; }
+        .loss { color: #f87171; }
+        .spin { animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Ocultar flechas de inputs number pero mantener funcionalidad */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { opacity: 0.3; }
+        .card {
+            background: rgba(15,23,42,0.7);
+            border: 1px solid rgba(100,116,139,0.25);
+            border-radius: 1.5rem;
+            backdrop-filter: blur(8px);
+        }
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 999px;
+        }
+        .btn-ok {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700;
+            padding: 5px 10px; border-radius: 8px;
+            cursor: pointer; border: none; outline: none;
+            transition: all 0.15s; flex-shrink: 0;
+        }
+        .btn-ok:active { transform: scale(0.93); }
+        .inp {
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #e2e8f0;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .inp:focus { border-color: #6366f1; }
+        .inp-sm {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 11px;
+            color: #e2e8f0;
+            outline: none;
+            text-align: right;
+            width: 100px;
+            transition: border-color 0.15s;
+        }
+        .inp-sm:focus { border-color: #6366f1; }
+        /* label estilo unificado */
+        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+               text-transform: uppercase; letter-spacing: 0.1em; color: #475569; display: block; margin-bottom: 4px; }
+    </style>
 </head>
-<body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
-    <div class="max-w-4xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
+<body class="bg-[#080e1a] text-slate-100 min-h-screen p-4 md:p-10">
+
+    <div class="fixed inset-0 opacity-[0.03] pointer-events-none"
+         style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>')">
+    </div>
+
+    <div class="max-w-5xl mx-auto relative">
+
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
             <div>
-                <h1 class="text-3xl font-bold text-blue-400 font-mono tracking-tighter">PATRIMONIO ISUKIZA</h1>
-                <p id="status" class="text-xs text-orange-400 font-mono mt-1 animate-pulse">Iniciando conexión mercados...</p>
+                <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
+                <h1 class="text-4xl font-extrabold text-white" style="letter-spacing:-0.03em">
+                    ISUKIZA <span class="text-blue-500">&#9679;</span> LIVE
+                </h1>
+                <p id="status" class="mono text-[10px] text-amber-400 mt-2">
+                    <span class="spin">&#10227;</span> Conectando con mercados...
+                </p>
             </div>
-            <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 text-center font-mono">Total Global (EUR)</p>
-                <p id="totalPatrimonio" class="text-3xl font-mono text-green-400 font-bold text-center">0.00 €</p>
+            <div class="card px-8 py-5 text-center min-w-[240px]">
+                <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
+                <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
+                <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic font-mono font-bold underline decoration-blue-500/30">📈 Bolsa</h2>
-                <div id="listaAcciones" class="space-y-4">
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- ══ BOLSA EN VIVO ══ -->
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
+                    <span id="bolsaStatus" class="badge bg-blue-950 text-blue-400">&mdash;</span>
+                </div>
+                <div id="listaAcciones" class="space-y-3"></div>
             </div>
 
-            <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300 italic font-mono font-bold underline decoration-purple-500/30">🏦 Otros Activos</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1">Fondo IE...H0Q7 (€)</label>
-                        <input type="number" id="f1" oninput="save()" placeholder="Introduce valor total (€)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
+            <!-- ══ FONDOS INDEXADOS ══ -->
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
+                </div>
+                <div class="flex items-center justify-between mb-5">
+                    <a href="https://myinvestor.es/" target="_blank"
+                       class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
+                        &#8599; Consultar VL en MyInvestor
+                    </a>
+                    <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
+                </div>
+
+                <!-- FONDO 1 -->
+                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="font-bold text-slate-200 text-sm">iShares Developed World</p>
+                            <p class="mono text-[9px] text-slate-600">IE000ZYRH0Q7</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="lbl">VL Actual (&euro;)</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="f1_vl" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')"
+                                    class="inp-sm text-violet-200">
+                                <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;" title="Marcar actualizado">&#10003;</button>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1">Fondo IE...P7L2 (€)</label>
-                        <input type="number" id="f2" oninput="save()" placeholder="Introduce valor total (€)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="lbl">Participaciones</label>
+                            <input type="number" id="f1_part" step="any" placeholder="0.0000"
+                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl">Coste Medio (&euro;)</label>
+                            <input type="number" id="f1_coste" step="any" placeholder="0.0000"
+                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[9px] text-purple-300 uppercase font-bold ml-1">Indie MyInvestor (€)</label>
-                        <input type="number" id="indie" oninput="save()" placeholder="Introduce valor total (€)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none text-purple-200">
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                        <div>
+                            <p class="lbl">Valor Invertido</p>
+                            <p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="lbl">Valor Mercado</p>
+                            <p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p>
+                        </div>
+                    </div>
+                    <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
+                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
+                        <span id="f1_rent_val" class="mono text-sm font-bold"></span>
+                    </div>
+                </div>
+
+                <!-- FONDO 2 -->
+                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="font-bold text-slate-200 text-sm">iShares Emerging Markets</p>
+                            <p class="mono text-[9px] text-slate-600">IE000QAZP7L2</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="lbl">VL Actual (&euro;)</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="f2_vl" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')"
+                                    class="inp-sm text-indigo-200">
+                                <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;" title="Marcar actualizado">&#10003;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="lbl">Participaciones</label>
+                            <input type="number" id="f2_part" step="any" placeholder="0.0000"
+                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl">Coste Medio (&euro;)</label>
+                            <input type="number" id="f2_coste" step="any" placeholder="0.0000"
+                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                        <div>
+                            <p class="lbl">Valor Invertido</p>
+                            <p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="lbl">Valor Mercado</p>
+                            <p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p>
+                        </div>
+                    </div>
+                    <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
+                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
+                        <span id="f2_rent_val" class="mono text-sm font-bold"></span>
+                    </div>
+                </div>
+
+                <!-- Total fondos -->
+                <div class="mt-5 pt-4 border-t border-slate-700/50 flex justify-between items-center">
+                    <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
+                    <div class="text-right">
+                        <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
+                        <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm md:col-span-2 border-l-4 border-l-red-500 shadow-2xl">
-                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 border-b border-red-900/40 pb-4">
+            <!-- ══ INDIE MYINVESTOR ══ -->
+            <div class="card p-6">
+                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-5">&#127807; Cartera Indie MyInvestor</h2>
+                <div class="space-y-3">
                     <div>
-                        <h2 class="text-xl font-semibold text-red-400 italic font-mono font-bold">🛡️ JUBILACIÓN (SANTANDER ASG)</h2>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold">Actualiza el VLP para sincronizar ambos planes</p>
+                        <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
+                        <input type="number" id="indie_mer" step="any" placeholder="0.00"
+                            oninput="calcIndie()" onchange="calcIndie()"
+                            class="inp" style="color:#6ee7b7; border-color:#064e3b;">
                     </div>
-                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924&nombre=Santander%20ASG%20RV%20Norteam%C3%A9rica,%20P.P.S.I." target="_blank" class="bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95 border border-red-400/20 w-full sm:w-auto text-center justify-center flex items-center gap-2">
-                        🚀 CONSULTAR VLP OFICIAL (SANTANDER SAM)
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="lbl">Invertido (&euro;)</label>
+                            <input type="number" id="indie_inv" step="any" placeholder="0.00"
+                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl">Efectivo (&euro;)</label>
+                            <input type="number" id="indie_ef" step="any" placeholder="0.00"
+                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                        </div>
+                    </div>
+                    <div class="mt-1 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                        <div>
+                            <p class="lbl">Rentabilidad</p>
+                            <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="lbl">Total (mercado + efectivo)</p>
+                            <p id="indie_total" class="mono text-base font-bold text-emerald-300">&mdash;</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ JUBILACION EPSV ══ -->
+            <div class="card p-6 border-l-4 border-l-rose-600">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
+                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924"
+                       target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">
+                        VLP &#8599;
                     </a>
                 </div>
-                
+                <p class="mono text-[9px] text-slate-600 mb-4 uppercase tracking-widest">Actualiza el VLP para sincronizar ambos planes</p>
+
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
-                        <div><label class="text-[9px] text-red-400 font-bold mb-1 block italic">Tus Participaciones</label><input type="number" id="p1" oninput="save()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono" placeholder="1376.6933"></div>
-                        <div><label class="text-[9px] text-red-400 font-bold mb-1 block italic">VLP Actual</label><input type="number" id="vlp" oninput="syncVLP(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-red-200" placeholder="Ej: 22.14"></div>
-                        <div class="text-right"><p id="res1" class="text-2xl font-mono font-bold text-red-400">0,00 €</p><p class="text-[8px] text-slate-500 font-bold uppercase">Tu Inversión</p></div>
+                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                        <p class="mono text-[9px] text-rose-400 uppercase font-bold mb-3">Tu plan</p>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="lbl">Participaciones</label>
+                                <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
+                                    class="inp" style="font-size:11px;">
+                            </div>
+                            <div>
+                                <label class="lbl">VLP (&euro;)</label>
+                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
+                                    class="inp" style="font-size:11px;color:#fca5a5;">
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <p class="lbl">Valor</p>
+                                <p id="res1" class="mono text-base font-bold text-rose-400">0,00 &euro;</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
-                        <div><label class="text-[9px] text-pink-400 font-bold mb-1 block italic">Participaciones Ella</label><input type="number" id="p2" oninput="save()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono" placeholder="1975.6095"></div>
-                        <div><label class="text-[9px] text-pink-400 font-bold mb-1 block italic">VLP Actual</label><input type="number" id="vlp_m" oninput="syncVLP(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-pink-200" placeholder="Ej: 22.14"></div>
-                        <div class="text-right"><p id="res2" class="text-2xl font-mono font-bold text-pink-400">0,00 €</p><p class="text-[8px] text-slate-500 font-bold uppercase">Inversión Ella</p></div>
+                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                        <p class="mono text-[9px] text-pink-400 uppercase font-bold mb-3">Su plan</p>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="lbl">Participaciones</label>
+                                <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
+                                    class="inp" style="font-size:11px;">
+                            </div>
+                            <div>
+                                <label class="lbl">VLP (&euro;)</label>
+                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
+                                    class="inp" style="font-size:11px;color:#f9a8d4;">
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <p class="lbl">Valor</p>
+                                <p id="res2" class="mono text-base font-bold text-pink-400">0,00 &euro;</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="mt-4 flex justify-between items-center border-t border-slate-800 pt-4">
+                    <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
+                    <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <script>
-        const acciones = [
-            { ticker: "AMZN", nombre: "Amazon", cant: 20, mon: "USD" },
-            { ticker: "SAN.MC", nombre: "Santander", cant: 1080, mon: "EUR" },
-            { ticker: "OHLA.MC", nombre: "OHLA", cant: 300, mon: "EUR" }
-        ];
+        </div><!-- end grid -->
+    </div><!-- end container -->
 
-        let precios = { "AMZN": 180.1, "SAN.MC": 4.6, "OHLA.MC": 0.42 };
-        let usd_eur = 0.92;
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+var acciones = [
+    { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD" },
+    { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR" },
+    { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR" }
+];
 
-        async function fetchPrices() {
-            document.getElementById('status').innerText = "🔄 Actualizando precios reales...";
-            try {
-                const proxy = "https://api.allorigins.win/get?url=";
-                const fx = await fetch(proxy + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X'));
-                const fx_data = JSON.parse((await fx.json()).contents);
-                usd_eur = fx_data.chart.result[0].meta.regularMarketPrice || 0.92;
+var precios = { "AMZN": 0, "SAN.MC": 0, "OHLA.MC": 0 };
+var usd_eur = 0.92;
 
-                for (let a of acciones) {
-                    const resp = await fetch(proxy + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${a.ticker}`));
-                    const data = JSON.parse((await resp.json()).contents);
-                    if(data.chart.result[0].meta.regularMarketPrice) {
-                        precios[a.ticker] = data.chart.result[0].meta.regularMarketPrice;
-                    }
-                }
-                document.getElementById('status').className = "text-xs text-green-400 font-mono mt-1";
-                document.getElementById('status').innerText = "✓ Mercados sincronizados " + new Date().toLocaleTimeString();
-            } catch(e) { 
-                document.getElementById('status').innerText = "⚠️ Modo Offline (Datos Locales)";
-            }
-            renderBolsa();
-        }
+// ══════════════════════════════════════════
+// FETCH BOLSA
+// FIX: usa v8/finance/chart con fallback a previousClose
+// ══════════════════════════════════════════
+function fetchPrice(ticker) {
+    var url   = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
+    var proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+    return fetch(proxy)
+        .then(function(r) { return r.json(); })
+        .then(function(j) {
+            var data = JSON.parse(j.contents);
+            var meta = data.chart.result[0].meta;
+            // regularMarketPrice puede ser 0 fuera de horario → usar previousClose como fallback
+            var price = meta.regularMarketPrice;
+            if (!price || price === 0) price = meta.previousClose || meta.chartPreviousClose || 0;
+            return price;
+        });
+}
 
-        function syncVLP(v) {
-            document.getElementById('vlp').value = v;
-            document.getElementById('vlp_m').value = v;
-            save();
-        }
+function fetchAllPrices() {
+    setStatus("Actualizando bolsa...", "amber");
 
-        function renderBolsa() {
-            const list = document.getElementById('listaAcciones');
-            list.innerHTML = acciones.map(a => {
-                const price = precios[a.ticker];
-                const subTotalEUR = a.mon === "USD" ? (price * a.cant * usd_eur) : (price * a.cant);
-                // REINTEGRADO: Enlace a Yahoo Finance y desglose completo
-                const link = `https://finance.yahoo.com/quote/${a.ticker}`;
-                
-                return `<div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30 flex justify-between items-center hover:bg-slate-900/60 transition-all group">
-                    <div>
-                        <a href="${link}" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 flex items-center gap-1">
-                            ${a.nombre} <span class="text-[9px] text-blue-500 opacity-0 group-hover:opacity-100 transition">↗</span>
-                        </a>
-                        <p class="text-[10px] text-slate-500 font-mono">${a.cant} títulos @ ${price.toFixed(2)} ${a.mon}</p>
-                    </div>
-                    <p class="font-mono text-blue-300 font-bold text-lg">${subTotalEUR.toLocaleString('es-ES', { minimumFractionDigits: 2 })} <span class="text-[9px] text-slate-500 font-normal">EUR</span></p>
-                </div>`;
-            }).join('');
-            calc();
-        }
-
-        function save() {
-            const d = {
-                f1: document.getElementById('f1').value,
-                f2: document.getElementById('f2').value,
-                indie: document.getElementById('indie').value,
-                p1: document.getElementById('p1').value,
-                p2: document.getElementById('p2').value,
-                vlp: document.getElementById('vlp').value
-            };
-            localStorage.setItem('isukiza_vFinal_PRO', JSON.stringify(d));
-            calc();
-        }
-
-        function load() {
-            const d = JSON.parse(localStorage.getItem('isukiza_vFinal_PRO')) || {p1: "1376.6933", p2: "1975.6095"};
-            document.getElementById('f1').value = d.f1 || "";
-            document.getElementById('f2').value = d.f2 || "";
-            document.getElementById('indie').value = d.indie || "";
-            document.getElementById('p1').value = d.p1 || "1376.6933";
-            document.getElementById('p2').value = d.p2 || "1975.6095";
-            document.getElementById('vlp').value = d.vlp || "";
-            document.getElementById('vlp_m').value = d.vlp || "";
-            
-            // Primero pintamos con datos locales por velocidad
-            renderBolsa();
-            // Luego intentamos conectar a la red
-            fetchPrices();
-        }
-
-        function calc() {
-            let total = 0;
-            acciones.forEach(a => {
-                let sub = precios[a.ticker] * a.cant;
-                total += (a.mon === "USD") ? sub * usd_eur : sub;
+    // FX primero
+    fetchPrice("EURUSD=X")
+        .then(function(v) { usd_eur = 1 / v; })
+        .catch(function()  { usd_eur = 0.92; })
+        .then(function() {
+            var ps = acciones.map(function(a) {
+                return fetchPrice(a.ticker)
+                    .then(function(p) { precios[a.ticker] = p; })
+                    .catch(function()  { console.warn("Fallo precio: " + a.ticker); });
             });
-            total += parseFloat(document.getElementById('f1').value || 0);
-            total += parseFloat(document.getElementById('f2').value || 0);
-            total += parseFloat(document.getElementById('indie').value || 0);
-            
-            const v = parseFloat(document.getElementById('vlp').value || 0);
-            const r1 = (parseFloat(document.getElementById('p1').value) || 0) * v;
-            const r2 = (parseFloat(document.getElementById('p2').value) || 0) * v;
-            
-            document.getElementById('res1').innerText = r1.toLocaleString('es-ES', {minimumFractionDigits: 2}) + " €";
-            document.getElementById('res2').innerText = r2.toLocaleString('es-ES', {minimumFractionDigits: 2}) + " €";
-            
-            total += (r1 + r2);
-            document.getElementById('totalPatrimonio').innerText = total.toLocaleString('es-ES', {style: 'currency', currency: 'EUR'});
-        }
+            return Promise.all(ps);
+        })
+        .then(function() {
+            document.getElementById("bolsaStatus").innerText = "live";
+            setStatus("Bolsa actualizada  " + new Date().toLocaleTimeString("es-ES"), "green");
+            renderBolsa();
+            calcTotal();
+        });
+}
 
-        window.onload = load;
-    </script>
+// ══════════════════════════════════════════
+// RENDER BOLSA
+// ══════════════════════════════════════════
+function renderBolsa() {
+    var list = document.getElementById("listaAcciones");
+    list.innerHTML = acciones.map(function(a) {
+        var price  = precios[a.ticker];
+        var sub    = price * a.cant;
+        var subEur = a.mon === "USD" ? sub * usd_eur : sub;
+        var link   = "https://finance.yahoo.com/quote/" + a.ticker;
+        return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-700/50 transition-all">'
+            + '<div>'
+            + '<a href="' + link + '" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">'
+            + a.nombre + ' <span class="text-blue-500 text-[9px]">&#8599;</span></a>'
+            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds &middot; '
+            + price.toFixed(2) + ' ' + a.mon + '</p>'
+            + '</div>'
+            + '<div class="text-right">'
+            + '<p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
+            + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' USD</p>' : '')
+            + '</div></div>';
+    }).join("");
+}
+
+// ══════════════════════════════════════════
+// FONDOS — cálculo sin re-render del DOM
+// FIX: los inputs están en el HTML estático,
+// solo actualizamos los elementos de resultado
+// ══════════════════════════════════════════
+function calcFondo(id) {
+    var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
+    var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
+    var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
+
+    var valInv = part * coste;
+    var valMer = part * vl;
+    var gan    = valMer - valInv;
+    var ganPct = valInv > 0 ? gan / valInv * 100 : 0;
+    var esG    = gan >= 0;
+
+    document.getElementById(id + "_inv").innerText = valInv > 0 ? fmt(valInv) + " \u20AC" : "\u2014";
+    document.getElementById(id + "_mer").innerText = valMer > 0 ? fmt(valMer) + " \u20AC" : "\u2014";
+
+    var rentBox = document.getElementById(id + "_rent");
+    var rentVal = document.getElementById(id + "_rent_val");
+    if (valInv > 0) {
+        rentBox.classList.remove("hidden");
+        rentBox.classList.add("flex");
+        rentVal.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
+        rentVal.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + ganPct.toFixed(2) + "%)";
+    } else {
+        rentBox.classList.add("hidden");
+        rentBox.classList.remove("flex");
+    }
+
+    calcTotalFondos();
+    calcTotal();
+    save();
+}
+
+function calcTotalFondos() {
+    var ids = ["f1", "f2"];
+    var totalInv = 0, totalMer = 0;
+    ids.forEach(function(id) {
+        var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
+        var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
+        var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
+        totalInv += part * coste;
+        totalMer += part * vl;
+    });
+    var ganT    = totalMer - totalInv;
+    var ganPctT = totalInv > 0 ? ganT / totalInv * 100 : 0;
+    var esGT    = ganT >= 0;
+    document.getElementById("totalFondosValor").innerText = totalMer > 0 ? fmt(totalMer) + " \u20AC" : "\u2014";
+    var rentEl = document.getElementById("totalFondosRentab");
+    rentEl.className = "mono text-[10px] " + (totalInv > 0 ? (esGT ? "gain" : "loss") : "text-slate-600");
+    rentEl.innerText = totalInv > 0
+        ? (esGT?"+":"") + fmt(ganT) + " \u20AC (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)"
+        : "";
+}
+
+function marcarTS() {
+    var ts = new Date().toLocaleString("es-ES", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+    document.getElementById("fondosTimestamp").innerText = "VL " + ts;
+    save();
+}
+
+// ══════════════════════════════════════════
+// INDIE — tres campos
+// ══════════════════════════════════════════
+function calcIndie() {
+    var mer  = parseFloat(document.getElementById("indie_mer").value) || 0;
+    var inv  = parseFloat(document.getElementById("indie_inv").value) || 0;
+    var ef   = parseFloat(document.getElementById("indie_ef").value)  || 0;
+    var gan  = mer - inv;
+    var pct  = inv > 0 ? gan / inv * 100 : 0;
+    var esG  = gan >= 0;
+    var total = mer + ef;
+
+    var rentEl = document.getElementById("indie_rent");
+    if (inv > 0) {
+        rentEl.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
+        rentEl.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)";
+    } else {
+        rentEl.className = "mono text-sm font-bold text-slate-500";
+        rentEl.innerText = "\u2014";
+    }
+    document.getElementById("indie_total").innerText = total > 0 ? fmt(total) + " \u20AC" : "\u2014";
+
+    calcTotal();
+    save();
+}
+
+// ══════════════════════════════════════════
+// EPSV
+// ══════════════════════════════════════════
+function calcEPSV() {
+    var vlp = parseFloat(document.getElementById("vlp").value)   || 0;
+    var r1  = (parseFloat(document.getElementById("p1").value)   || 0) * vlp;
+    var r2  = (parseFloat(document.getElementById("p2").value)   || 0) * vlp;
+    document.getElementById("res1").innerText    = fmt(r1)      + " \u20AC";
+    document.getElementById("res2").innerText    = fmt(r2)      + " \u20AC";
+    document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " \u20AC";
+    calcTotal();
+    save();
+}
+
+function syncVLP(v) {
+    document.getElementById("vlp").value   = v;
+    document.getElementById("vlp_m").value = v;
+    calcEPSV();
+}
+
+// ══════════════════════════════════════════
+// TOTAL GLOBAL
+// ══════════════════════════════════════════
+function calcTotal() {
+    var total = 0;
+
+    // Bolsa
+    acciones.forEach(function(a) {
+        var sub = precios[a.ticker] * a.cant;
+        total += a.mon === "USD" ? sub * usd_eur : sub;
+    });
+
+    // Fondos
+    ["f1","f2"].forEach(function(id) {
+        var part = parseFloat(document.getElementById(id + "_part").value) || 0;
+        var vl   = parseFloat(document.getElementById(id + "_vl").value)   || 0;
+        total += part * vl;
+    });
+
+    // Indie (mercado + efectivo)
+    total += parseFloat(document.getElementById("indie_mer").value) || 0;
+    total += parseFloat(document.getElementById("indie_ef").value)  || 0;
+
+    // EPSV
+    var vlp = parseFloat(document.getElementById("vlp").value) || 0;
+    total += (parseFloat(document.getElementById("p1").value) || 0) * vlp;
+    total += (parseFloat(document.getElementById("p2").value) || 0) * vlp;
+
+    document.getElementById("totalPatrimonio").innerText =
+        total.toLocaleString("es-ES", {style:"currency", currency:"EUR"});
+
+    // Rentabilidad fondos en header
+    var tInv = 0, tMer = 0;
+    ["f1","f2"].forEach(function(id) {
+        tInv += (parseFloat(document.getElementById(id + "_part").value)  || 0)
+              * (parseFloat(document.getElementById(id + "_coste").value) || 0);
+        tMer += (parseFloat(document.getElementById(id + "_part").value)  || 0)
+              * (parseFloat(document.getElementById(id + "_vl").value)    || 0);
+    });
+    var ganF = tMer - tInv;
+    var esGF = ganF >= 0;
+    var rEl  = document.getElementById("totalRentab");
+    if (tInv > 0) {
+        rEl.className = "mono text-[10px] mt-1 " + (esGF ? "gain" : "loss");
+        rEl.innerText = "Fondos: " + (esGF?"+":"") + fmt(ganF)
+            + " \u20AC (" + (esGF?"+":"") + (ganF/tInv*100).toFixed(2) + "%)";
+    } else {
+        rEl.className = "mono text-[10px] mt-1 text-slate-600";
+        rEl.innerText = "Introduce VL y participaciones";
+    }
+}
+
+// ══════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════
+function fmt(n) {
+    return n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function setStatus(msg, color) {
+    var s = document.getElementById("status");
+    var map = {amber:"text-amber-400", green:"text-green-400", red:"text-red-400"};
+    s.className = "mono text-[10px] mt-2 " + (map[color] || "text-slate-400");
+    s.innerText = msg;
+}
+
+// ══════════════════════════════════════════
+// PERSISTENCIA
+// ══════════════════════════════════════════
+function save() {
+    localStorage.setItem("isukiza_v4", JSON.stringify({
+        f1_vl:    document.getElementById("f1_vl").value,
+        f1_part:  document.getElementById("f1_part").value,
+        f1_coste: document.getElementById("f1_coste").value,
+        f2_vl:    document.getElementById("f2_vl").value,
+        f2_part:  document.getElementById("f2_part").value,
+        f2_coste: document.getElementById("f2_coste").value,
+        indie_mer: document.getElementById("indie_mer").value,
+        indie_inv: document.getElementById("indie_inv").value,
+        indie_ef:  document.getElementById("indie_ef").value,
+        p1:  document.getElementById("p1").value,
+        p2:  document.getElementById("p2").value,
+        vlp: document.getElementById("vlp").value,
+        ts:  document.getElementById("fondosTimestamp").innerText
+    }));
+}
+
+function load() {
+    var raw = localStorage.getItem("isukiza_v4");
+    var d   = raw ? JSON.parse(raw) : {};
+
+    var set = function(id, val) {
+        var el = document.getElementById(id);
+        if (el && val !== undefined && val !== null && val !== "") el.value = val;
+    };
+
+    set("f1_vl",    d.f1_vl);
+    set("f1_part",  d.f1_part);
+    set("f1_coste", d.f1_coste);
+    set("f2_vl",    d.f2_vl);
+    set("f2_part",  d.f2_part);
+    set("f2_coste", d.f2_coste);
+    set("indie_mer", d.indie_mer);
+    set("indie_inv", d.indie_inv);
+    set("indie_ef",  d.indie_ef);
+    set("p1",  d.p1  || "1376.6933");
+    set("p2",  d.p2  || "1975.6095");
+    set("vlp", d.vlp);
+    document.getElementById("vlp_m").value = d.vlp || "";
+    if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
+
+    // Recalcular todo con datos cargados
+    calcFondo("f1");
+    calcFondo("f2");
+    calcIndie();
+    calcEPSV();
+
+    // Bolsa en vivo
+    fetchAllPrices();
+    setInterval(fetchAllPrices, 5 * 60 * 1000);
+}
+
+window.onload = load;
+</script>
 </body>
 </html>
