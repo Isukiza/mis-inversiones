@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Patrimonio Familiar Isukiza - Santander SAM</title>
+    <title>Patrimonio Familiar Isukiza - PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
@@ -10,7 +10,7 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400">Patrimonio Familiar Isukiza</h1>
-                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Sincronización Santander Asset ✓</p>
+                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Conectando con mercados...</p>
             </div>
             <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
                 <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 text-center font-mono">Total Cartera Familiar</p>
@@ -20,23 +20,24 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
-                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic font-mono font-bold underline decoration-blue-500/30">📈 Bolsa</h2>
-                <div id="listaAcciones" class="space-y-4"></div>
+                <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic font-mono font-bold underline decoration-blue-500/30">📈 Bolsa (Live)</h2>
+                <div id="listaAcciones" class="space-y-4">
+                    </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
                 <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-purple-300 italic font-mono font-bold underline decoration-purple-500/30">🏦 Otros Fondos</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1">Fondo IE...H0Q7 (€)</label>
+                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1 italic">Fondo IE...H0Q7 (€)</label>
                         <input type="number" id="f1" oninput="save()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
                     </div>
                     <div>
-                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1">Fondo IE...P7L2 (€)</label>
+                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1 italic">Fondo IE...P7L2 (€)</label>
                         <input type="number" id="f2" oninput="save()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
                     </div>
                     <div>
-                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1">Indie MyInvestor (€)</label>
+                        <label class="text-[9px] text-slate-400 uppercase font-bold ml-1 italic">Indie MyInvestor (€)</label>
                         <input type="number" id="indie" oninput="save()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
                     </div>
                 </div>
@@ -46,41 +47,41 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 border-b border-red-900/40 pb-4">
                     <div>
                         <h2 class="text-xl font-semibold text-red-400 italic font-mono font-bold">🛡️ PLANES DE PENSIONES (SANTANDER ASG)</h2>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tight">Introduce el VLP una vez para actualizar ambos planes</p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tight">Introduce el VLP oficial para calcular ambos importes</p>
                     </div>
-                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924&nombre=Santander%20ASG%20RV%20Norteam%C3%A9rica,%20P.P.S.I." target="_blank" class="bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-lg w-full sm:w-auto text-center justify-center">
-                        🚀 CONSULTAR VLP OFICIAL
+                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924&nombre=Santander%20ASG%20RV%20Norteam%C3%A9rica,%20P.P.S.I." target="_blank" class="bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
+                        🔍 CONSULTAR VLP OFICIAL
                     </a>
                 </div>
                 
-                <div class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
                         <div>
-                            <label class="text-[9px] text-red-300/60 uppercase font-bold mb-1 block">Participaciones (Tus)</label>
-                            <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white outline-none">
+                            <label class="text-[10px] text-red-300 font-bold mb-1 block">TUS PARTICIPACIONES</label>
+                            <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white">
                         </div>
                         <div>
-                            <label class="text-[9px] text-red-300/60 uppercase font-bold mb-1 block">VLP Actual</label>
-                            <input type="number" id="vlp" oninput="syncVLP(this.value)" step="0.0001" class="vlp-input w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-red-200 outline-none" placeholder="Ej: 22.1450">
+                            <label class="text-[10px] text-red-300 font-bold mb-1 block">VLP ACTUAL</label>
+                            <input type="number" id="vlp" oninput="syncVLP(this.value)" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-red-200" placeholder="Ej: 22.14">
                         </div>
                         <div class="text-right">
-                            <p id="totalPension" class="text-xl font-mono font-bold text-red-400">0,00 €</p>
-                            <p class="text-[8px] text-slate-500 uppercase font-bold">Tu Inversión</p>
+                            <p id="totalPension" class="text-2xl font-mono font-bold text-red-400">0,00 €</p>
+                            <p class="text-[9px] text-slate-500 font-bold">VALOR TU INVERSIÓN</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/40 p-4 rounded-xl border border-slate-700/50">
                         <div>
-                            <label class="text-[9px] text-pink-300/60 uppercase font-bold mb-1 block">Participaciones (Ella)</label>
-                            <input type="number" id="p_parts_mujer" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white outline-none">
+                            <label class="text-[10px] text-pink-300 font-bold mb-1 block">PARTICIPACIONES (ELLA)</label>
+                            <input type="number" id="p_parts_mujer" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white">
                         </div>
                         <div>
-                            <label class="text-[9px] text-pink-300/60 uppercase font-bold mb-1 block">VLP Actual</label>
-                            <input type="number" id="vlp_mujer" oninput="syncVLP(this.value)" step="0.0001" class="vlp-input w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-pink-200 outline-none" placeholder="Ej: 22.1450">
+                            <label class="text-[10px] text-pink-300 font-bold mb-1 block">VLP ACTUAL</label>
+                            <input type="number" id="vlp_mujer" oninput="syncVLP(this.value)" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm font-mono text-pink-200" placeholder="Ej: 22.14">
                         </div>
                         <div class="text-right">
-                            <p id="totalPensionMujer" class="text-xl font-mono font-bold text-pink-400">0,00 €</p>
-                            <p class="text-[8px] text-slate-500 uppercase font-bold">Inversión Ella</p>
+                            <p id="totalPensionMujer" class="text-2xl font-mono font-bold text-pink-400">0,00 €</p>
+                            <p class="text-[9px] text-slate-500 font-bold">VALOR INVERSIÓN ELLA</p>
                         </div>
                     </div>
                 </div>
@@ -95,4 +96,99 @@
             { ticker: "OHLA.MC", nombre: "OHLA", cantidad: 300, moneda: "EUR" }
         ];
 
-        let
+        let precios = { "AMZN": 180.1, "SAN.MC": 4.6, "OHLA.MC": 0.42 };
+        const TIPO_CAMBIO_EURUSD = 0.92;
+
+        async function getLivePrices() {
+            for (let accion of acciones) {
+                try {
+                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${accion.ticker}`)}`);
+                    const json = await response.json();
+                    const data = JSON.parse(json.contents);
+                    if(data.chart.result && data.chart.result[0].meta.regularMarketPrice) {
+                        precios[accion.ticker] = data.chart.result[0].meta.regularMarketPrice;
+                    }
+                } catch (e) { console.error("Error cargando " + accion.ticker); }
+            }
+            document.getElementById('status').innerText = "Mercados Actualizados ✓";
+            render();
+        }
+
+        function syncVLP(val) {
+            document.getElementById('vlp').value = val;
+            document.getElementById('vlp_mujer').value = val;
+            save();
+        }
+
+        function render() {
+            const container = document.getElementById('listaAcciones');
+            container.innerHTML = acciones.map(a => {
+                const subTotal = precios[a.ticker] * a.cantidad;
+                const link = `https://finance.yahoo.com/quote/${a.ticker}`;
+                return `<div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30 flex justify-between items-center group hover:border-blue-500/50 transition-all">
+                    <div>
+                        <a href="${link}" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 flex items-center gap-1">
+                            ${a.nombre} <span class="text-[10px] text-blue-500">↗</span>
+                        </a>
+                        <p class="text-[10px] text-slate-500 font-mono">${a.cantidad} títulos @ ${precios[a.ticker].toFixed(2)}</p>
+                    </div>
+                    <p class="font-mono text-blue-300 font-bold text-lg">${subTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })} <span class="text-[9px] text-slate-500 font-normal">${a.moneda}</span></p>
+                </div>`;
+            }).join('');
+            calc();
+        }
+
+        function save() {
+            const data = {
+                f1: document.getElementById('f1').value,
+                f2: document.getElementById('f2').value,
+                indie: document.getElementById('indie.value'),
+                p1: document.getElementById('p_parts').value,
+                p2: document.getElementById('p_parts_mujer').value,
+                vlp: document.getElementById('vlp').value
+            };
+            localStorage.setItem('isukiza_vFinal_Full', JSON.stringify(data));
+            calc();
+        }
+
+        function load() {
+            const data = JSON.parse(localStorage.getItem('isukiza_vFinal_Full')) || {p1: "1376.6933", p2: "1975.6095"};
+            document.getElementById('f1').value = data.f1 || "";
+            document.getElementById('f2').value = data.f2 || "";
+            document.getElementById('indie').value = data.indie || "";
+            document.getElementById('p_parts').value = data.p1 || "1376.6933";
+            document.getElementById('p_parts_mujer').value = data.p2 || "1975.6095";
+            document.getElementById('vlp').value = data.vlp || "";
+            document.getElementById('vlp_mujer').value = data.vlp || "";
+            render();
+            getLivePrices();
+        }
+
+        function calc() {
+            let total = 0;
+            // Bolsa
+            acciones.forEach(a => {
+                let sub = precios[a.ticker] * a.cantidad;
+                total += (a.moneda === "USD") ? sub * TIPO_CAMBIO_EURUSD : sub;
+            });
+            // Fondos
+            total += parseFloat(document.getElementById('f1').value || 0);
+            total += parseFloat(document.getElementById('f2').value || 0);
+            total += parseFloat(document.getElementById('indie').value || 0);
+            
+            // Planes Pensiones
+            const v = parseFloat(document.getElementById('vlp').value || 0);
+            const val1 = parseFloat(document.getElementById('p_parts').value || 0) * v;
+            const val2 = parseFloat(document.getElementById('p_parts_mujer').value || 0) * v;
+
+            document.getElementById('totalPension').innerText = val1.toLocaleString('es-ES', {minimumFractionDigits: 2}) + " €";
+            document.getElementById('totalPensionMujer').innerText = val2.toLocaleString('es-ES', {minimumFractionDigits: 2}) + " €";
+            
+            total += (val1 + val2);
+            document.getElementById('totalPatrimonio').innerText = total.toLocaleString('es-ES', {style: 'currency', currency: 'EUR'});
+        }
+
+        window.onload = load;
+    </script>
+</body>
+</html>
