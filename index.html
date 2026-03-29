@@ -12,9 +12,10 @@
         .loss { color: #f87171; }
         .spin { animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* Ocultar flechas de inputs number pero mantener funcionalidad */
+        
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { opacity: 0.3; }
+        
         .card {
             background: rgba(15,23,42,0.7);
             border: 1px solid rgba(100,116,139,0.25);
@@ -62,7 +63,6 @@
             transition: border-color 0.15s;
         }
         .inp-sm:focus { border-color: #6366f1; }
-        /* label estilo unificado */
         .lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
                text-transform: uppercase; letter-spacing: 0.1em; color: #475569; display: block; margin-bottom: 4px; }
     </style>
@@ -75,7 +75,6 @@
 
     <div class="max-w-5xl mx-auto relative">
 
-        <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
             <div>
                 <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
@@ -95,7 +94,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <!-- ══ BOLSA EN VIVO ══ -->
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-5">
                     <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
@@ -104,7 +102,6 @@
                 <div id="listaAcciones" class="space-y-3"></div>
             </div>
 
-            <!-- ══ FONDOS INDEXADOS ══ -->
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-1">
                     <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
@@ -117,7 +114,6 @@
                     <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
                 </div>
 
-                <!-- FONDO 1 -->
                 <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-4">
                     <div class="flex justify-between items-start mb-3">
                         <div>
@@ -128,8 +124,7 @@
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="f1_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')"
-                                    class="inp-sm text-violet-200">
+                                    oninput="calcFondo('f1')" class="inp-sm text-violet-200">
                                 <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;" title="Marcar actualizado">&#10003;</button>
                             </div>
                         </div>
@@ -138,12 +133,12 @@
                         <div>
                             <label class="lbl">Participaciones</label>
                             <input type="number" id="f1_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
+                                oninput="calcFondo('f1')" class="inp">
                         </div>
                         <div>
                             <label class="lbl">Coste Medio (&euro;)</label>
                             <input type="number" id="f1_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
+                                oninput="calcFondo('f1')" class="inp">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
@@ -162,7 +157,6 @@
                     </div>
                 </div>
 
-                <!-- FONDO 2 -->
                 <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
                     <div class="flex justify-between items-start mb-3">
                         <div>
@@ -173,8 +167,7 @@
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="f2_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')"
-                                    class="inp-sm text-indigo-200">
+                                    oninput="calcFondo('f2')" class="inp-sm text-indigo-200">
                                 <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;" title="Marcar actualizado">&#10003;</button>
                             </div>
                         </div>
@@ -183,12 +176,12 @@
                         <div>
                             <label class="lbl">Participaciones</label>
                             <input type="number" id="f2_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                                oninput="calcFondo('f2')" class="inp">
                         </div>
                         <div>
                             <label class="lbl">Coste Medio (&euro;)</label>
                             <input type="number" id="f2_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                                oninput="calcFondo('f2')" class="inp">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
@@ -207,7 +200,6 @@
                     </div>
                 </div>
 
-                <!-- Total fondos -->
                 <div class="mt-5 pt-4 border-t border-slate-700/50 flex justify-between items-center">
                     <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
                     <div class="text-right">
@@ -217,26 +209,24 @@
                 </div>
             </div>
 
-            <!-- ══ INDIE MYINVESTOR ══ -->
             <div class="card p-6">
                 <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-5">&#127807; Cartera Indie MyInvestor</h2>
                 <div class="space-y-3">
                     <div>
                         <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
                         <input type="number" id="indie_mer" step="any" placeholder="0.00"
-                            oninput="calcIndie()" onchange="calcIndie()"
-                            class="inp" style="color:#6ee7b7; border-color:#064e3b;">
+                            oninput="calcIndie()" class="inp" style="color:#6ee7b7; border-color:#064e3b;">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="lbl">Invertido (&euro;)</label>
                             <input type="number" id="indie_inv" step="any" placeholder="0.00"
-                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                                oninput="calcIndie()" class="inp">
                         </div>
                         <div>
                             <label class="lbl">Efectivo (&euro;)</label>
                             <input type="number" id="indie_ef" step="any" placeholder="0.00"
-                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                                oninput="calcIndie()" class="inp">
                         </div>
                     </div>
                     <div class="mt-1 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
@@ -252,7 +242,6 @@
                 </div>
             </div>
 
-            <!-- ══ JUBILACION EPSV ══ -->
             <div class="card p-6 border-l-4 border-l-rose-600">
                 <div class="flex items-center justify-between mb-5">
                     <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
@@ -269,12 +258,12 @@
                         <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="lbl">Participaciones</label>
-                                <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
+                                <input type="number" id="p1" step="any" oninput="calcEPSV()" placeholder="0.00"
                                     class="inp" style="font-size:11px;">
                             </div>
                             <div>
                                 <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
+                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" placeholder="0.00"
                                     class="inp" style="font-size:11px;color:#fca5a5;">
                             </div>
                             <div class="flex flex-col justify-end">
@@ -288,12 +277,12 @@
                         <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="lbl">Participaciones</label>
-                                <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
+                                <input type="number" id="p2" step="any" oninput="calcEPSV()" placeholder="0.00"
                                     class="inp" style="font-size:11px;">
                             </div>
                             <div>
                                 <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
+                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" placeholder="0.00"
                                     class="inp" style="font-size:11px;color:#f9a8d4;">
                             </div>
                             <div class="flex flex-col justify-end">
@@ -310,12 +299,12 @@
                 </div>
             </div>
 
-        </div><!-- end grid -->
-    </div><!-- end container -->
+        </div>
+    </div>
 
 <script>
 // ══════════════════════════════════════════
-// CONFIG
+// CONFIGURACIÓN E INICIO
 // ══════════════════════════════════════════
 var acciones = [
     { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD" },
@@ -327,8 +316,7 @@ var precios = { "AMZN": 0, "SAN.MC": 0, "OHLA.MC": 0 };
 var usd_eur = 0.92;
 
 // ══════════════════════════════════════════
-// FETCH BOLSA
-// FIX: usa v8/finance/chart con fallback a previousClose
+// FETCH BOLSA (ALLORIGINS + YAHOO)
 // ══════════════════════════════════════════
 function fetchPrice(ticker) {
     var url   = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
@@ -338,7 +326,6 @@ function fetchPrice(ticker) {
         .then(function(j) {
             var data = JSON.parse(j.contents);
             var meta = data.chart.result[0].meta;
-            // regularMarketPrice puede ser 0 fuera de horario → usar previousClose como fallback
             var price = meta.regularMarketPrice;
             if (!price || price === 0) price = meta.previousClose || meta.chartPreviousClose || 0;
             return price;
@@ -348,29 +335,26 @@ function fetchPrice(ticker) {
 function fetchAllPrices() {
     setStatus("Actualizando bolsa...", "amber");
 
-    // FX primero
-    fetchPrice("EURUSD=X")
-        .then(function(v) { usd_eur = 1 / v; })
+    // Obtenemos el tipo de cambio directo USDEUR=X
+    fetchPrice("USDEUR=X")
+        .then(function(v) { usd_eur = (v > 0.5 && v < 1.5) ? v : 0.92; })
         .catch(function()  { usd_eur = 0.92; })
         .then(function() {
             var ps = acciones.map(function(a) {
                 return fetchPrice(a.ticker)
                     .then(function(p) { precios[a.ticker] = p; })
-                    .catch(function()  { console.warn("Fallo precio: " + a.ticker); });
+                    .catch(function() { console.warn("Error en " + a.ticker); });
             });
             return Promise.all(ps);
         })
         .then(function() {
-            document.getElementById("bolsaStatus").innerText = "live";
-            setStatus("Bolsa actualizada  " + new Date().toLocaleTimeString("es-ES"), "green");
+            document.getElementById("bolsaStatus").innerText = "LIVE";
+            setStatus("Bolsa actualizada " + new Date().toLocaleTimeString("es-ES"), "green");
             renderBolsa();
             calcTotal();
         });
 }
 
-// ══════════════════════════════════════════
-// RENDER BOLSA
-// ══════════════════════════════════════════
 function renderBolsa() {
     var list = document.getElementById("listaAcciones");
     list.innerHTML = acciones.map(function(a) {
@@ -393,9 +377,7 @@ function renderBolsa() {
 }
 
 // ══════════════════════════════════════════
-// FONDOS — cálculo sin re-render del DOM
-// FIX: los inputs están en el HTML estático,
-// solo actualizamos los elementos de resultado
+// LÓGICA DE CÁLCULOS
 // ══════════════════════════════════════════
 function calcFondo(id) {
     var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
@@ -405,219 +387,146 @@ function calcFondo(id) {
     var valInv = part * coste;
     var valMer = part * vl;
     var gan    = valMer - valInv;
-    var ganPct = valInv > 0 ? gan / valInv * 100 : 0;
-    var esG    = gan >= 0;
+    var pct    = valInv > 0 ? (gan / valInv * 100) : 0;
 
-    document.getElementById(id + "_inv").innerText = valInv > 0 ? fmt(valInv) + " \u20AC" : "\u2014";
-    document.getElementById(id + "_mer").innerText = valMer > 0 ? fmt(valMer) + " \u20AC" : "\u2014";
+    document.getElementById(id + "_inv").innerText = valInv > 0 ? fmt(valInv) + " €" : "—";
+    document.getElementById(id + "_mer").innerText = valMer > 0 ? fmt(valMer) + " €" : "—";
 
     var rentBox = document.getElementById(id + "_rent");
     var rentVal = document.getElementById(id + "_rent_val");
     if (valInv > 0) {
-        rentBox.classList.remove("hidden");
-        rentBox.classList.add("flex");
-        rentVal.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
-        rentVal.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + ganPct.toFixed(2) + "%)";
+        rentBox.classList.replace("hidden", "flex");
+        rentVal.className = "mono text-sm font-bold " + (gan >= 0 ? "gain" : "loss");
+        rentVal.innerText = (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + pct.toFixed(2) + "%)";
     } else {
-        rentBox.classList.add("hidden");
-        rentBox.classList.remove("flex");
+        rentBox.classList.replace("flex", "hidden");
     }
-
     calcTotalFondos();
     calcTotal();
     save();
 }
 
 function calcTotalFondos() {
-    var ids = ["f1", "f2"];
-    var totalInv = 0, totalMer = 0;
-    ids.forEach(function(id) {
-        var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
-        var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
-        var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
-        totalInv += part * coste;
-        totalMer += part * vl;
+    var tInv = 0, tMer = 0;
+    ["f1", "f2"].forEach(function(id) {
+        tInv += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_coste").value) || 0);
+        tMer += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
     });
-    var ganT    = totalMer - totalInv;
-    var ganPctT = totalInv > 0 ? ganT / totalInv * 100 : 0;
-    var esGT    = ganT >= 0;
-    document.getElementById("totalFondosValor").innerText = totalMer > 0 ? fmt(totalMer) + " \u20AC" : "\u2014";
-    var rentEl = document.getElementById("totalFondosRentab");
-    rentEl.className = "mono text-[10px] " + (totalInv > 0 ? (esGT ? "gain" : "loss") : "text-slate-600");
-    rentEl.innerText = totalInv > 0
-        ? (esGT?"+":"") + fmt(ganT) + " \u20AC (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)"
-        : "";
+    var gan = tMer - tInv;
+    document.getElementById("totalFondosValor").innerText = tMer > 0 ? fmt(tMer) + " €" : "—";
+    var rEl = document.getElementById("totalFondosRentab");
+    rEl.className = "mono text-[10px] " + (gan >= 0 ? "gain" : "loss");
+    rEl.innerText = tInv > 0 ? (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/tInv*100).toFixed(2) + "%)" : "";
 }
 
+function calcIndie() {
+    var mer = parseFloat(document.getElementById("indie_mer").value) || 0;
+    var inv = parseFloat(document.getElementById("indie_inv").value) || 0;
+    var ef  = parseFloat(document.getElementById("indie_ef").value)  || 0;
+    var total = mer + ef;
+    var gan = mer - inv;
+    var rentEl = document.getElementById("indie_rent");
+    if (inv > 0) {
+        rentEl.className = "mono text-sm font-bold " + (gan >= 0 ? "gain" : "loss");
+        rentEl.innerText = (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/inv*100).toFixed(2) + "%)";
+    }
+    document.getElementById("indie_total").innerText = total > 0 ? fmt(total) + " €" : "—";
+    calcTotal();
+    save();
+}
+
+function syncVLP(v) {
+    document.getElementById("vlp").value = v;
+    document.getElementById("vlp_m").value = v;
+    calcEPSV();
+}
+
+function calcEPSV() {
+    var vlp = parseFloat(document.getElementById("vlp").value) || 0;
+    var r1  = (parseFloat(document.getElementById("p1").value) || 0) * vlp;
+    var r2  = (parseFloat(document.getElementById("p2").value) || 0) * vlp;
+    document.getElementById("res1").innerText = fmt(r1) + " €";
+    document.getElementById("res2").innerText = fmt(r2) + " €";
+    document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " €";
+    calcTotal();
+    save();
+}
+
+function calcTotal() {
+    var total = 0;
+    // Bolsa
+    acciones.forEach(function(a) {
+        var sub = (precios[a.ticker] || 0) * a.cant;
+        total += a.mon === "USD" ? sub * usd_eur : sub;
+    });
+    // Fondos
+    ["f1","f2"].forEach(function(id) {
+        total += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
+    });
+    // Indie
+    total += (parseFloat(document.getElementById("indie_mer").value) || 0) + (parseFloat(document.getElementById("indie_ef").value) || 0);
+    // EPSV
+    var vlp = parseFloat(document.getElementById("vlp").value) || 0;
+    total += ((parseFloat(document.getElementById("p1").value) || 0) + (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
+
+    document.getElementById("totalPatrimonio").innerText = total.toLocaleString("es-ES", {style:"currency", currency:"EUR"});
+    
+    // Rentabilidad global fondos/indie en header
+    var tInv = 0, tMer = 0;
+    ["f1","f2"].forEach(function(id) {
+        tInv += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_coste").value) || 0);
+        tMer += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
+    });
+    tInv += parseFloat(document.getElementById("indie_inv").value) || 0;
+    tMer += parseFloat(document.getElementById("indie_mer").value) || 0;
+    
+    var rEl = document.getElementById("totalRentab");
+    if (tInv > 0) {
+        var gan = tMer - tInv;
+        rEl.className = "mono text-[10px] mt-1 " + (gan >= 0 ? "gain" : "loss");
+        rEl.innerText = "Inversión: " + (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/tInv*100).toFixed(2) + "%)";
+    }
+}
+
+// ══════════════════════════════════════════
+// PERSISTENCIA Y UTILIDADES
+// ══════════════════════════════════════════
+function fmt(n) { return n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function setStatus(msg, color) {
+    var s = document.getElementById("status");
+    var colors = {amber:"text-amber-400", green:"text-green-400", red:"text-red-400"};
+    s.className = "mono text-[10px] mt-2 " + colors[color];
+    s.innerText = msg;
+}
 function marcarTS() {
     var ts = new Date().toLocaleString("es-ES", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
     document.getElementById("fondosTimestamp").innerText = "VL " + ts;
     save();
 }
 
-// ══════════════════════════════════════════
-// INDIE — tres campos
-// ══════════════════════════════════════════
-function calcIndie() {
-    var mer  = parseFloat(document.getElementById("indie_mer").value) || 0;
-    var inv  = parseFloat(document.getElementById("indie_inv").value) || 0;
-    var ef   = parseFloat(document.getElementById("indie_ef").value)  || 0;
-    var gan  = mer - inv;
-    var pct  = inv > 0 ? gan / inv * 100 : 0;
-    var esG  = gan >= 0;
-    var total = mer + ef;
-
-    var rentEl = document.getElementById("indie_rent");
-    if (inv > 0) {
-        rentEl.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
-        rentEl.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)";
-    } else {
-        rentEl.className = "mono text-sm font-bold text-slate-500";
-        rentEl.innerText = "\u2014";
-    }
-    document.getElementById("indie_total").innerText = total > 0 ? fmt(total) + " \u20AC" : "\u2014";
-
-    calcTotal();
-    save();
-}
-
-// ══════════════════════════════════════════
-// EPSV
-// ══════════════════════════════════════════
-function calcEPSV() {
-    var vlp = parseFloat(document.getElementById("vlp").value)   || 0;
-    var r1  = (parseFloat(document.getElementById("p1").value)   || 0) * vlp;
-    var r2  = (parseFloat(document.getElementById("p2").value)   || 0) * vlp;
-    document.getElementById("res1").innerText    = fmt(r1)      + " \u20AC";
-    document.getElementById("res2").innerText    = fmt(r2)      + " \u20AC";
-    document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " \u20AC";
-    calcTotal();
-    save();
-}
-
-function syncVLP(v) {
-    document.getElementById("vlp").value   = v;
-    document.getElementById("vlp_m").value = v;
-    calcEPSV();
-}
-
-// ══════════════════════════════════════════
-// TOTAL GLOBAL
-// ══════════════════════════════════════════
-function calcTotal() {
-    var total = 0;
-
-    // Bolsa
-    acciones.forEach(function(a) {
-        var sub = precios[a.ticker] * a.cant;
-        total += a.mon === "USD" ? sub * usd_eur : sub;
-    });
-
-    // Fondos
-    ["f1","f2"].forEach(function(id) {
-        var part = parseFloat(document.getElementById(id + "_part").value) || 0;
-        var vl   = parseFloat(document.getElementById(id + "_vl").value)   || 0;
-        total += part * vl;
-    });
-
-    // Indie (mercado + efectivo)
-    total += parseFloat(document.getElementById("indie_mer").value) || 0;
-    total += parseFloat(document.getElementById("indie_ef").value)  || 0;
-
-    // EPSV
-    var vlp = parseFloat(document.getElementById("vlp").value) || 0;
-    total += (parseFloat(document.getElementById("p1").value) || 0) * vlp;
-    total += (parseFloat(document.getElementById("p2").value) || 0) * vlp;
-
-    document.getElementById("totalPatrimonio").innerText =
-        total.toLocaleString("es-ES", {style:"currency", currency:"EUR"});
-
-    // Rentabilidad fondos en header
-    var tInv = 0, tMer = 0;
-    ["f1","f2"].forEach(function(id) {
-        tInv += (parseFloat(document.getElementById(id + "_part").value)  || 0)
-              * (parseFloat(document.getElementById(id + "_coste").value) || 0);
-        tMer += (parseFloat(document.getElementById(id + "_part").value)  || 0)
-              * (parseFloat(document.getElementById(id + "_vl").value)    || 0);
-    });
-    var ganF = tMer - tInv;
-    var esGF = ganF >= 0;
-    var rEl  = document.getElementById("totalRentab");
-    if (tInv > 0) {
-        rEl.className = "mono text-[10px] mt-1 " + (esGF ? "gain" : "loss");
-        rEl.innerText = "Fondos: " + (esGF?"+":"") + fmt(ganF)
-            + " \u20AC (" + (esGF?"+":"") + (ganF/tInv*100).toFixed(2) + "%)";
-    } else {
-        rEl.className = "mono text-[10px] mt-1 text-slate-600";
-        rEl.innerText = "Introduce VL y participaciones";
-    }
-}
-
-// ══════════════════════════════════════════
-// UTILIDADES
-// ══════════════════════════════════════════
-function fmt(n) {
-    return n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function setStatus(msg, color) {
-    var s = document.getElementById("status");
-    var map = {amber:"text-amber-400", green:"text-green-400", red:"text-red-400"};
-    s.className = "mono text-[10px] mt-2 " + (map[color] || "text-slate-400");
-    s.innerText = msg;
-}
-
-// ══════════════════════════════════════════
-// PERSISTENCIA
-// ══════════════════════════════════════════
 function save() {
-    localStorage.setItem("isukiza_v4", JSON.stringify({
-        f1_vl:    document.getElementById("f1_vl").value,
-        f1_part:  document.getElementById("f1_part").value,
-        f1_coste: document.getElementById("f1_coste").value,
-        f2_vl:    document.getElementById("f2_vl").value,
-        f2_part:  document.getElementById("f2_part").value,
-        f2_coste: document.getElementById("f2_coste").value,
-        indie_mer: document.getElementById("indie_mer").value,
-        indie_inv: document.getElementById("indie_inv").value,
-        indie_ef:  document.getElementById("indie_ef").value,
-        p1:  document.getElementById("p1").value,
-        p2:  document.getElementById("p2").value,
-        vlp: document.getElementById("vlp").value,
-        ts:  document.getElementById("fondosTimestamp").innerText
-    }));
+    var data = {
+        f1_vl: document.getElementById("f1_vl").value, f1_part: document.getElementById("f1_part").value, f1_coste: document.getElementById("f1_coste").value,
+        f2_vl: document.getElementById("f2_vl").value, f2_part: document.getElementById("f2_part").value, f2_coste: document.getElementById("f2_coste").value,
+        indie_mer: document.getElementById("indie_mer").value, indie_inv: document.getElementById("indie_inv").value, indie_ef: document.getElementById("indie_ef").value,
+        p1: document.getElementById("p1").value, p2: document.getElementById("p2").value, vlp: document.getElementById("vlp").value,
+        ts: document.getElementById("fondosTimestamp").innerText
+    };
+    localStorage.setItem("isukiza_v4_final", JSON.stringify(data));
 }
 
 function load() {
-    var raw = localStorage.getItem("isukiza_v4");
-    var d   = raw ? JSON.parse(raw) : {};
-
-    var set = function(id, val) {
-        var el = document.getElementById(id);
-        if (el && val !== undefined && val !== null && val !== "") el.value = val;
-    };
-
-    set("f1_vl",    d.f1_vl);
-    set("f1_part",  d.f1_part);
-    set("f1_coste", d.f1_coste);
-    set("f2_vl",    d.f2_vl);
-    set("f2_part",  d.f2_part);
-    set("f2_coste", d.f2_coste);
-    set("indie_mer", d.indie_mer);
-    set("indie_inv", d.indie_inv);
-    set("indie_ef",  d.indie_ef);
-    set("p1",  d.p1  || "1376.6933");
-    set("p2",  d.p2  || "1975.6095");
-    set("vlp", d.vlp);
-    document.getElementById("vlp_m").value = d.vlp || "";
+    var d = JSON.parse(localStorage.getItem("isukiza_v4_final")) || {};
+    var ids = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp"];
+    ids.forEach(function(id) {
+        if (d[id] !== undefined) document.getElementById(id).value = d[id];
+    });
+    if (!document.getElementById("p1").value) document.getElementById("p1").value = "1376.6933";
+    if (!document.getElementById("p2").value) document.getElementById("p2").value = "1975.6095";
+    document.getElementById("vlp_m").value = document.getElementById("vlp").value || "";
     if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
 
-    // Recalcular todo con datos cargados
-    calcFondo("f1");
-    calcFondo("f2");
-    calcIndie();
-    calcEPSV();
-
-    // Bolsa en vivo
+    calcFondo("f1"); calcFondo("f2"); calcIndie(); calcEPSV();
     fetchAllPrices();
     setInterval(fetchAllPrices, 5 * 60 * 1000);
 }
