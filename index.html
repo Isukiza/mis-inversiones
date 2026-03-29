@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Patrimonio Isukiza - Santander Edition</title>
+    <title>Dashboard Patrimonio Isukiza - Santander SAM</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-100 min-h-screen p-4 md:p-10 font-sans">
@@ -10,10 +10,10 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-700 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400">Patrimonio Isukiza</h1>
-                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Sincronización Santander Asset ✓</p>
+                <p id="status" class="text-xs text-slate-500 font-mono mt-1 italic">Conectado a Bolsa ✓</p>
             </div>
             <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-xl min-w-[220px]">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 text-center font-mono">Total Global</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 text-center font-mono">Patrimonio Total Global</p>
                 <p id="totalPatrimonio" class="text-3xl font-mono text-green-400 font-bold text-center">0.00 €</p>
             </div>
         </header>
@@ -21,7 +21,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
                 <h2 class="text-xl font-semibold mb-5 flex items-center gap-2 text-blue-300 italic font-mono font-bold underline decoration-blue-500/30">📈 Bolsa</h2>
-                <div id="listaAcciones" class="space-y-4"></div>
+                <div id="listaAcciones" class="space-y-4">
+                    </div>
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm shadow-lg">
@@ -43,9 +44,131 @@
             </div>
 
             <div class="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-sm md:col-span-2 border-l-4 border-l-red-500 shadow-2xl">
-                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 border-b border-red-900/40 pb-4">
                     <div>
                         <h2 class="text-xl font-semibold text-red-400 italic font-mono font-bold">🛡️ SAN ASG RV NORTEAMÉRICA</h2>
-                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tight">Dato oficial Santander Asset Management</p>
+                        <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tight">Carga mensual de VLP requerida</p>
                     </div>
-                    <a href="
+                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924&nombre=Santander%20ASG%20RV%20Norteam%C3%A9rica,%20P.P.S.I." target="_blank" class="bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-lg active:scale-95 border border-red-400/20 w-full sm:w-auto text-center justify-center">
+                        🚀 IR A LA FICHA OFICIAL DE SANTANDER SAM
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end bg-slate-900/60 p-6 rounded-2xl border border-slate-700">
+                    <div>
+                        <label class="text-[10px] text-red-300/60 uppercase font-bold mb-2 block font-mono italic">Participaciones Actuales</label>
+                        <input type="number" id="p_parts" oninput="save()" step="0.000001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-white outline-none focus:ring-1 focus:ring-red-500" placeholder="Ej: 1376.6933">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-red-300/60 uppercase font-bold mb-2 block font-mono italic">Valor Liquidativo (VLP) Real</label>
+                        <input type="number" id="vlp" oninput="save()" step="0.0001" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm font-mono text-red-200 outline-none focus:ring-1 focus:ring-red-500" placeholder="Introduce el VLP de la web...">
+                    </div>
+                    <div class="bg-red-500/10 p-4 rounded-lg border border-red-500/20 text-right flex flex-col justify-center min-h-[72px]">
+                        <label class="text-[10px] text-red-300/60 uppercase font-bold mb-1 block font-mono">Valor Inversión</label>
+                        <p id="totalPension" class="text-3xl font-mono font-bold text-red-400 leading-none">0,00 €</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definición de las acciones que componen tu cartera
+        const acciones = [
+            { ticker: "AMZN", nombre: "Amazon", cantidad: 20, moneda: "USD" },
+            { ticker: "SAN.MC", nombre: "Santander", cantidad: 1080, moneda: "EUR" },
+            { ticker: "OHLA.MC", nombre: "OHLA", cantidad: 300, moneda: "EUR" }
+        ];
+
+        // Precios por defecto (se usarán si la API falla momentáneamente)
+        let precios = { "AMZN": 180.1, "SAN.MC": 4.6, "OHLA.MC": 0.42 };
+        const TIPO_CAMBIO_EURUSD = 0.92; // Tipo de cambio fijo aproximado para USD/EUR
+
+        // Función para actualizar los precios de bolsa en tiempo real
+        async function getLivePrices() {
+            document.getElementById('status').innerText = "Sincronizando bolsa...";
+            for (let accion of acciones) {
+                try {
+                    // Usamos allorigins.win para saltar bloqueos de CORS
+                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${accion.ticker}`)}`);
+                    const json = await response.json();
+                    const data = JSON.parse(json.contents);
+                    if(data.chart.result && data.chart.result[0].meta.regularMarketPrice) {
+                        precios[accion.ticker] = data.chart.result[0].meta.regularMarketPrice;
+                    }
+                } catch (e) { console.log("Fallo en bolsa: " + accion.ticker); }
+            }
+            document.getElementById('status').innerText = "Conectado a Bolsa ✓";
+            render();
+        }
+
+        // Función para dibujar las tarjetas de acciones en el HTML
+        function render() {
+            const containerAcciones = document.getElementById('listaAcciones');
+            if (containerAcciones) {
+                containerAcciones.innerHTML = acciones.map(a => {
+                    const subTotal = precios[a.ticker] * a.cantidad;
+                    return `<div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/30 flex justify-between items-center hover:bg-slate-900/60 transition-all">
+                        <div><p class="font-bold text-slate-200">${a.nombre}</p><p class="text-[10px] text-slate-500 font-mono">${a.cantidad} títulos</p></div>
+                        <p class="font-mono text-blue-300 font-bold text-lg">${subTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })} <span class="text-[9px] font-normal text-slate-500">${a.moneda}</span></p>
+                    </div>`;
+                }).join('');
+            }
+            calc();
+        }
+
+        // Función para guardar los datos manuales en el almacenamiento del navegador
+        function save() {
+            const data = {
+                f1: document.getElementById('f1').value,
+                f2: document.getElementById('f2').value,
+                indie: document.getElementById('indie').value,
+                parts: document.getElementById('p_parts').value,
+                vlp: document.getElementById('vlp').value
+            };
+            localStorage.setItem('isukiza_patrimonio_SAM', JSON.stringify(data));
+            calc();
+        }
+
+        // Función para cargar los datos guardados al iniciar la página
+        function load() {
+            const data = JSON.parse(localStorage.getItem('isukiza_patrimonio_SAM')) || {parts: "1376.6933"};
+            document.getElementById('f1').value = data.f1 || "";
+            document.getElementById('f2').value = data.f2 || "";
+            document.getElementById('indie').value = data.indie || "";
+            document.getElementById('p_parts').value = data.parts || "1376.6933";
+            document.getElementById('vlp').value = data.vlp || "";
+            render(); // Render inicial con precios por defecto
+            getLivePrices(); // Intento de actualización en vivo
+        }
+
+        // Función para realizar los cálculos del patrimonio total
+        function calc() {
+            let total = 0;
+            // Cálculo del valor de las acciones
+            acciones.forEach(a => {
+                let sub = precios[a.ticker] * a.cantidad;
+                total += (a.moneda === "USD") ? sub * TIPO_CAMBIO_EURUSD : sub;
+            });
+            
+            // Suma de los fondos manuales
+            total += parseFloat(document.getElementById('f1').value || 0);
+            total += parseFloat(document.getElementById('f2').value || 0);
+            total += parseFloat(document.getElementById('indie').value || 0);
+            
+            // Cálculo del valor del plan de pensiones
+            const p = parseFloat(document.getElementById('p_parts').value || 0);
+            const v = parseFloat(document.getElementById('vlp').value || 0);
+            const tP = p * v;
+            total += tP;
+
+            // Actualización de los elementos HTML con los resultados
+            document.getElementById('totalPension').innerText = tP.toLocaleString('es-ES', {minimumFractionDigits: 2}) + " €";
+            document.getElementById('totalPatrimonio').innerText = total.toLocaleString('es-ES', {style: 'currency', currency: 'EUR'});
+        }
+
+        // Evento de inicio: carga los datos al abrir la página
+        window.onload = load;
+    </script>
+</body>
+</html>
