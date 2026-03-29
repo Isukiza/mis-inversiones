@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Patrimonio Familiar Isukiza - LIVE</title>
+    <title>Patrimonio Familiar Isukiza - LIVE + Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
         body { font-family: 'Syne', sans-serif; }
@@ -62,7 +63,6 @@
             width: 100px;
             transition: border-color 0.15s;
         }
-        .inp-sm:focus { border-color: #6366f1; }
         .lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
                text-transform: uppercase; letter-spacing: 0.1em; color: #475569; display: block; margin-bottom: 4px; }
     </style>
@@ -73,7 +73,7 @@
          style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>')">
     </div>
 
-    <div class="max-w-5xl mx-auto relative">
+    <div class="max-w-6xl mx-auto relative">
 
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
             <div>
@@ -85,10 +85,16 @@
                     <span class="spin">&#10227;</span> Conectando con mercados...
                 </p>
             </div>
-            <div class="card px-8 py-5 text-center min-w-[240px]">
-                <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
-                <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
-                <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+            
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="w-32 h-32 relative">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="card px-8 py-5 text-center min-w-[240px]">
+                    <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
+                    <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
+                    <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+                </div>
             </div>
         </header>
 
@@ -103,336 +109,198 @@
             </div>
 
             <div class="card p-6">
-                <div class="flex items-center justify-between mb-1">
-                    <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
-                </div>
                 <div class="flex items-center justify-between mb-5">
-                    <a href="https://myinvestor.es/" target="_blank"
-                       class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
-                        &#8599; Consultar VL en MyInvestor
-                    </a>
+                    <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
                     <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
                 </div>
 
                 <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-4">
                     <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-slate-200 text-sm">iShares Developed World</p>
-                            <p class="mono text-[9px] text-slate-600">IE000ZYRH0Q7</p>
-                        </div>
+                        <div><p class="font-bold text-slate-200 text-sm">iShares Dev World</p></div>
                         <div class="text-right">
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
-                                <input type="number" id="f1_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f1')" class="inp-sm text-violet-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;" title="Marcar actualizado">&#10003;</button>
+                                <input type="number" id="f1_vl" step="any" oninput="calcFondo('f1')" class="inp-sm text-violet-200">
+                                <button onclick="marcarTS()" class="btn-ok bg-violet-900 text-violet-200">&#10003;</button>
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="lbl">Participaciones</label>
-                            <input type="number" id="f1_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" class="inp">
-                        </div>
-                        <div>
-                            <label class="lbl">Coste Medio (&euro;)</label>
-                            <input type="number" id="f1_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" class="inp">
-                        </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="lbl">Uds</label><input type="number" id="f1_part" step="any" oninput="calcFondo('f1')" class="inp"></div>
+                        <div><label class="lbl">Coste</label><input type="number" id="f1_coste" step="any" oninput="calcFondo('f1')" class="inp"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div>
-                            <p class="lbl">Valor Invertido</p>
-                            <p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Valor Mercado</p>
-                            <p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p>
-                        </div>
-                    </div>
-                    <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                        <span id="f1_rent_val" class="mono text-sm font-bold"></span>
+                    <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-800">
+                        <div><p class="lbl">Mercado</p><p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p></div>
+                        <div class="text-right"><p id="f1_rent_val" class="mono text-sm font-bold">&mdash;</p></div>
                     </div>
                 </div>
 
                 <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
                     <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-slate-200 text-sm">iShares Emerging Markets</p>
-                            <p class="mono text-[9px] text-slate-600">IE000QAZP7L2</p>
-                        </div>
+                        <div><p class="font-bold text-slate-200 text-sm">iShares Emerging</p></div>
                         <div class="text-right">
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
-                                <input type="number" id="f2_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f2')" class="inp-sm text-indigo-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;" title="Marcar actualizado">&#10003;</button>
+                                <input type="number" id="f2_vl" step="any" oninput="calcFondo('f2')" class="inp-sm text-indigo-200">
+                                <button onclick="marcarTS()" class="btn-ok bg-indigo-900 text-indigo-200">&#10003;</button>
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="lbl">Participaciones</label>
-                            <input type="number" id="f2_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" class="inp">
-                        </div>
-                        <div>
-                            <label class="lbl">Coste Medio (&euro;)</label>
-                            <input type="number" id="f2_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" class="inp">
-                        </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="lbl">Uds</label><input type="number" id="f2_part" step="any" oninput="calcFondo('f2')" class="inp"></div>
+                        <div><label class="lbl">Coste</label><input type="number" id="f2_coste" step="any" oninput="calcFondo('f2')" class="inp"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div>
-                            <p class="lbl">Valor Invertido</p>
-                            <p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Valor Mercado</p>
-                            <p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p>
-                        </div>
-                    </div>
-                    <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                        <span id="f2_rent_val" class="mono text-sm font-bold"></span>
-                    </div>
-                </div>
-
-                <div class="mt-5 pt-4 border-t border-slate-700/50 flex justify-between items-center">
-                    <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
-                    <div class="text-right">
-                        <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
-                        <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
+                    <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-800">
+                        <div><p class="lbl">Mercado</p><p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p></div>
+                        <div class="text-right"><p id="f2_rent_val" class="mono text-sm font-bold">&mdash;</p></div>
                     </div>
                 </div>
             </div>
 
             <div class="card p-6">
-                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-5">&#127807; Cartera Indie MyInvestor</h2>
+                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-5">&#127807; Cartera Indie</h2>
                 <div class="space-y-3">
                     <div>
                         <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
-                        <input type="number" id="indie_mer" step="any" placeholder="0.00"
-                            oninput="calcIndie()" class="inp" style="color:#6ee7b7; border-color:#064e3b;">
+                        <input type="number" id="indie_mer" step="any" oninput="calcIndie()" class="inp" style="color:#6ee7b7; border-color:#064e3b;">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="lbl">Invertido (&euro;)</label>
-                            <input type="number" id="indie_inv" step="any" placeholder="0.00"
-                                oninput="calcIndie()" class="inp">
-                        </div>
-                        <div>
-                            <label class="lbl">Efectivo (&euro;)</label>
-                            <input type="number" id="indie_ef" step="any" placeholder="0.00"
-                                oninput="calcIndie()" class="inp">
-                        </div>
+                        <div><label class="lbl">Invertido</label><input type="number" id="indie_inv" step="any" oninput="calcIndie()" class="inp"></div>
+                        <div><label class="lbl">Efectivo</label><input type="number" id="indie_ef" step="any" oninput="calcIndie()" class="inp"></div>
                     </div>
-                    <div class="mt-1 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
-                        <div>
-                            <p class="lbl">Rentabilidad</p>
-                            <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Total (mercado + efectivo)</p>
-                            <p id="indie_total" class="mono text-base font-bold text-emerald-300">&mdash;</p>
-                        </div>
+                    <div class="mt-1 pt-3 border-t border-slate-800 flex justify-between">
+                        <div><p id="indie_rent" class="mono text-sm font-bold">&mdash;</p></div>
+                        <div class="text-right"><p id="indie_total" class="mono text-base font-bold text-emerald-300">&mdash;</p></div>
                     </div>
                 </div>
             </div>
 
             <div class="card p-6 border-l-4 border-l-rose-600">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
-                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924"
-                       target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">
-                        VLP &#8599;
-                    </a>
-                </div>
-                <p class="mono text-[9px] text-slate-600 mb-4 uppercase tracking-widest">Actualiza el VLP para sincronizar ambos planes</p>
-
+                <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase mb-5">&#128737; Jubilaci&oacute;n EPSV</h2>
                 <div class="space-y-4">
-                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                        <p class="mono text-[9px] text-rose-400 uppercase font-bold mb-3">Tu plan</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="lbl">Participaciones</label>
-                                <input type="number" id="p1" step="any" oninput="calcEPSV()" placeholder="0.00"
-                                    class="inp" style="font-size:11px;">
-                            </div>
-                            <div>
-                                <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" placeholder="0.00"
-                                    class="inp" style="font-size:11px;color:#fca5a5;">
-                            </div>
-                            <div class="flex flex-col justify-end">
-                                <p class="lbl">Valor</p>
-                                <p id="res1" class="mono text-base font-bold text-rose-400">0,00 &euro;</p>
-                            </div>
-                        </div>
+                    <div class="grid grid-cols-3 gap-2 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="col-span-3 pb-1"><p class="mono text-[9px] text-rose-400 font-bold uppercase">Plan 1</p></div>
+                        <div><label class="lbl">Uds</label><input type="number" id="p1" step="any" oninput="calcEPSV()" class="inp"></div>
+                        <div><label class="lbl">VLP</label><input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" class="inp text-rose-300"></div>
+                        <div class="text-right pt-4"><p id="res1" class="mono text-sm font-bold text-rose-400">0,00</p></div>
                     </div>
-                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                        <p class="mono text-[9px] text-pink-400 uppercase font-bold mb-3">Su plan</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="lbl">Participaciones</label>
-                                <input type="number" id="p2" step="any" oninput="calcEPSV()" placeholder="0.00"
-                                    class="inp" style="font-size:11px;">
-                            </div>
-                            <div>
-                                <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" placeholder="0.00"
-                                    class="inp" style="font-size:11px;color:#f9a8d4;">
-                            </div>
-                            <div class="flex flex-col justify-end">
-                                <p class="lbl">Valor</p>
-                                <p id="res2" class="mono text-base font-bold text-pink-400">0,00 &euro;</p>
-                            </div>
-                        </div>
+                    <div class="grid grid-cols-3 gap-2 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="col-span-3 pb-1"><p class="mono text-[9px] text-pink-400 font-bold uppercase">Plan 2</p></div>
+                        <div><label class="lbl">Uds</label><input type="number" id="p2" step="any" oninput="calcEPSV()" class="inp"></div>
+                        <div><label class="lbl">VLP</label><input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" class="inp text-pink-300"></div>
+                        <div class="text-right pt-4"><p id="res2" class="mono text-sm font-bold text-pink-400">0,00</p></div>
                     </div>
                 </div>
-
-                <div class="mt-4 flex justify-between items-center border-t border-slate-800 pt-4">
+                <div class="mt-4 flex justify-between pt-4 border-t border-slate-800">
                     <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
                     <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
                 </div>
             </div>
-
         </div>
     </div>
 
 <script>
-// ══════════════════════════════════════════
-// CONFIGURACIÓN E INICIO
-// ══════════════════════════════════════════
+// VARIABLES GLOBALES
 var acciones = [
     { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD" },
     { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR" },
     { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR" }
 ];
-
 var precios = { "AMZN": 0, "SAN.MC": 0, "OHLA.MC": 0 };
 var usd_eur = 0.92;
+var myChart;
 
-// ══════════════════════════════════════════
-// FETCH BOLSA (ALLORIGINS + YAHOO)
-// ══════════════════════════════════════════
+// INICIALIZAR GRÁFICO
+function initChart() {
+    var ctx = document.getElementById('mainChart').getContext('2d');
+    myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Bolsa', 'Fondos', 'Indie', 'EPSV'],
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f43f5e'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+function updateChart(vals) {
+    if(!myChart) return;
+    myChart.data.datasets[0].data = vals;
+    myChart.update();
+}
+
+// FETCH BOLSA
 function fetchPrice(ticker) {
-    var url   = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
+    var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
     var proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
-    return fetch(proxy)
-        .then(function(r) { return r.json(); })
-        .then(function(j) {
-            var data = JSON.parse(j.contents);
-            var meta = data.chart.result[0].meta;
-            var price = meta.regularMarketPrice;
-            if (!price || price === 0) price = meta.previousClose || meta.chartPreviousClose || 0;
-            return price;
-        });
+    return fetch(proxy).then(r => r.json()).then(j => {
+        var data = JSON.parse(j.contents);
+        var meta = data.chart.result[0].meta;
+        return meta.regularMarketPrice || meta.previousClose || 0;
+    });
 }
 
 function fetchAllPrices() {
-    setStatus("Actualizando bolsa...", "amber");
-
-    // Obtenemos el tipo de cambio directo USDEUR=X
-    fetchPrice("USDEUR=X")
-        .then(function(v) { usd_eur = (v > 0.5 && v < 1.5) ? v : 0.92; })
-        .catch(function()  { usd_eur = 0.92; })
-        .then(function() {
-            var ps = acciones.map(function(a) {
-                return fetchPrice(a.ticker)
-                    .then(function(p) { precios[a.ticker] = p; })
-                    .catch(function() { console.warn("Error en " + a.ticker); });
-            });
-            return Promise.all(ps);
-        })
-        .then(function() {
-            document.getElementById("bolsaStatus").innerText = "LIVE";
-            setStatus("Bolsa actualizada " + new Date().toLocaleTimeString("es-ES"), "green");
-            renderBolsa();
-            calcTotal();
-        });
+    setStatus("Actualizando...", "amber");
+    fetchPrice("USDEUR=X").then(v => { usd_eur = v || 0.92; })
+    .then(() => Promise.all(acciones.map(a => fetchPrice(a.ticker).then(p => precios[a.ticker] = p))))
+    .then(() => {
+        document.getElementById("bolsaStatus").innerText = "LIVE";
+        setStatus("Bolsa OK " + new Date().toLocaleTimeString(), "green");
+        renderBolsa();
+        calcTotal();
+    });
 }
 
 function renderBolsa() {
     var list = document.getElementById("listaAcciones");
-    list.innerHTML = acciones.map(function(a) {
-        var price  = precios[a.ticker];
-        var sub    = price * a.cant;
-        var subEur = a.mon === "USD" ? sub * usd_eur : sub;
-        var link   = "https://finance.yahoo.com/quote/" + a.ticker;
-        return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-700/50 transition-all">'
-            + '<div>'
-            + '<a href="' + link + '" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">'
-            + a.nombre + ' <span class="text-blue-500 text-[9px]">&#8599;</span></a>'
-            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds &middot; '
-            + price.toFixed(2) + ' ' + a.mon + '</p>'
-            + '</div>'
-            + '<div class="text-right">'
-            + '<p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
-            + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' USD</p>' : '')
-            + '</div></div>';
+    list.innerHTML = acciones.map(a => {
+        var p = precios[a.ticker];
+        var subEur = a.mon === "USD" ? (p * a.cant * usd_eur) : (p * a.cant);
+        return `<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div><p class="font-bold text-slate-200 text-sm">${a.nombre}</p><p class="mono text-[9px] text-slate-500">${a.cant} uds · ${p.toFixed(2)} ${a.mon}</p></div>
+            <p class="mono text-sm font-bold text-blue-300">${fmt(subEur)} €</p>
+        </div>`;
     }).join("");
 }
 
-// ══════════════════════════════════════════
-// LÓGICA DE CÁLCULOS
-// ══════════════════════════════════════════
+// CÁLCULOS
 function calcFondo(id) {
-    var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
-    var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
-    var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
-
+    var part = parseFloat(document.getElementById(id+"_part").value) || 0;
+    var coste = parseFloat(document.getElementById(id+"_coste").value) || 0;
+    var vl = parseFloat(document.getElementById(id+"_vl").value) || 0;
     var valInv = part * coste;
     var valMer = part * vl;
-    var gan    = valMer - valInv;
-    var pct    = valInv > 0 ? (gan / valInv * 100) : 0;
-
-    document.getElementById(id + "_inv").innerText = valInv > 0 ? fmt(valInv) + " €" : "—";
-    document.getElementById(id + "_mer").innerText = valMer > 0 ? fmt(valMer) + " €" : "—";
-
-    var rentBox = document.getElementById(id + "_rent");
-    var rentVal = document.getElementById(id + "_rent_val");
-    if (valInv > 0) {
-        rentBox.classList.replace("hidden", "flex");
-        rentVal.className = "mono text-sm font-bold " + (gan >= 0 ? "gain" : "loss");
-        rentVal.innerText = (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + pct.toFixed(2) + "%)";
-    } else {
-        rentBox.classList.replace("flex", "hidden");
+    var gan = valMer - valInv;
+    document.getElementById(id+"_mer").innerText = valMer > 0 ? fmt(valMer) + " €" : "—";
+    var rVal = document.getElementById(id+"_rent_val");
+    if(valInv > 0) {
+        rVal.className = "mono text-sm font-bold " + (gan>=0?"gain":"loss");
+        rVal.innerText = (gan>=0?"+":"") + (gan/valInv*100).toFixed(2) + "%";
     }
-    calcTotalFondos();
-    calcTotal();
-    save();
-}
-
-function calcTotalFondos() {
-    var tInv = 0, tMer = 0;
-    ["f1", "f2"].forEach(function(id) {
-        tInv += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_coste").value) || 0);
-        tMer += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
-    });
-    var gan = tMer - tInv;
-    document.getElementById("totalFondosValor").innerText = tMer > 0 ? fmt(tMer) + " €" : "—";
-    var rEl = document.getElementById("totalFondosRentab");
-    rEl.className = "mono text-[10px] " + (gan >= 0 ? "gain" : "loss");
-    rEl.innerText = tInv > 0 ? (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/tInv*100).toFixed(2) + "%)" : "";
+    calcTotal(); save();
 }
 
 function calcIndie() {
     var mer = parseFloat(document.getElementById("indie_mer").value) || 0;
     var inv = parseFloat(document.getElementById("indie_inv").value) || 0;
-    var ef  = parseFloat(document.getElementById("indie_ef").value)  || 0;
-    var total = mer + ef;
+    var ef = parseFloat(document.getElementById("indie_ef").value) || 0;
     var gan = mer - inv;
-    var rentEl = document.getElementById("indie_rent");
-    if (inv > 0) {
-        rentEl.className = "mono text-sm font-bold " + (gan >= 0 ? "gain" : "loss");
-        rentEl.innerText = (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/inv*100).toFixed(2) + "%)";
+    var rEl = document.getElementById("indie_rent");
+    if(inv > 0) {
+        rEl.className = "mono text-sm font-bold " + (gan>=0?"gain":"loss");
+        rEl.innerText = (gan>=0?"+":"") + (gan/inv*100).toFixed(2) + "%";
     }
-    document.getElementById("indie_total").innerText = total > 0 ? fmt(total) + " €" : "—";
-    calcTotal();
-    save();
+    document.getElementById("indie_total").innerText = fmt(mer + ef) + " €";
+    calcTotal(); save();
 }
 
 function syncVLP(v) {
@@ -443,94 +311,66 @@ function syncVLP(v) {
 
 function calcEPSV() {
     var vlp = parseFloat(document.getElementById("vlp").value) || 0;
-    var r1  = (parseFloat(document.getElementById("p1").value) || 0) * vlp;
-    var r2  = (parseFloat(document.getElementById("p2").value) || 0) * vlp;
-    document.getElementById("res1").innerText = fmt(r1) + " €";
-    document.getElementById("res2").innerText = fmt(r2) + " €";
+    var r1 = (parseFloat(document.getElementById("p1").value) || 0) * vlp;
+    var r2 = (parseFloat(document.getElementById("p2").value) || 0) * vlp;
+    document.getElementById("res1").innerText = fmt(r1);
+    document.getElementById("res2").innerText = fmt(r2);
     document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " €";
-    calcTotal();
-    save();
+    calcTotal(); save();
 }
 
 function calcTotal() {
-    var total = 0;
-    // Bolsa
-    acciones.forEach(function(a) {
+    var sumBolsa = 0;
+    acciones.forEach(a => {
         var sub = (precios[a.ticker] || 0) * a.cant;
-        total += a.mon === "USD" ? sub * usd_eur : sub;
+        sumBolsa += a.mon === "USD" ? sub * usd_eur : sub;
     });
-    // Fondos
-    ["f1","f2"].forEach(function(id) {
-        total += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
+    var sumFondos = 0;
+    ["f1","f2"].forEach(id => {
+        sumFondos += (parseFloat(document.getElementById(id+"_part").value)||0) * (parseFloat(document.getElementById(id+"_vl").value)||0);
     });
-    // Indie
-    total += (parseFloat(document.getElementById("indie_mer").value) || 0) + (parseFloat(document.getElementById("indie_ef").value) || 0);
-    // EPSV
+    var sumIndie = (parseFloat(document.getElementById("indie_mer").value)||0) + (parseFloat(document.getElementById("indie_ef").value)||0);
     var vlp = parseFloat(document.getElementById("vlp").value) || 0;
-    total += ((parseFloat(document.getElementById("p1").value) || 0) + (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
+    var sumEPSV = ((parseFloat(document.getElementById("p1").value)||0) + (parseFloat(document.getElementById("p2").value)||0)) * vlp;
 
+    var total = sumBolsa + sumFondos + sumIndie + sumEPSV;
     document.getElementById("totalPatrimonio").innerText = total.toLocaleString("es-ES", {style:"currency", currency:"EUR"});
     
-    // Rentabilidad global fondos/indie en header
-    var tInv = 0, tMer = 0;
-    ["f1","f2"].forEach(function(id) {
-        tInv += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_coste").value) || 0);
-        tMer += (parseFloat(document.getElementById(id + "_part").value) || 0) * (parseFloat(document.getElementById(id + "_vl").value) || 0);
-    });
-    tInv += parseFloat(document.getElementById("indie_inv").value) || 0;
-    tMer += parseFloat(document.getElementById("indie_mer").value) || 0;
-    
-    var rEl = document.getElementById("totalRentab");
-    if (tInv > 0) {
-        var gan = tMer - tInv;
-        rEl.className = "mono text-[10px] mt-1 " + (gan >= 0 ? "gain" : "loss");
-        rEl.innerText = "Inversión: " + (gan>=0?"+":"") + fmt(gan) + " € (" + (gan>=0?"+":"") + (gan/tInv*100).toFixed(2) + "%)";
-    }
+    updateChart([sumBolsa, sumFondos, sumIndie, sumEPSV]);
 }
 
-// ══════════════════════════════════════════
-// PERSISTENCIA Y UTILIDADES
-// ══════════════════════════════════════════
+// AUXILIARES
 function fmt(n) { return n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2}); }
-function setStatus(msg, color) {
+function setStatus(m, c) {
     var s = document.getElementById("status");
-    var colors = {amber:"text-amber-400", green:"text-green-400", red:"text-red-400"};
-    s.className = "mono text-[10px] mt-2 " + colors[color];
-    s.innerText = msg;
+    s.className = "mono text-[10px] mt-2 " + (c==="amber"?"text-amber-400":c==="green"?"text-green-400":"text-red-400");
+    s.innerText = m;
 }
 function marcarTS() {
-    var ts = new Date().toLocaleString("es-ES", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-    document.getElementById("fondosTimestamp").innerText = "VL " + ts;
+    document.getElementById("fondosTimestamp").innerText = "VL " + new Date().toLocaleString("es-ES", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
     save();
 }
-
 function save() {
-    var data = {
-        f1_vl: document.getElementById("f1_vl").value, f1_part: document.getElementById("f1_part").value, f1_coste: document.getElementById("f1_coste").value,
-        f2_vl: document.getElementById("f2_vl").value, f2_part: document.getElementById("f2_part").value, f2_coste: document.getElementById("f2_coste").value,
-        indie_mer: document.getElementById("indie_mer").value, indie_inv: document.getElementById("indie_inv").value, indie_ef: document.getElementById("indie_ef").value,
-        p1: document.getElementById("p1").value, p2: document.getElementById("p2").value, vlp: document.getElementById("vlp").value,
-        ts: document.getElementById("fondosTimestamp").innerText
-    };
-    localStorage.setItem("isukiza_v4_final", JSON.stringify(data));
-}
-
-function load() {
-    var d = JSON.parse(localStorage.getItem("isukiza_v4_final")) || {};
-    var ids = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp"];
-    ids.forEach(function(id) {
-        if (d[id] !== undefined) document.getElementById(id).value = d[id];
+    var data = {};
+    ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp"].forEach(id => {
+        data[id] = document.getElementById(id).value;
     });
-    if (!document.getElementById("p1").value) document.getElementById("p1").value = "1376.6933";
-    if (!document.getElementById("p2").value) document.getElementById("p2").value = "1975.6095";
+    data.ts = document.getElementById("fondosTimestamp").innerText;
+    localStorage.setItem("isukiza_v5", JSON.stringify(data));
+}
+function load() {
+    initChart();
+    var d = JSON.parse(localStorage.getItem("isukiza_v5")) || {};
+    ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp"].forEach(id => {
+        if(d[id]) document.getElementById(id).value = d[id];
+    });
+    if(d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
     document.getElementById("vlp_m").value = document.getElementById("vlp").value || "";
-    if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
-
+    
     calcFondo("f1"); calcFondo("f2"); calcIndie(); calcEPSV();
     fetchAllPrices();
-    setInterval(fetchAllPrices, 5 * 60 * 1000);
+    setInterval(fetchAllPrices, 300000);
 }
-
 window.onload = load;
 </script>
 </body>
