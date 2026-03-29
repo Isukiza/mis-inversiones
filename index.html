@@ -3,91 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patrimonio Isukiza - ULTRA LIGHT</title>
+    <title>Patrimonio Isukiza - V7 Full Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { background: #0f172a; color: #f1f5f9; font-family: 'JetBrains Mono', monospace; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 1.5rem; }
-        .inp { width: 100%; background: #0f172a; border: 1px solid #475569; border-radius: 0.5rem; padding: 0.5rem; color: white; outline: none; font-size: 0.8rem; }
+        body { background: #080c14; color: #f1f5f9; font-family: 'JetBrains Mono', monospace; }
+        .card { background: #111827; border: 1px solid #1f2937; border-radius: 1rem; padding: 1.2rem; }
+        .inp { width: 100%; background: #030712; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.5rem; color: white; outline: none; font-size: 0.85rem; }
         .inp:focus { border-color: #3b82f6; }
-        .lbl { font-size: 0.65rem; color: #94a3b8; font-weight: bold; text-transform: uppercase; margin-bottom: 0.3rem; display: block; }
+        .lbl { font-size: 0.6rem; color: #6b7280; font-weight: bold; text-transform: uppercase; margin-bottom: 0.2rem; display: block; }
         .gain { color: #4ade80; } .loss { color: #f87171; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-5xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 border-b border-slate-700 pb-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 border-b border-slate-800 pb-6">
             <div>
-                <h1 class="text-3xl font-bold tracking-tighter text-white">ISUKIZA <span class="text-blue-500">LIVE</span></h1>
-                <p id="status" class="text-[10px] text-amber-500 mt-1">● Cargando sistema...</p>
+                <h1 class="text-3xl font-bold tracking-tighter text-white">ISUKIZA <span class="text-blue-500">PRO</span></h1>
+                <p id="status" class="text-[10px] text-amber-500 mt-1 uppercase tracking-widest">● Sincronizando...</p>
             </div>
-            <div class="text-center bg-slate-800 p-4 rounded-2xl min-w-[200px]">
-                <p class="text-[9px] text-slate-400">TOTAL PATRIMONIO</p>
-                <p id="totalGlobal" class="text-3xl font-bold text-green-400">0,00 €</p>
+            <div class="flex gap-4">
+                <div class="text-center bg-slate-900 p-4 rounded-2xl border border-slate-800 min-w-[180px]">
+                    <p class="text-[8px] text-slate-500 mb-1 uppercase">Total Global</p>
+                    <p id="totalGlobal" class="text-2xl font-bold text-green-400">0,00 €</p>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             <div class="card">
-                <h2 class="text-blue-400 text-xs font-bold mb-4">📈 BOLSA EN VIVO</h2>
-                <div id="listaBolsa" class="space-y-3 text-sm">
-                    </div>
+                <h2 class="text-blue-400 text-[10px] font-bold mb-4 tracking-[0.2em] uppercase">Bolsa en Vivo</h2>
+                <div id="listaBolsa" class="space-y-2"></div>
             </div>
 
-            <div class="card">
-                <h2 class="text-violet-400 text-xs font-bold mb-4">🌍 FONDOS INDEXADOS</h2>
+            <div class="card border-t-4 border-violet-500">
+                <h2 class="text-violet-400 text-[10px] font-bold mb-4 tracking-[0.2em] uppercase">Fondos Indexados</h2>
                 <div class="space-y-4">
-                    <div class="p-3 bg-slate-900/50 rounded-lg">
-                        <p class="text-xs font-bold mb-2">iShares Dev World</p>
-                        <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                        <p class="text-xs font-bold text-violet-200 mb-3">iShares Developed World</p>
+                        <div class="grid grid-cols-3 gap-2">
                             <div><label class="lbl">Uds</label><input type="number" id="f1_p" step="any" oninput="calc()" class="inp"></div>
-                            <div><label class="lbl">VL (€)</label><input type="number" id="f1_v" step="any" oninput="calc()" class="inp text-violet-300"></div>
+                            <div><label class="lbl">Coste Medio</label><input type="number" id="f1_c" step="any" oninput="calc()" class="inp"></div>
+                            <div><label class="lbl">VL Actual</label><input type="number" id="f1_v" step="any" oninput="calc()" class="inp text-violet-300"></div>
+                        </div>
+                        <div class="flex justify-between mt-3 px-1">
+                            <div><p class="lbl">Invertido</p><p id="f1_inv" class="text-xs font-bold">0 €</p></div>
+                            <div class="text-center"><p class="lbl">Mercado</p><p id="f1_mer" class="text-xs font-bold text-violet-300">0 €</p></div>
+                            <div class="text-right"><p class="lbl">Rent.</p><p id="f1_rent" class="text-xs font-bold">0%</p></div>
                         </div>
                     </div>
-                    <div class="p-3 bg-slate-900/50 rounded-lg">
-                        <p class="text-xs font-bold mb-2">iShares Emerging</p>
-                        <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                        <p class="text-xs font-bold text-indigo-200 mb-3">iShares Emerging Markets</p>
+                        <div class="grid grid-cols-3 gap-2">
                             <div><label class="lbl">Uds</label><input type="number" id="f2_p" step="any" oninput="calc()" class="inp"></div>
-                            <div><label class="lbl">VL (€)</label><input type="number" id="f2_v" step="any" oninput="calc()" class="inp text-indigo-300"></div>
+                            <div><label class="lbl">Coste Medio</label><input type="number" id="f2_c" step="any" oninput="calc()" class="inp"></div>
+                            <div><label class="lbl">VL Actual</label><input type="number" id="f2_v" step="any" oninput="calc()" class="inp text-indigo-300"></div>
+                        </div>
+                        <div class="flex justify-between mt-3 px-1">
+                            <div><p class="lbl">Invertido</p><p id="f2_inv" class="text-xs font-bold">0 €</p></div>
+                            <div class="text-center"><p class="lbl">Mercado</p><p id="f2_mer" class="text-xs font-bold text-indigo-300">0 €</p></div>
+                            <div class="text-right"><p class="lbl">Rent.</p><p id="f2_rent" class="text-xs font-bold">0%</p></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2 class="text-emerald-400 text-xs font-bold mb-4">🌱 CARTERA INDIE</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2"><label class="lbl">Mercado (€)</label><input type="number" id="i_m" step="any" oninput="calc()" class="inp text-emerald-300"></div>
-                    <div><label class="lbl">Efectivo</label><input type="number" id="i_e" step="any" oninput="calc()" class="inp"></div>
-                    <div class="text-right pt-4"><p id="res_indie" class="font-bold text-emerald-400">0,00 €</p></div>
+            <div class="card border-t-4 border-emerald-500">
+                <h2 class="text-emerald-400 text-[10px] font-bold mb-4 tracking-[0.2em] uppercase">Cartera Indie MyInvestor</h2>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div><label class="lbl">Invertido (€)</label><input type="number" id="i_inv" step="any" oninput="calc()" class="inp"></div>
+                    <div><label class="lbl">Mercado (€)</label><input type="number" id="i_mer" step="any" oninput="calc()" class="inp text-emerald-300"></div>
+                    <div class="col-span-2"><label class="lbl">Efectivo (€)</label><input type="number" id="i_ef" step="any" oninput="calc()" class="inp"></div>
+                </div>
+                <div class="flex justify-between border-t border-slate-800 pt-3">
+                    <span id="i_rent_pct" class="text-xs font-bold">0%</span>
+                    <span id="i_total" class="text-sm font-bold text-emerald-400">0,00 €</span>
                 </div>
             </div>
 
-            <div class="card border-l-4 border-rose-500">
-                <h2 class="text-rose-400 text-xs font-bold mb-4">🛡️ JUBILACIÓN EPSV</h2>
-                <div class="space-y-3">
-                    <div class="flex gap-2">
-                        <div class="w-1/2"><label class="lbl">Uds Tu Plan</label><input type="number" id="e_p1" step="any" oninput="calc()" class="inp"></div>
-                        <div class="w-1/2"><label class="lbl">VLP (€)</label><input type="number" id="e_v" step="any" oninput="calcSyncVLP(this.value)" class="inp text-rose-300"></div>
+            <div class="card border-t-4 border-rose-500">
+                <h2 class="text-rose-400 text-[10px] font-bold mb-4 tracking-[0.2em] uppercase">🛡️ EPSV (3 Campos)</h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-2 bg-slate-900/40 p-3 rounded-lg">
+                        <div><label class="lbl">Particip.</label><input type="number" id="e_p1" step="any" oninput="calc()" class="inp"></div>
+                        <div><label class="lbl">VLP (€)</label><input type="number" id="e_v1" step="any" oninput="syncVLP(this.value)" class="inp text-rose-300"></div>
+                        <div class="text-right"><label class="lbl">Valor</label><p id="e_r1" class="text-xs font-bold pt-2">0 €</p></div>
                     </div>
-                    <div class="flex gap-2">
-                        <div class="w-1/2"><label class="lbl">Uds Su Plan</label><input type="number" id="e_p2" step="any" oninput="calc()" class="inp"></div>
-                        <div class="w-1/2"><label class="lbl">VLP (€)</label><input type="number" id="e_v2" step="any" oninput="calcSyncVLP(this.value)" class="inp text-pink-300"></div>
-                    </div>
-                    <div class="text-right pt-2 border-t border-slate-700 mt-2">
-                        <p id="res_epsv" class="text-xl font-bold text-rose-400">0,00 €</p>
+                    <div class="grid grid-cols-3 gap-2 bg-slate-900/40 p-3 rounded-lg">
+                        <div><label class="lbl">Particip.</label><input type="number" id="e_p2" step="any" oninput="calc()" class="inp"></div>
+                        <div><label class="lbl">VLP (€)</label><input type="number" id="e_v2" step="any" oninput="syncVLP(this.value)" class="inp text-pink-300"></div>
+                        <div class="text-right"><label class="lbl">Valor</label><p id="e_r2" class="text-xs font-bold pt-2">0 €</p></div>
                     </div>
                 </div>
+                <p id="e_total" class="text-right mt-3 text-sm font-bold text-rose-400">Total: 0,00 €</p>
             </div>
 
         </div>
     </div>
 
 <script>
-// DATOS BOLSA
 const stocks = [
     { t: "AMZN", n: "Amazon", c: 20, m: "USD" },
     { t: "SAN.MC", n: "Santander", c: 1080, m: "EUR" },
@@ -96,92 +112,106 @@ const stocks = [
 let prices = { "AMZN": 180, "SAN.MC": 4.5, "OHLA.MC": 0.44 };
 let eur_usd = 1.08;
 
-// FUNCION PRINCIPAL DE CALCULO
+function syncVLP(v) {
+    document.getElementById("e_v1").value = v;
+    document.getElementById("e_v2").value = v;
+    calc();
+}
+
 function calc() {
-    // 1. Bolsa
-    let totalBolsa = 0;
+    let tBolsa = 0;
     stocks.forEach(s => {
         let p = prices[s.t] || 0;
-        let val = s.m === "USD" ? (p * s.c / eur_usd) : (p * s.c);
-        totalBolsa += val;
+        tBolsa += s.m === "USD" ? (p * s.c / eur_usd) : (p * s.c);
     });
     renderBolsa();
 
-    // 2. Fondos
-    let f1 = (parseFloat(document.getElementById("f1_p").value)||0) * (parseFloat(document.getElementById("f1_v").value)||0);
-    let f2 = (parseFloat(document.getElementById("f2_p").value)||0) * (parseFloat(document.getElementById("f2_v").value)||0);
-    
-    // 3. Indie
-    let indie = (parseFloat(document.getElementById("i_m").value)||0) + (parseFloat(document.getElementById("i_e").value)||0);
-    document.getElementById("res_indie").innerText = indie.toLocaleString('es-ES') + " €";
+    // Fondos 1 y 2
+    let f1_m = (parseFloat(document.getElementById("f1_p").value)||0) * (parseFloat(document.getElementById("f1_v").value)||0);
+    let f1_i = (parseFloat(document.getElementById("f1_p").value)||0) * (parseFloat(document.getElementById("f1_c").value)||0);
+    renderRent(f1_i, f1_m, "f1_inv", "f1_mer", "f1_rent");
 
-    // 4. EPSV
-    let vlp = parseFloat(document.getElementById("e_v").value)||0;
-    let epsv = ((parseFloat(document.getElementById("e_p1").value)||0) + (parseFloat(document.getElementById("e_p2").value)||0)) * vlp;
-    document.getElementById("res_epsv").innerText = epsv.toLocaleString('es-ES') + " €";
+    let f2_m = (parseFloat(document.getElementById("f2_p").value)||0) * (parseFloat(document.getElementById("f2_v").value)||0);
+    let f2_i = (parseFloat(document.getElementById("f2_p").value)||0) * (parseFloat(document.getElementById("f2_c").value)||0);
+    renderRent(f2_i, f2_m, "f2_inv", "f2_mer", "f2_rent");
 
-    // TOTAL
-    let total = totalBolsa + f1 + f2 + indie + epsv;
-    document.getElementById("totalGlobal").innerText = total.toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
-    
+    // Indie
+    let i_i = parseFloat(document.getElementById("i_inv").value)||0;
+    let i_m = parseFloat(document.getElementById("i_mer").value)||0;
+    let i_e = parseFloat(document.getElementById("i_ef").value)||0;
+    let i_gan = i_m - i_i;
+    let i_pct = i_i > 0 ? (i_gan/i_i*100) : 0;
+    document.getElementById("i_total").innerText = (i_m + i_e).toLocaleString('es-ES') + " €";
+    document.getElementById("i_rent_pct").innerText = (i_gan >= 0 ? "+" : "") + i_pct.toFixed(2) + "%";
+    document.getElementById("i_rent_pct").className = "text-xs font-bold " + (i_gan >= 0 ? "gain" : "loss");
+
+    // EPSV
+    let vlp = parseFloat(document.getElementById("e_v1").value)||0;
+    let r1 = (parseFloat(document.getElementById("e_p1").value)||0) * vlp;
+    let r2 = (parseFloat(document.getElementById("e_p2").value)||0) * vlp;
+    document.getElementById("e_r1").innerText = r1.toLocaleString('es-ES') + " €";
+    document.getElementById("e_r2").innerText = r2.toLocaleString('es-ES') + " €";
+    document.getElementById("e_total").innerText = "Total: " + (r1 + r2).toLocaleString('es-ES') + " €";
+
+    // TOTAL GLOBAL
+    let global = tBolsa + f1_m + f2_m + i_m + i_e + r1 + r2;
+    document.getElementById("totalGlobal").innerText = global.toLocaleString('es-ES', {minimumFractionDigits:2}) + " €";
     save();
 }
 
-function calcSyncVLP(v) {
-    document.getElementById("e_v").value = v;
-    document.getElementById("e_v2").value = v;
-    calc();
+function renderRent(inv, mer, idI, idM, idR) {
+    document.getElementById(idI).innerText = inv.toLocaleString('es-ES') + " €";
+    document.getElementById(idM).innerText = mer.toLocaleString('es-ES') + " €";
+    let gan = mer - inv;
+    let pct = inv > 0 ? (gan/inv*100) : 0;
+    let el = document.getElementById(idR);
+    el.innerText = (gan >= 0 ? "+" : "") + pct.toFixed(2) + "%";
+    el.className = "text-xs font-bold " + (gan >= 0 ? "gain" : "loss");
 }
 
 function renderBolsa() {
     const list = document.getElementById("listaBolsa");
     list.innerHTML = stocks.map(s => {
         let p = prices[s.t] || 0;
-        let val = s.m === "USD" ? (p * s.c / eur_usd) : (p * s.c);
-        return `<div class="flex justify-between items-center bg-slate-900/30 p-2 rounded">
-            <span>${s.n} <small class="text-slate-500">${s.c} uds</small></span>
-            <span class="font-bold text-blue-300">${val.toLocaleString('es-ES')} €</span>
+        let v = s.m === "USD" ? (p * s.c / eur_usd) : (p * s.c);
+        return `<div class="flex justify-between items-center bg-slate-900/30 p-2 rounded border border-slate-800">
+            <span class="text-xs">${s.n}</span>
+            <span class="text-xs font-bold text-blue-300">${v.toLocaleString('es-ES')} €</span>
         </div>`;
     }).join("");
 }
 
-// FETCH REAL (ALLORIGINS)
 async function updateMarket() {
-    document.getElementById("status").innerText = "↻ Sincronizando...";
     try {
-        // Tipo de cambio
-        const rx = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X')}`);
+        const proxy = "https://api.allorigins.win/get?url=";
+        const rx = await fetch(proxy + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X'));
         const jx = await rx.json();
         eur_usd = JSON.parse(jx.contents).chart.result[0].meta.regularMarketPrice || 1.08;
 
         for (let s of stocks) {
-            const rs = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+s.t)}`);
+            const rs = await fetch(proxy + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + s.t));
             const js = await rs.json();
-            const p = JSON.parse(js.contents).chart.result[0].meta.regularMarketPrice;
-            if(p) prices[s.t] = p;
+            prices[s.t] = JSON.parse(js.contents).chart.result[0].meta.regularMarketPrice || prices[s.t];
         }
         document.getElementById("status").innerText = "● LIVE " + new Date().toLocaleTimeString();
-    } catch(e) {
-        document.getElementById("status").innerText = "● Usando datos locales (Offline)";
-    }
+    } catch(e) { document.getElementById("status").innerText = "● OFFLINE"; }
     calc();
 }
 
-// PERSISTENCIA
 function save() {
-    const ids = ["f1_p","f1_v","f2_p","f2_v","i_m","i_e","e_p1","e_p2","e_v"];
+    const ids = ["f1_p","f1_c","f1_v","f2_p","f2_c","f2_v","i_inv","i_mer","i_ef","e_p1","e_p2","e_v1"];
     let data = {};
     ids.forEach(id => data[id] = document.getElementById(id).value);
-    localStorage.setItem("isukiza_vFinal", JSON.stringify(data));
+    localStorage.setItem("isukiza_v7_data", JSON.stringify(data));
 }
 
 function load() {
-    let data = JSON.parse(localStorage.getItem("isukiza_vFinal")) || {};
+    let data = JSON.parse(localStorage.getItem("isukiza_v7_data")) || { e_p1: "1376.6933", e_p2: "1975.6095" };
     Object.keys(data).forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = data[id]; });
-    document.getElementById("e_v2").value = document.getElementById("e_v").value;
+    document.getElementById("e_v2").value = document.getElementById("e_v1").value;
     updateMarket();
+    calc();
 }
-
 window.onload = load;
 </script>
 </body>
