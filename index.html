@@ -425,31 +425,77 @@ var historial = []; // array de snapshots
 var tabActiva = "total";
 
 // ══════════════════════════════════════════════════
-// FETCH BOLSA
+// FETCH BOLSA — multi-proxy con fallback y timeout
 // ══════════════════════════════════════════════════
-function fetchPrice(ticker) {
-    var url   = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
-    var proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
-    return fetch(proxy)
-        .then(function(r){ return r.json(); })
-        .then(function(j){
-            var meta = JSON.parse(j.contents).chart.result[0].meta;
-            var p = meta.regularMarketPrice;
-            if (!p || p === 0) p = meta.previousClose || meta.chartPreviousClose || 0;
-            return p;
+
+// Proxies CORS en orden de preferencia
+var PROXIES = [
+    function(url){ return "https://api.allorigins.win/get?url=" + encodeURIComponent(url); },
+    function(url){ return "https://corsproxy.io/?" + encodeURIComponent(url); },
+    function(url){ return "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url); }
+];
+
+// Extrae precio de la respuesta según el proxy usado
+function extraerPrecio(text) {
+    var data = typeof text === "string" ? JSON.parse(text) : text;
+    // allorigins envuelve en {contents:...}
+    if (data.contents) data = JSON.parse(data.contents);
+    var meta = data.chart.result[0].meta;
+    var p = meta.regularMarketPrice;
+    if (!p || p === 0) p = meta.previousClose || meta.chartPreviousClose || 0;
+    if (!p || p === 0) throw new Error("Precio cero");
+    return p;
+}
+
+// Fetch con timeout
+function fetchConTimeout(url, ms) {
+    ms = ms || 6000;
+    return new Promise(function(resolve, reject) {
+        var timer = setTimeout(function(){ reject(new Error("timeout")); }, ms);
+        fetch(url).then(function(r){
+            clearTimeout(timer);
+            resolve(r);
+        }).catch(function(e){
+            clearTimeout(timer);
+            reject(e);
         });
+    });
+}
+
+// Intenta cada proxy en cadena hasta obtener un precio válido
+function fetchPrice(ticker) {
+    var yahooUrl = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
+
+    function intentar(idx) {
+        if (idx >= PROXIES.length) return Promise.reject(new Error("Todos los proxies fallaron para " + ticker));
+        var proxyUrl = PROXIES[idx](yahooUrl);
+        return fetchConTimeout(proxyUrl, 7000)
+            .then(function(r){ return r.json(); })
+            .then(function(j){ return extraerPrecio(j); })
+            .catch(function(e){
+                console.warn("Proxy " + idx + " fallo para " + ticker + ": " + e.message);
+                return intentar(idx + 1);
+            });
+    }
+    return intentar(0);
 }
 
 function fetchAllPrices() {
     setStatus("Actualizando bolsa...", "amber");
+
     fetchPrice("EURUSD=X")
         .then(function(v){ usd_eur = 1 / v; })
         .catch(function(){ usd_eur = 0.92; })
         .then(function(){
             return Promise.all(acciones.map(function(a){
                 return fetchPrice(a.ticker)
-                    .then(function(p){ precios[a.ticker] = p; })
-                    .catch(function(){ console.warn("Fallo: " + a.ticker); });
+                    .then(function(p){
+                        precios[a.ticker] = p;
+                        console.log(a.ticker + ": " + p);
+                    })
+                    .catch(function(e){
+                        console.warn("Sin precio para " + a.ticker + ": " + e.message);
+                    });
             }));
         })
         .then(function(){
@@ -457,6 +503,9 @@ function fetchAllPrices() {
             setStatus("Bolsa actualizada  " + new Date().toLocaleTimeString("es-ES"), "green");
             renderBolsa();
             calcTotal();
+        })
+        .catch(function(){
+            setStatus("Error actualizando bolsa", "red");
         });
 }
 
