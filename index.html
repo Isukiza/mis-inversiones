@@ -12,7 +12,6 @@
         .loss { color: #f87171; }
         .spin { animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* Ocultar flechas de inputs number pero mantener funcionalidad */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { opacity: 0.3; }
         .card {
@@ -62,9 +61,63 @@
             transition: border-color 0.15s;
         }
         .inp-sm:focus { border-color: #6366f1; }
-        /* label estilo unificado */
-        .lbl { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
-               text-transform: uppercase; letter-spacing: 0.1em; color: #475569; display: block; margin-bottom: 4px; }
+        .lbl {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: #475569; display: block; margin-bottom: 4px;
+        }
+        /* Botón snapshot */
+        .btn-snap {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+            color: #e0e7ff;
+            border: 1px solid #3b82f6;
+            border-radius: 12px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-snap:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-snap:active { transform: scale(0.96); }
+        /* Tabs gráfica grande */
+        .tab-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            padding: 6px 14px; border-radius: 8px;
+            cursor: pointer; border: 1px solid #334155;
+            background: transparent; color: #64748b;
+            transition: all 0.15s;
+        }
+        .tab-btn.active {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #6366f1;
+        }
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #e2e8f0;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 100;
+            display: none;
+        }
+        /* Flash animación al registrar */
+        @keyframes flashGreen {
+            0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.6); }
+            50%  { box-shadow: 0 0 0 12px rgba(74,222,128,0); }
+            100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+        }
+        .flash { animation: flashGreen 0.6s ease-out; }
     </style>
 </head>
 <body class="bg-[#080e1a] text-slate-100 min-h-screen p-4 md:p-10">
@@ -75,7 +128,7 @@
 
     <div class="max-w-5xl mx-auto relative">
 
-        <!-- HEADER -->
+        <!-- ══ HEADER ══ -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
             <div>
                 <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
@@ -86,10 +139,17 @@
                     <span class="spin">&#10227;</span> Conectando con mercados...
                 </p>
             </div>
-            <div class="card px-8 py-5 text-center min-w-[240px]">
-                <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
-                <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
-                <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+            <div class="flex flex-col items-end gap-3">
+                <div class="card px-8 py-5 text-center min-w-[240px]">
+                    <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
+                    <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
+                    <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+                </div>
+                <!-- BOTÓN SNAPSHOT -->
+                <button onclick="registrarSnapshot()" class="btn-snap">
+                    📸 Registrar snapshot
+                </button>
+                <p id="snapMsg" class="mono text-[9px] text-slate-600 text-right"></p>
             </div>
         </header>
 
@@ -105,13 +165,12 @@
             </div>
 
             <!-- ══ FONDOS INDEXADOS ══ -->
-            <div class="card p-6">
+            <div class="card p-6" id="card-fondos">
                 <div class="flex items-center justify-between mb-1">
                     <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
                 </div>
-                <div class="flex items-center justify-between mb-5">
-                    <a href="https://myinvestor.es/" target="_blank"
-                       class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                    <a href="https://myinvestor.es/" target="_blank" class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
                         &#8599; Consultar VL en MyInvestor
                     </a>
                     <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
@@ -128,9 +187,8 @@
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="f1_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')"
-                                    class="inp-sm text-violet-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;" title="Marcar actualizado">&#10003;</button>
+                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp-sm text-violet-200">
+                                <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;">&#10003;</button>
                             </div>
                         </div>
                     </div>
@@ -147,14 +205,8 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div>
-                            <p class="lbl">Valor Invertido</p>
-                            <p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Valor Mercado</p>
-                            <p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p>
-                        </div>
+                        <div><p class="lbl">Valor Invertido</p><p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
+                        <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p></div>
                     </div>
                     <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
                         <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
@@ -173,9 +225,8 @@
                             <span class="lbl">VL Actual (&euro;)</span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="f2_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')"
-                                    class="inp-sm text-indigo-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;" title="Marcar actualizado">&#10003;</button>
+                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp-sm text-indigo-200">
+                                <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;">&#10003;</button>
                             </div>
                         </div>
                     </div>
@@ -192,14 +243,8 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div>
-                            <p class="lbl">Valor Invertido</p>
-                            <p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Valor Mercado</p>
-                            <p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p>
-                        </div>
+                        <div><p class="lbl">Valor Invertido</p><p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
+                        <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p></div>
                     </div>
                     <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
                         <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
@@ -207,19 +252,26 @@
                     </div>
                 </div>
 
-                <!-- Total fondos -->
-                <div class="mt-5 pt-4 border-t border-slate-700/50 flex justify-between items-center">
-                    <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
-                    <div class="text-right">
-                        <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
-                        <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
+                <!-- Total fondos + sparkline -->
+                <div class="mt-4 pt-4 border-t border-slate-700/50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
+                        <div class="text-right">
+                            <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
+                            <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
+                        </div>
+                    </div>
+                    <!-- SPARKLINE FONDOS -->
+                    <div class="mt-2 relative">
+                        <svg id="spark-fondos" width="100%" height="48" style="display:block;"></svg>
+                        <div id="tip-fondos" class="tooltip"></div>
                     </div>
                 </div>
             </div>
 
             <!-- ══ INDIE MYINVESTOR ══ -->
-            <div class="card p-6">
-                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-5">&#127807; Cartera Indie MyInvestor</h2>
+            <div class="card p-6" id="card-indie">
+                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-4">&#127807; Cartera Indie MyInvestor</h2>
                 <div class="space-y-3">
                     <div>
                         <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
@@ -239,7 +291,7 @@
                                 oninput="calcIndie()" onchange="calcIndie()" class="inp">
                         </div>
                     </div>
-                    <div class="mt-1 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                    <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
                         <div>
                             <p class="lbl">Rentabilidad</p>
                             <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
@@ -250,16 +302,20 @@
                         </div>
                     </div>
                 </div>
+                <!-- SPARKLINE INDIE -->
+                <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <p class="lbl mb-1" style="color:#34d399">Evolución mercado + efectivo</p>
+                    <svg id="spark-indie" width="100%" height="48" style="display:block;"></svg>
+                    <div id="tip-indie" class="tooltip"></div>
+                </div>
             </div>
 
             <!-- ══ JUBILACION EPSV ══ -->
-            <div class="card p-6 border-l-4 border-l-rose-600">
+            <div class="card p-6 border-l-4 border-l-rose-600" id="card-epsv">
                 <div class="flex items-center justify-between mb-5">
                     <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
                     <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924"
-                       target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">
-                        VLP &#8599;
-                    </a>
+                       target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">VLP &#8599;</a>
                 </div>
                 <p class="mono text-[9px] text-slate-600 mb-4 uppercase tracking-widest">Actualiza el VLP para sincronizar ambos planes</p>
 
@@ -269,13 +325,11 @@
                         <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="lbl">Participaciones</label>
-                                <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
-                                    class="inp" style="font-size:11px;">
+                                <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
                             </div>
                             <div>
                                 <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
-                                    class="inp" style="font-size:11px;color:#fca5a5;">
+                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#fca5a5;">
                             </div>
                             <div class="flex flex-col justify-end">
                                 <p class="lbl">Valor</p>
@@ -288,13 +342,11 @@
                         <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="lbl">Participaciones</label>
-                                <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0"
-                                    class="inp" style="font-size:11px;">
+                                <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
                             </div>
                             <div>
                                 <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00"
-                                    class="inp" style="font-size:11px;color:#f9a8d4;">
+                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#f9a8d4;">
                             </div>
                             <div class="flex flex-col justify-end">
                                 <p class="lbl">Valor</p>
@@ -308,59 +360,99 @@
                     <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
                     <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
                 </div>
+
+                <!-- SPARKLINE EPSV -->
+                <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <p class="lbl mb-1" style="color:#fda4af">Evolución EPSV</p>
+                    <svg id="spark-epsv" width="100%" height="48" style="display:block;"></svg>
+                    <div id="tip-epsv" class="tooltip"></div>
+                </div>
             </div>
 
         </div><!-- end grid -->
+
+        <!-- ══ SECCIÓN GRÁFICA GRANDE ══ -->
+        <div class="card p-6 mt-6" id="card-total">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-sm font-bold text-green-300 tracking-widest uppercase">&#128202; Evolución del Patrimonio</h2>
+                    <p id="histCount" class="mono text-[9px] text-slate-600 mt-1">0 registros guardados</p>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <button class="tab-btn active" onclick="setTab('total')" id="tab-total">Total</button>
+                    <button class="tab-btn" onclick="setTab('fondos')" id="tab-fondos">Fondos</button>
+                    <button class="tab-btn" onclick="setTab('indie')" id="tab-indie">Indie</button>
+                    <button class="tab-btn" onclick="setTab('epsv')" id="tab-epsv">EPSV</button>
+                    <button onclick="borrarHistorial()" class="tab-btn" style="color:#f87171;border-color:#450a0a;" title="Borrar todo el historial">&#128465;</button>
+                </div>
+            </div>
+
+            <!-- Gráfica SVG grande -->
+            <div class="relative" style="height:220px;">
+                <svg id="chart-big" width="100%" height="100%" style="display:block; overflow:visible;"></svg>
+                <div id="tip-big" class="tooltip"></div>
+            </div>
+
+            <!-- Eje X fechas -->
+            <div id="chart-xaxis" class="flex justify-between mt-1 px-1">
+            </div>
+
+            <!-- Tabla últimos snapshots -->
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <p class="mono text-[9px] text-slate-600 uppercase tracking-widest mb-3">Últimos registros</p>
+                <div id="snapTable" class="space-y-1"></div>
+            </div>
+        </div>
+
     </div><!-- end container -->
 
+    <div id="snapToast" class="fixed bottom-6 right-6 bg-green-900 border border-green-600 text-green-300 mono text-[11px] font-bold px-5 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none">
+        ✓ Snapshot registrado
+    </div>
+
 <script>
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // CONFIG
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 var acciones = [
     { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD" },
     { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR" },
     { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR" }
 ];
-
 var precios = { "AMZN": 0, "SAN.MC": 0, "OHLA.MC": 0 };
 var usd_eur = 0.92;
+var historial = []; // array de snapshots
+var tabActiva = "total";
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // FETCH BOLSA
-// FIX: usa v8/finance/chart con fallback a previousClose
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function fetchPrice(ticker) {
     var url   = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
     var proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
     return fetch(proxy)
-        .then(function(r) { return r.json(); })
-        .then(function(j) {
-            var data = JSON.parse(j.contents);
-            var meta = data.chart.result[0].meta;
-            // regularMarketPrice puede ser 0 fuera de horario → usar previousClose como fallback
-            var price = meta.regularMarketPrice;
-            if (!price || price === 0) price = meta.previousClose || meta.chartPreviousClose || 0;
-            return price;
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+            var meta = JSON.parse(j.contents).chart.result[0].meta;
+            var p = meta.regularMarketPrice;
+            if (!p || p === 0) p = meta.previousClose || meta.chartPreviousClose || 0;
+            return p;
         });
 }
 
 function fetchAllPrices() {
     setStatus("Actualizando bolsa...", "amber");
-
-    // FX primero
     fetchPrice("EURUSD=X")
-        .then(function(v) { usd_eur = 1 / v; })
-        .catch(function()  { usd_eur = 0.92; })
-        .then(function() {
-            var ps = acciones.map(function(a) {
+        .then(function(v){ usd_eur = 1 / v; })
+        .catch(function(){ usd_eur = 0.92; })
+        .then(function(){
+            return Promise.all(acciones.map(function(a){
                 return fetchPrice(a.ticker)
-                    .then(function(p) { precios[a.ticker] = p; })
-                    .catch(function()  { console.warn("Fallo precio: " + a.ticker); });
-            });
-            return Promise.all(ps);
+                    .then(function(p){ precios[a.ticker] = p; })
+                    .catch(function(){ console.warn("Fallo: " + a.ticker); });
+            }));
         })
-        .then(function() {
+        .then(function(){
             document.getElementById("bolsaStatus").innerText = "live";
             setStatus("Bolsa actualizada  " + new Date().toLocaleTimeString("es-ES"), "green");
             renderBolsa();
@@ -368,234 +460,473 @@ function fetchAllPrices() {
         });
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // RENDER BOLSA
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function renderBolsa() {
-    var list = document.getElementById("listaAcciones");
-    list.innerHTML = acciones.map(function(a) {
+    document.getElementById("listaAcciones").innerHTML = acciones.map(function(a){
         var price  = precios[a.ticker];
         var sub    = price * a.cant;
         var subEur = a.mon === "USD" ? sub * usd_eur : sub;
         var link   = "https://finance.yahoo.com/quote/" + a.ticker;
         return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-700/50 transition-all">'
-            + '<div>'
-            + '<a href="' + link + '" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">'
+            + '<div><a href="' + link + '" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">'
             + a.nombre + ' <span class="text-blue-500 text-[9px]">&#8599;</span></a>'
-            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds &middot; '
-            + price.toFixed(2) + ' ' + a.mon + '</p>'
-            + '</div>'
-            + '<div class="text-right">'
-            + '<p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
+            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds &middot; ' + price.toFixed(2) + ' ' + a.mon + '</p></div>'
+            + '<div class="text-right"><p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
             + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' USD</p>' : '')
             + '</div></div>';
     }).join("");
 }
 
-// ══════════════════════════════════════════
-// FONDOS — cálculo sin re-render del DOM
-// FIX: los inputs están en el HTML estático,
-// solo actualizamos los elementos de resultado
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// FONDOS
+// ══════════════════════════════════════════════════
 function calcFondo(id) {
-    var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
-    var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
-    var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
-
+    var part  = parseFloat(document.getElementById(id+"_part").value)  || 0;
+    var coste = parseFloat(document.getElementById(id+"_coste").value) || 0;
+    var vl    = parseFloat(document.getElementById(id+"_vl").value)    || 0;
     var valInv = part * coste;
     var valMer = part * vl;
     var gan    = valMer - valInv;
-    var ganPct = valInv > 0 ? gan / valInv * 100 : 0;
+    var ganPct = valInv > 0 ? gan/valInv*100 : 0;
     var esG    = gan >= 0;
 
-    document.getElementById(id + "_inv").innerText = valInv > 0 ? fmt(valInv) + " \u20AC" : "\u2014";
-    document.getElementById(id + "_mer").innerText = valMer > 0 ? fmt(valMer) + " \u20AC" : "\u2014";
+    document.getElementById(id+"_inv").innerText = valInv > 0 ? fmt(valInv)+" \u20AC" : "\u2014";
+    document.getElementById(id+"_mer").innerText = valMer > 0 ? fmt(valMer)+" \u20AC" : "\u2014";
 
-    var rentBox = document.getElementById(id + "_rent");
-    var rentVal = document.getElementById(id + "_rent_val");
+    var box = document.getElementById(id+"_rent");
+    var val = document.getElementById(id+"_rent_val");
     if (valInv > 0) {
-        rentBox.classList.remove("hidden");
-        rentBox.classList.add("flex");
-        rentVal.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
-        rentVal.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + ganPct.toFixed(2) + "%)";
+        box.classList.remove("hidden"); box.classList.add("flex");
+        val.className = "mono text-sm font-bold " + (esG?"gain":"loss");
+        val.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + ganPct.toFixed(2) + "%)";
     } else {
-        rentBox.classList.add("hidden");
-        rentBox.classList.remove("flex");
+        box.classList.add("hidden"); box.classList.remove("flex");
     }
-
     calcTotalFondos();
     calcTotal();
     save();
 }
 
 function calcTotalFondos() {
-    var ids = ["f1", "f2"];
-    var totalInv = 0, totalMer = 0;
-    ids.forEach(function(id) {
-        var part  = parseFloat(document.getElementById(id + "_part").value)  || 0;
-        var coste = parseFloat(document.getElementById(id + "_coste").value) || 0;
-        var vl    = parseFloat(document.getElementById(id + "_vl").value)    || 0;
-        totalInv += part * coste;
-        totalMer += part * vl;
+    var tInv=0, tMer=0;
+    ["f1","f2"].forEach(function(id){
+        tInv += (parseFloat(document.getElementById(id+"_part").value)||0) * (parseFloat(document.getElementById(id+"_coste").value)||0);
+        tMer += (parseFloat(document.getElementById(id+"_part").value)||0) * (parseFloat(document.getElementById(id+"_vl").value)||0);
     });
-    var ganT    = totalMer - totalInv;
-    var ganPctT = totalInv > 0 ? ganT / totalInv * 100 : 0;
-    var esGT    = ganT >= 0;
-    document.getElementById("totalFondosValor").innerText = totalMer > 0 ? fmt(totalMer) + " \u20AC" : "\u2014";
-    var rentEl = document.getElementById("totalFondosRentab");
-    rentEl.className = "mono text-[10px] " + (totalInv > 0 ? (esGT ? "gain" : "loss") : "text-slate-600");
-    rentEl.innerText = totalInv > 0
-        ? (esGT?"+":"") + fmt(ganT) + " \u20AC (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)"
-        : "";
+    var gan = tMer - tInv;
+    var pct = tInv > 0 ? gan/tInv*100 : 0;
+    var esG = gan >= 0;
+    document.getElementById("totalFondosValor").innerText = tMer > 0 ? fmt(tMer)+" \u20AC" : "\u2014";
+    var el = document.getElementById("totalFondosRentab");
+    el.className = "mono text-[10px] " + (tInv>0 ? (esG?"gain":"loss") : "text-slate-600");
+    el.innerText = tInv > 0 ? (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)" : "";
 }
 
 function marcarTS() {
-    var ts = new Date().toLocaleString("es-ES", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+    var ts = new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
     document.getElementById("fondosTimestamp").innerText = "VL " + ts;
     save();
 }
 
-// ══════════════════════════════════════════
-// INDIE — tres campos
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// INDIE
+// ══════════════════════════════════════════════════
 function calcIndie() {
-    var mer  = parseFloat(document.getElementById("indie_mer").value) || 0;
-    var inv  = parseFloat(document.getElementById("indie_inv").value) || 0;
-    var ef   = parseFloat(document.getElementById("indie_ef").value)  || 0;
+    var mer  = parseFloat(document.getElementById("indie_mer").value)||0;
+    var inv  = parseFloat(document.getElementById("indie_inv").value)||0;
+    var ef   = parseFloat(document.getElementById("indie_ef").value) ||0;
     var gan  = mer - inv;
-    var pct  = inv > 0 ? gan / inv * 100 : 0;
+    var pct  = inv > 0 ? gan/inv*100 : 0;
     var esG  = gan >= 0;
-    var total = mer + ef;
-
-    var rentEl = document.getElementById("indie_rent");
+    var tot  = mer + ef;
+    var el   = document.getElementById("indie_rent");
     if (inv > 0) {
-        rentEl.className = "mono text-sm font-bold " + (esG ? "gain" : "loss");
-        rentEl.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)";
+        el.className = "mono text-sm font-bold "+(esG?"gain":"loss");
+        el.innerText = (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)";
     } else {
-        rentEl.className = "mono text-sm font-bold text-slate-500";
-        rentEl.innerText = "\u2014";
+        el.className = "mono text-sm font-bold text-slate-500";
+        el.innerText = "\u2014";
     }
-    document.getElementById("indie_total").innerText = total > 0 ? fmt(total) + " \u20AC" : "\u2014";
-
+    document.getElementById("indie_total").innerText = tot > 0 ? fmt(tot)+" \u20AC" : "\u2014";
     calcTotal();
     save();
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // EPSV
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function calcEPSV() {
-    var vlp = parseFloat(document.getElementById("vlp").value)   || 0;
-    var r1  = (parseFloat(document.getElementById("p1").value)   || 0) * vlp;
-    var r2  = (parseFloat(document.getElementById("p2").value)   || 0) * vlp;
-    document.getElementById("res1").innerText    = fmt(r1)      + " \u20AC";
-    document.getElementById("res2").innerText    = fmt(r2)      + " \u20AC";
+    var vlp = parseFloat(document.getElementById("vlp").value)||0;
+    var r1  = (parseFloat(document.getElementById("p1").value)||0) * vlp;
+    var r2  = (parseFloat(document.getElementById("p2").value)||0) * vlp;
+    document.getElementById("res1").innerText    = fmt(r1)    + " \u20AC";
+    document.getElementById("res2").innerText    = fmt(r2)    + " \u20AC";
     document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " \u20AC";
     calcTotal();
     save();
 }
-
 function syncVLP(v) {
     document.getElementById("vlp").value   = v;
     document.getElementById("vlp_m").value = v;
     calcEPSV();
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // TOTAL GLOBAL
-// ══════════════════════════════════════════
-function calcTotal() {
-    var total = 0;
-
+// ══════════════════════════════════════════════════
+function getValues() {
     // Bolsa
-    acciones.forEach(function(a) {
+    var bolsa = 0;
+    acciones.forEach(function(a){
         var sub = precios[a.ticker] * a.cant;
-        total += a.mon === "USD" ? sub * usd_eur : sub;
+        bolsa += a.mon==="USD" ? sub*usd_eur : sub;
     });
-
     // Fondos
-    ["f1","f2"].forEach(function(id) {
-        var part = parseFloat(document.getElementById(id + "_part").value) || 0;
-        var vl   = parseFloat(document.getElementById(id + "_vl").value)   || 0;
-        total += part * vl;
+    var fondos = 0;
+    ["f1","f2"].forEach(function(id){
+        fondos += (parseFloat(document.getElementById(id+"_part").value)||0)
+                * (parseFloat(document.getElementById(id+"_vl").value)||0);
     });
-
-    // Indie (mercado + efectivo)
-    total += parseFloat(document.getElementById("indie_mer").value) || 0;
-    total += parseFloat(document.getElementById("indie_ef").value)  || 0;
-
+    // Indie
+    var indieMer = parseFloat(document.getElementById("indie_mer").value)||0;
+    var indieEf  = parseFloat(document.getElementById("indie_ef").value) ||0;
+    var indie    = indieMer + indieEf;
     // EPSV
-    var vlp = parseFloat(document.getElementById("vlp").value) || 0;
-    total += (parseFloat(document.getElementById("p1").value) || 0) * vlp;
-    total += (parseFloat(document.getElementById("p2").value) || 0) * vlp;
+    var vlp = parseFloat(document.getElementById("vlp").value)||0;
+    var epsv = ((parseFloat(document.getElementById("p1").value)||0)
+              + (parseFloat(document.getElementById("p2").value)||0)) * vlp;
+    return { bolsa: bolsa, fondos: fondos, indie: indie, epsv: epsv,
+             total: bolsa + fondos + indie + epsv };
+}
 
+function calcTotal() {
+    var v = getValues();
     document.getElementById("totalPatrimonio").innerText =
-        total.toLocaleString("es-ES", {style:"currency", currency:"EUR"});
+        v.total.toLocaleString("es-ES",{style:"currency",currency:"EUR"});
 
     // Rentabilidad fondos en header
-    var tInv = 0, tMer = 0;
-    ["f1","f2"].forEach(function(id) {
-        tInv += (parseFloat(document.getElementById(id + "_part").value)  || 0)
-              * (parseFloat(document.getElementById(id + "_coste").value) || 0);
-        tMer += (parseFloat(document.getElementById(id + "_part").value)  || 0)
-              * (parseFloat(document.getElementById(id + "_vl").value)    || 0);
+    var tInv=0, tMer=0;
+    ["f1","f2"].forEach(function(id){
+        tInv += (parseFloat(document.getElementById(id+"_part").value)||0)*(parseFloat(document.getElementById(id+"_coste").value)||0);
+        tMer += (parseFloat(document.getElementById(id+"_part").value)||0)*(parseFloat(document.getElementById(id+"_vl").value)||0);
     });
     var ganF = tMer - tInv;
     var esGF = ganF >= 0;
     var rEl  = document.getElementById("totalRentab");
     if (tInv > 0) {
-        rEl.className = "mono text-[10px] mt-1 " + (esGF ? "gain" : "loss");
-        rEl.innerText = "Fondos: " + (esGF?"+":"") + fmt(ganF)
-            + " \u20AC (" + (esGF?"+":"") + (ganF/tInv*100).toFixed(2) + "%)";
+        rEl.className = "mono text-[10px] mt-1 "+(esGF?"gain":"loss");
+        rEl.innerText = "Fondos: "+(esGF?"+":"")+fmt(ganF)+" \u20AC ("+(esGF?"+":"")+(ganF/tInv*100).toFixed(2)+"%)";
     } else {
         rEl.className = "mono text-[10px] mt-1 text-slate-600";
         rEl.innerText = "Introduce VL y participaciones";
     }
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SNAPSHOT
+// ══════════════════════════════════════════════════
+function registrarSnapshot() {
+    var v = getValues();
+    if (v.total === 0) {
+        showToast("Introduce datos antes de registrar", "#7c2d12", "#f97316");
+        return;
+    }
+    var snap = {
+        fecha: new Date().toISOString(),
+        total: v.total,
+        fondos: v.fondos,
+        indie: v.indie,
+        epsv: v.epsv,
+        bolsa: v.bolsa
+    };
+    historial.push(snap);
+    saveHistorial();
+    actualizarGraficas();
+    showToast("✓ Snapshot registrado", "#14532d", "#4ade80");
+
+    // Flash en header
+    var card = document.querySelector("header .card");
+    card.classList.remove("flash");
+    void card.offsetWidth;
+    card.classList.add("flash");
+
+    // Mensaje
+    var ts = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+    document.getElementById("snapMsg").innerText = "Último: " + ts;
+}
+
+function showToast(msg, bg, color) {
+    var t = document.getElementById("snapToast");
+    t.style.background = bg || "#14532d";
+    t.style.borderColor = color || "#4ade80";
+    t.style.color = color || "#4ade80";
+    t.innerText = msg;
+    t.style.opacity = "1";
+    setTimeout(function(){ t.style.opacity = "0"; }, 2500);
+}
+
+function borrarHistorial() {
+    if (!confirm("¿Borrar todo el historial de snapshots?")) return;
+    historial = [];
+    saveHistorial();
+    actualizarGraficas();
+}
+
+// ══════════════════════════════════════════════════
+// GRÁFICAS — sparklines y gráfica grande
+// ══════════════════════════════════════════════════
+var COLORES = {
+    total:  "#4ade80",
+    fondos: "#a78bfa",
+    indie:  "#34d399",
+    epsv:   "#fb7185"
+};
+
+function makePath(data, W, H, color, filled) {
+    if (data.length < 2) return "";
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var rng = max - min || 1;
+    var pad = 4;
+    var h = H - pad*2;
+    var xs = data.map(function(_,i){ return pad + i * (W - pad*2) / (data.length-1); });
+    var ys = data.map(function(v){ return pad + h - (v - min)/rng * h; });
+    var d = "M " + xs[0] + " " + ys[0];
+    for (var i=1; i<xs.length; i++) {
+        var mx = (xs[i-1]+xs[i])/2;
+        d += " C " + mx + " " + ys[i-1] + " " + mx + " " + ys[i] + " " + xs[i] + " " + ys[i];
+    }
+    var path = '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/>';
+    if (filled) {
+        var area = d + " L " + xs[xs.length-1] + " " + (H-pad) + " L " + xs[0] + " " + (H-pad) + " Z";
+        path = '<path d="' + area + '" fill="' + color + '" fill-opacity="0.08"/>' + path;
+    }
+    return { svg: path, xs: xs, ys: ys, min: min, max: max };
+}
+
+function drawDots(xs, ys, color, svgId, field, tipId) {
+    var svg = document.getElementById(svgId);
+    // Elimina puntos anteriores
+    var old = svg.querySelectorAll(".snap-dot");
+    old.forEach(function(el){ el.parentNode.removeChild(el); });
+
+    xs.forEach(function(x, i) {
+        var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", ys[i]);
+        circle.setAttribute("r", "3");
+        circle.setAttribute("fill", color);
+        circle.setAttribute("class", "snap-dot");
+        circle.style.cursor = "pointer";
+        (function(snap, cx, cy){
+            circle.addEventListener("mouseenter", function(e){
+                var tip = document.getElementById(tipId);
+                var rect = document.getElementById(svgId).getBoundingClientRect();
+                tip.style.display = "block";
+                var fechaStr = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+                tip.innerText = fechaStr + "  " + fmt(snap[field]) + " \u20AC";
+                tip.style.left = (cx + 6) + "px";
+                tip.style.top  = (cy - 28) + "px";
+            });
+            circle.addEventListener("mouseleave", function(){
+                document.getElementById(tipId).style.display = "none";
+            });
+        })(historial[i], x, ys[i]);
+        svg.appendChild(circle);
+    });
+}
+
+function drawSparkline(svgId, field, color, tipId) {
+    var svg = document.getElementById(svgId);
+    var W   = svg.clientWidth || svg.parentElement.clientWidth || 300;
+    var H   = 48;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = "";
+    var data = historial.map(function(s){ return s[field]; });
+    if (data.length < 2) {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="9">Sin datos — registra snapshots</text>';
+        return;
+    }
+    var r = makePath(data, W, H, color, true);
+    if (!r) return;
+    svg.innerHTML = r.svg;
+    drawDots(r.xs, r.ys, color, svgId, field, tipId);
+}
+
+function drawBigChart() {
+    var svg = document.getElementById("chart-big");
+    var tip = document.getElementById("tip-big");
+    var W   = svg.clientWidth || svg.parentElement.clientWidth || 600;
+    var H   = 200;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = "";
+
+    var data = historial.map(function(s){ return s[tabActiva]; });
+    if (data.length < 2) {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="11">Registra al menos 2 snapshots para ver la gráfica</text>';
+        document.getElementById("chart-xaxis").innerHTML = "";
+        return;
+    }
+
+    var color = COLORES[tabActiva];
+    var pad   = 8;
+    var min   = Math.min.apply(null, data);
+    var max   = Math.max.apply(null, data);
+    var rng   = max - min || 1;
+    var h     = H - pad*2 - 20; // 20px para etiquetas eje Y
+    var xs    = data.map(function(_,i){ return pad + i*(W-pad*2)/(data.length-1); });
+    var ys    = data.map(function(v){ return pad + h - (v-min)/rng*h; });
+
+    // Grid lines horizontales
+    var nGrid = 4;
+    var gridSvg = "";
+    for (var g=0; g<=nGrid; g++) {
+        var yg = pad + h/nGrid*g;
+        var val = max - (max-min)/nGrid*g;
+        gridSvg += '<line x1="' + pad + '" y1="' + yg + '" x2="' + (W-pad) + '" y2="' + yg
+            + '" stroke="#1e293b" stroke-width="1"/>';
+        gridSvg += '<text x="' + (pad+2) + '" y="' + (yg-3) + '" fill="#334155" font-family="JetBrains Mono" font-size="8">'
+            + fmtK(val) + '</text>';
+    }
+    svg.innerHTML = gridSvg;
+
+    // Path + área
+    var d = "M " + xs[0] + " " + ys[0];
+    for (var i=1; i<xs.length; i++) {
+        var mx = (xs[i-1]+xs[i])/2;
+        d += " C " + mx + " " + ys[i-1] + " " + mx + " " + ys[i] + " " + xs[i] + " " + ys[i];
+    }
+    var area = d + " L " + xs[xs.length-1] + " " + (pad+h) + " L " + xs[0] + " " + (pad+h) + " Z";
+    svg.innerHTML += '<path d="' + area + '" fill="' + color + '" fill-opacity="0.07"/>';
+    svg.innerHTML += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>';
+
+    // Dots interactivos grandes
+    xs.forEach(function(x, i){
+        var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", ys[i]);
+        circle.setAttribute("r", "4");
+        circle.setAttribute("fill", color);
+        circle.setAttribute("stroke", "#080e1a");
+        circle.setAttribute("stroke-width", "2");
+        circle.style.cursor = "pointer";
+        (function(snap, cx, cy){
+            circle.addEventListener("mouseenter", function(){
+                tip.style.display = "block";
+                var fechaStr = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+                tip.innerText = fechaStr + "  " + fmt(snap[tabActiva]) + " \u20AC";
+                tip.style.left = (cx + 8) + "px";
+                tip.style.top  = (cy - 36) + "px";
+            });
+            circle.addEventListener("mouseleave", function(){ tip.style.display = "none"; });
+        })(historial[i], x, ys[i]);
+        svg.appendChild(circle);
+    });
+
+    // Eje X con fechas
+    var xaxis = document.getElementById("chart-xaxis");
+    var step  = Math.max(1, Math.floor(historial.length / 5));
+    var labels = [];
+    for (var j=0; j<historial.length; j++) {
+        if (j === 0 || j === historial.length-1 || j % step === 0) {
+            var fStr = new Date(historial[j].fecha).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"});
+            labels.push('<span class="mono text-[8px] text-slate-600">' + fStr + '</span>');
+        } else {
+            labels.push('<span></span>');
+        }
+    }
+    xaxis.innerHTML = labels.join("");
+}
+
+function drawSnapTable() {
+    var el = document.getElementById("snapTable");
+    if (historial.length === 0) {
+        el.innerHTML = '<p class="mono text-[9px] text-slate-700">Ningún registro todavía.</p>';
+        document.getElementById("histCount").innerText = "0 registros guardados";
+        return;
+    }
+    document.getElementById("histCount").innerText = historial.length + " registro" + (historial.length!==1?"s":"") + " guardado" + (historial.length!==1?"s":"");
+    var rows = historial.slice().reverse().slice(0, 8).map(function(s){
+        var fStr = new Date(s.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+        return '<div class="flex justify-between items-center bg-slate-900/40 px-3 py-2 rounded-lg">'
+            + '<span class="mono text-[9px] text-slate-500">' + fStr + '</span>'
+            + '<div class="flex gap-4">'
+            + '<span class="mono text-[9px] text-violet-400">F: ' + fmtK(s.fondos) + '</span>'
+            + '<span class="mono text-[9px] text-emerald-400">I: ' + fmtK(s.indie)  + '</span>'
+            + '<span class="mono text-[9px] text-rose-400">E: '   + fmtK(s.epsv)   + '</span>'
+            + '<span class="mono text-[9px] text-green-400 font-bold">' + fmtK(s.total) + ' \u20AC</span>'
+            + '</div></div>';
+    });
+    el.innerHTML = rows.join("");
+}
+
+function actualizarGraficas() {
+    drawSparkline("spark-fondos", "fondos", COLORES.fondos, "tip-fondos");
+    drawSparkline("spark-indie",  "indie",  COLORES.indie,  "tip-indie");
+    drawSparkline("spark-epsv",   "epsv",   COLORES.epsv,   "tip-epsv");
+    drawBigChart();
+    drawSnapTable();
+}
+
+function setTab(tab) {
+    tabActiva = tab;
+    ["total","fondos","indie","epsv"].forEach(function(t){
+        var btn = document.getElementById("tab-"+t);
+        btn.classList.toggle("active", t===tab);
+    });
+    drawBigChart();
+}
+
+// ══════════════════════════════════════════════════
 // UTILIDADES
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function fmt(n) {
-    return n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2});
+    return (n||0).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtK(n) {
+    if (!n) return "0";
+    if (Math.abs(n) >= 1000) return (n/1000).toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1}) + "k";
+    return (n||0).toLocaleString("es-ES",{minimumFractionDigits:0,maximumFractionDigits:0});
 }
 function setStatus(msg, color) {
-    var s = document.getElementById("status");
-    var map = {amber:"text-amber-400", green:"text-green-400", red:"text-red-400"};
-    s.className = "mono text-[10px] mt-2 " + (map[color] || "text-slate-400");
+    var s   = document.getElementById("status");
+    var map = {amber:"text-amber-400",green:"text-green-400",red:"text-red-400"};
+    s.className = "mono text-[10px] mt-2 " + (map[color]||"text-slate-400");
     s.innerText = msg;
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // PERSISTENCIA
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function save() {
     localStorage.setItem("isukiza_v4", JSON.stringify({
-        f1_vl:    document.getElementById("f1_vl").value,
-        f1_part:  document.getElementById("f1_part").value,
+        f1_vl: document.getElementById("f1_vl").value,
+        f1_part: document.getElementById("f1_part").value,
         f1_coste: document.getElementById("f1_coste").value,
-        f2_vl:    document.getElementById("f2_vl").value,
-        f2_part:  document.getElementById("f2_part").value,
+        f2_vl: document.getElementById("f2_vl").value,
+        f2_part: document.getElementById("f2_part").value,
         f2_coste: document.getElementById("f2_coste").value,
         indie_mer: document.getElementById("indie_mer").value,
         indie_inv: document.getElementById("indie_inv").value,
         indie_ef:  document.getElementById("indie_ef").value,
-        p1:  document.getElementById("p1").value,
-        p2:  document.getElementById("p2").value,
+        p1: document.getElementById("p1").value,
+        p2: document.getElementById("p2").value,
         vlp: document.getElementById("vlp").value,
         ts:  document.getElementById("fondosTimestamp").innerText
     }));
 }
 
+function saveHistorial() {
+    localStorage.setItem("isukiza_hist", JSON.stringify(historial));
+}
+
 function load() {
+    // Datos del formulario
     var raw = localStorage.getItem("isukiza_v4");
     var d   = raw ? JSON.parse(raw) : {};
-
-    var set = function(id, val) {
-        var el = document.getElementById(id);
-        if (el && val !== undefined && val !== null && val !== "") el.value = val;
-    };
-
+    var set = function(id, val){ var el=document.getElementById(id); if(el && val) el.value=val; };
     set("f1_vl",    d.f1_vl);
     set("f1_part",  d.f1_part);
     set("f1_coste", d.f1_coste);
@@ -611,18 +942,31 @@ function load() {
     document.getElementById("vlp_m").value = d.vlp || "";
     if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
 
-    // Recalcular todo con datos cargados
+    // Historial
+    var rawH = localStorage.getItem("isukiza_hist");
+    historial = rawH ? JSON.parse(rawH) : [];
+    if (d.vlp) {
+        var ts = new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+        var last = historial[historial.length-1];
+        if (last) document.getElementById("snapMsg").innerText = "Último: " + new Date(last.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+    }
+
+    // Recalcular
     calcFondo("f1");
     calcFondo("f2");
     calcIndie();
     calcEPSV();
 
-    // Bolsa en vivo
+    // Gráficas (con pequeño delay para que el SVG tenga dimensiones)
+    setTimeout(actualizarGraficas, 100);
+
+    // Bolsa
     fetchAllPrices();
-    setInterval(fetchAllPrices, 5 * 60 * 1000);
+    setInterval(fetchAllPrices, 5*60*1000);
 }
 
 window.onload = load;
+window.addEventListener("resize", function(){ actualizarGraficas(); });
 </script>
 </body>
 </html>
