@@ -310,6 +310,60 @@
                 </div>
             </div>
 
+            <!-- == EFECTIVO == -->
+            <div class="card p-6 border-l-4 border-l-cyan-600" id="card-efectivo">
+                <h2 class="text-sm font-bold text-cyan-300 tracking-widest uppercase mb-5">&#128181; Efectivo</h2>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="lbl" style="color:#67e8f9">Abanca (&euro;)</label>
+                            <input type="number" id="ef_abanca" step="any" placeholder="0.00"
+                                oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        </div>
+                        <div>
+                            <label class="lbl" style="color:#67e8f9">Santander (&euro;)</label>
+                            <input type="number" id="ef_santander" step="any" placeholder="0.00"
+                                oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="lbl" style="color:#67e8f9">Kutxabank (&euro;)</label>
+                            <input type="number" id="ef_kutxa" step="any" placeholder="0.00"
+                                oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        </div>
+                        <div>
+                            <label class="lbl" style="color:#67e8f9">MyInvestor (&euro;)</label>
+                            <input type="number" id="ef_myinvestor" step="any" placeholder="0.00"
+                                oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
+                        <input type="number" id="ef_casa" step="any" placeholder="0.00"
+                            oninput="calcEfectivo()" onchange="calcEfectivo()"
+                            class="inp" style="color:#67e8f9; border-color:#164e63;">
+                    </div>
+                    <div class="pt-3 border-t border-slate-800">
+                        <!-- Desglose -->
+                        <div id="ef_desglose" class="space-y-1 mb-3 hidden"></div>
+                        <div class="flex justify-between items-center">
+                            <span class="mono text-[9px] text-slate-600 uppercase">Total efectivo</span>
+                            <span id="ef_total" class="mono text-lg font-bold text-cyan-300">&mdash;</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <p class="lbl mb-1" style="color:#22d3ee">Evolución efectivo</p>
+                    <svg id="spark-ef" width="100%" height="48" style="display:block;"></svg>
+                    <div id="tip-ef" class="tooltip"></div>
+                </div>
+            </div>
+
             <!-- ══ JUBILACION EPSV ══ -->
             <div class="card p-6 border-l-4 border-l-rose-600" id="card-epsv">
                 <div class="flex items-center justify-between mb-5">
@@ -383,6 +437,9 @@
                     <button class="tab-btn" onclick="setTab('fondos')" id="tab-fondos">Fondos</button>
                     <button class="tab-btn" onclick="setTab('indie')" id="tab-indie">Indie</button>
                     <button class="tab-btn" onclick="setTab('epsv')" id="tab-epsv">EPSV</button>
+                    <button class="tab-btn" onclick="setTab('efectivo')" id="tab-efectivo">Efectivo</button>
+                    <button onclick="exportarHistorial()" class="tab-btn" style="color:#67e8f9;border-color:#164e63;" title="Exportar historial a JSON">&#8659; Export</button>
+                    <label class="tab-btn" style="color:#a78bfa;border-color:#2e1065;cursor:pointer;" title="Importar historial desde JSON">&#8657; Import<input type="file" id="importFile" accept=".json" onchange="importarHistorial(event)" style="display:none;"></label>
                     <button onclick="borrarHistorial()" class="tab-btn" style="color:#f87171;border-color:#450a0a;" title="Borrar todo el historial">&#128465;</button>
                 </div>
             </div>
@@ -622,7 +679,39 @@ function syncVLP(v) {
     calcEPSV();
 }
 
-// ══════════════════════════════════════════════════
+// ==============================================
+// EFECTIVO
+// ==============================================
+function calcEfectivo() {
+    var campos = [
+        { id: "ef_abanca",    label: "Abanca"     },
+        { id: "ef_santander", label: "Santander"  },
+        { id: "ef_kutxa",     label: "Kutxabank"  },
+        { id: "ef_myinvestor",label: "MyInvestor" },
+        { id: "ef_casa",      label: "Casa"       }
+    ];
+    var total = 0;
+    var filas = [];
+    campos.forEach(function(c) {
+        var v = parseFloat(document.getElementById(c.id).value)||0;
+        total += v;
+        if (v > 0) {
+            filas.push('<div class="flex justify-between"><span class="mono text-[9px] text-slate-500">' + c.label + '</span><span class="mono text-[9px] text-cyan-400">' + fmt(v) + ' €</span></div>');
+        }
+    });
+    var desglose = document.getElementById("ef_desglose");
+    if (filas.length > 1) {
+        desglose.innerHTML = filas.join("");
+        desglose.classList.remove("hidden");
+    } else {
+        desglose.classList.add("hidden");
+    }
+    document.getElementById("ef_total").innerText = total > 0 ? fmt(total)+" €" : "—";
+    calcTotal();
+    save();
+}
+
+// ==============================================
 // TOTAL GLOBAL
 // ══════════════════════════════════════════════════
 function getValues() {
@@ -646,8 +735,13 @@ function getValues() {
     var vlp = parseFloat(document.getElementById("vlp").value)||0;
     var epsv = ((parseFloat(document.getElementById("p1").value)||0)
               + (parseFloat(document.getElementById("p2").value)||0)) * vlp;
-    return { bolsa: bolsa, fondos: fondos, indie: indie, epsv: epsv,
-             total: bolsa + fondos + indie + epsv };
+    var efectivo = (parseFloat(document.getElementById("ef_abanca").value)||0)
+                 + (parseFloat(document.getElementById("ef_santander").value)||0)
+                 + (parseFloat(document.getElementById("ef_kutxa").value)||0)
+                 + (parseFloat(document.getElementById("ef_myinvestor").value)||0)
+                 + (parseFloat(document.getElementById("ef_casa").value)||0);
+    return { bolsa: bolsa, fondos: fondos, indie: indie, epsv: epsv, efectivo: efectivo,
+             total: bolsa + fondos + indie + epsv + efectivo };
 }
 
 function calcTotal() {
@@ -688,7 +782,8 @@ function registrarSnapshot() {
         fondos: v.fondos,
         indie: v.indie,
         epsv: v.epsv,
-        bolsa: v.bolsa
+        bolsa: v.bolsa,
+        efectivo: v.efectivo
     };
     historial.push(snap);
     saveHistorial();
@@ -723,11 +818,55 @@ function borrarHistorial() {
     actualizarGraficas();
 }
 
-// ══════════════════════════════════════════════════
+function exportarHistorial() {
+    if (historial.length === 0) {
+        showToast("No hay registros que exportar", "#7c2d12", "#f97316");
+        return;
+    }
+    var json = JSON.stringify(historial, null, 2);
+    var blob = new Blob([json], { type: "application/json" });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    var fecha = new Date().toISOString().slice(0,10);
+    a.href     = url;
+    a.download = "isukiza_historial_" + fecha + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("↓ Historial exportado", "#14532d", "#4ade80");
+}
+
+function importarHistorial(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error("Formato incorrecto");
+            // Merge: combina y deduplica por fecha
+            var mapaExistente = {};
+            historial.forEach(function(s){ mapaExistente[s.fecha] = true; });
+            var nuevos = data.filter(function(s){ return !mapaExistente[s.fecha]; });
+            historial = historial.concat(nuevos);
+            historial.sort(function(a,b){ return new Date(a.fecha) - new Date(b.fecha); });
+            saveHistorial();
+            actualizarGraficas();
+            showToast("↑ " + nuevos.length + " registro(s) importado(s)", "#14532d", "#4ade80");
+        } catch(err) {
+            showToast("Error al leer el archivo", "#7c2d12", "#f97316");
+        }
+        // Reset input para permitir reimportar el mismo archivo
+        event.target.value = "";
+    };
+    reader.readAsText(file);
+}
+
+// ==============================================
 // GRÁFICAS — sparklines y gráfica grande
 // ══════════════════════════════════════════════════
 var COLORES = {
     total:  "#4ade80",
+    efectivo: "#22d3ee",
     fondos: "#a78bfa",
     indie:  "#34d399",
     epsv:   "#fb7185"
@@ -905,6 +1044,7 @@ function drawSnapTable() {
             + '<span class="mono text-[9px] text-violet-400">F: ' + fmtK(s.fondos) + '</span>'
             + '<span class="mono text-[9px] text-emerald-400">I: ' + fmtK(s.indie)  + '</span>'
             + '<span class="mono text-[9px] text-rose-400">E: '   + fmtK(s.epsv)   + '</span>'
+            + '<span class="mono text-[9px] text-cyan-400">C: ' + fmtK(s.efectivo||0) + '</span>'
             + '<span class="mono text-[9px] text-green-400 font-bold">' + fmtK(s.total) + ' \u20AC</span>'
             + '</div></div>';
     });
@@ -915,13 +1055,14 @@ function actualizarGraficas() {
     drawSparkline("spark-fondos", "fondos", COLORES.fondos, "tip-fondos");
     drawSparkline("spark-indie",  "indie",  COLORES.indie,  "tip-indie");
     drawSparkline("spark-epsv",   "epsv",   COLORES.epsv,   "tip-epsv");
+    drawSparkline("spark-ef",     "efectivo", COLORES.efectivo, "tip-ef");
     drawBigChart();
     drawSnapTable();
 }
 
 function setTab(tab) {
     tabActiva = tab;
-    ["total","fondos","indie","epsv"].forEach(function(t){
+    ["total","fondos","indie","epsv","efectivo"].forEach(function(t){
         var btn = document.getElementById("tab-"+t);
         btn.classList.toggle("active", t===tab);
     });
@@ -963,6 +1104,11 @@ function save() {
         p1: document.getElementById("p1").value,
         p2: document.getElementById("p2").value,
         vlp: document.getElementById("vlp").value,
+        ef_abanca:    document.getElementById("ef_abanca").value,
+        ef_santander: document.getElementById("ef_santander").value,
+        ef_kutxa:     document.getElementById("ef_kutxa").value,
+        ef_myinvestor:document.getElementById("ef_myinvestor").value,
+        ef_casa:      document.getElementById("ef_casa").value,
         ts:  document.getElementById("fondosTimestamp").innerText
     }));
 }
@@ -985,6 +1131,11 @@ function load() {
     set("indie_mer", d.indie_mer);
     set("indie_inv", d.indie_inv);
     set("indie_ef",  d.indie_ef);
+    set("ef_abanca",     d.ef_abanca);
+    set("ef_santander",  d.ef_santander);
+    set("ef_kutxa",      d.ef_kutxa);
+    set("ef_myinvestor", d.ef_myinvestor);
+    set("ef_casa",       d.ef_casa);
     set("p1",  d.p1  || "1376.6933");
     set("p2",  d.p2  || "1975.6095");
     set("vlp", d.vlp);
@@ -1005,6 +1156,7 @@ function load() {
     calcFondo("f2");
     calcIndie();
     calcEPSV();
+    calcEfectivo();
 
     // Gráficas (con pequeño delay para que el SVG tenga dimensiones)
     setTimeout(actualizarGraficas, 100);
