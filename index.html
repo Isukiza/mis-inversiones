@@ -654,11 +654,16 @@ function fetchAllPrices() {
         .then(function(){
             document.getElementById("bolsaStatus").innerText = "live";
             setStatus("Bolsa actualizada  " + new Date().toLocaleTimeString("es-ES"), "green");
-            renderBolsa();
-            calcTotal();
+            try { renderBolsa(); } catch(e){ console.error("renderBolsa error:", e); }
+            try { calcTotal();   } catch(e){ console.error("calcTotal error:",   e); }
         })
-        .catch(function(){
-            setStatus("Error actualizando bolsa", "red");
+        .catch(function(e){
+            console.warn("fetchAllPrices error:", e);
+            // Aun con error parcial, renderizar con los precios que tengamos
+            try { renderBolsa(); } catch(e2){}
+            try { calcTotal();   } catch(e2){}
+            document.getElementById("bolsaStatus").innerText = "parcial";
+            setStatus("Bolsa: algunos precios no disponibles", "amber");
         });
 }
 
@@ -673,17 +678,19 @@ function renderBolsa() {
     }
     var totalBolsaInv = 0, totalBolsaMer = 0;
     list.innerHTML = acciones.map(function(a, idx){
-        var price  = precios[a.ticker] || 0;
-        var sub    = price * a.cant;
-        var subEur = a.mon === "USD" ? sub * usd_eur : sub;
-        var inv    = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
-        var gan    = subEur - inv;
-        var ganPct = inv > 0 ? gan / inv * 100 : 0;
-        var esG    = gan >= 0;
-        totalBolsaInv += inv;
+        var price   = precios[a.ticker] || 0;
+        var sub     = price * a.cant;
+        var subEur  = a.mon === "USD" ? sub * usd_eur : sub;
+        // inv y coste se guardan en la moneda del valor → convertir a EUR para comparar
+        var invRaw  = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
+        var invEur  = a.mon === "USD" ? invRaw * usd_eur : invRaw;
+        var gan     = subEur - invEur;
+        var ganPct  = invEur > 0 ? gan / invEur * 100 : 0;
+        var esG     = gan >= 0;
+        totalBolsaInv += invEur;
         totalBolsaMer += subEur;
         var link = "https://finance.yahoo.com/quote/" + a.ticker;
-        var rentHTML = inv > 0
+        var rentHTML = invEur > 0
             ? '<div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">'
               + '<span class="mono text-[9px] text-slate-500">Rentabilidad</span>'
               + '<span class="mono text-[10px] font-bold ' + (esG?"gain":"loss") + '">'
@@ -705,16 +712,17 @@ function renderBolsa() {
             + '</div>';
     }).join("");
     // Total bolsa al pie
-    var ganT = totalBolsaMer - totalBolsaInv;
-    var esGT = ganT >= 0;
-    var footer = document.getElementById("bolsaFooter");
+    var ganT    = totalBolsaMer - totalBolsaInv;
+    var ganPctT = totalBolsaInv > 0 ? ganT / totalBolsaInv * 100 : 0;
+    var esGT    = ganT >= 0;
+    var footer  = document.getElementById("bolsaFooter");
     if (footer) {
         footer.className = "mt-3 pt-3 border-t border-slate-800 flex justify-between items-center";
         footer.innerHTML = '<span class="mono text-[9px] text-slate-600 uppercase">Total bolsa</span>'
             + '<div class="text-right">'
             + '<p class="mono text-sm font-bold text-blue-300">' + fmt(totalBolsaMer) + ' €</p>'
             + (totalBolsaInv > 0 ? '<p class="mono text-[9px] ' + (esGT?"gain":"loss") + '">'
-               + (esGT?"+":"") + fmt(ganT) + " € (" + (esGT?"+":"") + ganPct.toFixed(2) + "%)</p>" : "")
+               + (esGT?"+":"") + fmt(ganT) + " € (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)</p>" : "")
             + '</div>';
     }
 }
