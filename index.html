@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -118,6 +118,18 @@
             100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
         }
         .flash { animation: flashGreen 0.6s ease-out; }
+        /* Modal bolsa */
+        .modal-overlay {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+            z-index:200; align-items:center; justify-content:center;
+        }
+        .modal-overlay.open { display:flex; }
+        .modal-box {
+            background:#0f172a; border:1px solid #334155; border-radius:1.25rem;
+            padding:28px; width:min(420px,92vw); max-height:90vh; overflow-y:auto;
+        }
+        .modal-box input { margin-bottom:0; }
+
     </style>
 </head>
 <body class="bg-[#080e1a] text-slate-100 min-h-screen p-4 md:p-10">
@@ -159,9 +171,14 @@
             <div class="card p-6">
                 <div class="flex items-center justify-between mb-5">
                     <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
-                    <span id="bolsaStatus" class="badge bg-blue-950 text-blue-400">&mdash;</span>
+                    <div class="flex items-center gap-2">
+                        <span id="bolsaStatus" class="badge bg-blue-950 text-blue-400">&mdash;</span>
+                        <button onclick="abrirModal(-1)" title="Añadir valor"
+                            style="background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;border-radius:8px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:bold;line-height:1;">+</button>
+                    </div>
                 </div>
                 <div id="listaAcciones" class="space-y-3"></div>
+                <div id="bolsaFooter"></div>
             </div>
 
             <!-- ══ FONDOS INDEXADOS ══ -->
@@ -483,6 +500,63 @@
 
     </div><!-- end container -->
 
+    <!-- ══ MODAL EDITAR VALOR ══ -->
+    <div class="modal-overlay" id="modalBolsa">
+        <div class="modal-box">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="font-bold text-slate-100 text-base" id="modalTitle">Editar valor</h3>
+                <button onclick="cerrarModal()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="lbl">Nombre</label>
+                    <input type="text" id="m_nombre" class="inp" placeholder="Ej: Apple">
+                </div>
+                <div>
+                    <label class="lbl">Ticker Yahoo Finance</label>
+                    <input type="text" id="m_ticker" class="inp" placeholder="Ej: AAPL" style="text-transform:uppercase;">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="lbl">Moneda</label>
+                        <select id="m_mon" class="inp" style="cursor:pointer;">
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="lbl">N&ordm; T&iacute;tulos</label>
+                        <input type="number" id="m_cant" step="any" class="inp" placeholder="0" oninput="modalSyncCantCoste()">
+                    </div>
+                </div>
+                <div class="pt-1 border-t border-slate-800">
+                    <p class="lbl mb-3" style="color:#93c5fd;">Coste (se calculan mutuamente)</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="lbl">Coste Medio / t&iacute;tulo</label>
+                            <input type="number" id="m_coste" step="any" class="inp" placeholder="0.00"
+                                oninput="modalSyncCosteToInv()">
+                        </div>
+                        <div>
+                            <label class="lbl">Total Invertido</label>
+                            <input type="number" id="m_inv" step="any" class="inp" placeholder="0.00"
+                                oninput="modalSyncInvToCoste()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="guardarModal()" class="btn-snap flex-1" style="text-align:center;">Guardar</button>
+                <button onclick="eliminarValor()" id="m_eliminar"
+                    style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:10px;padding:10px 18px;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;cursor:pointer;">
+                    Eliminar
+                </button>
+            </div>
+            <input type="hidden" id="m_idx" value="-1">
+        </div>
+    </div>
+
     <div id="snapToast" class="fixed bottom-6 right-6 bg-green-900 border border-green-600 text-green-300 mono text-[11px] font-bold px-5 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none">
         ✓ Snapshot registrado
     </div>
@@ -491,13 +565,15 @@
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-var acciones = [
-    { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD" },
-    { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR" },
-    { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR" }
+// Cartera de acciones — se carga desde localStorage
+var ACCIONES_DEFAULT = [
+    { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD", coste: 0, inv: 0 },
+    { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR", coste: 0, inv: 0 },
+    { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR", coste: 0, inv: 0 }
 ];
-var precios = { "AMZN": 0, "SAN.MC": 0, "OHLA.MC": 0 };
-var usd_eur = 0.92;
+var acciones = [];
+var precios  = {};
+var usd_eur  = 0.92;
 var historial = []; // array de snapshots
 var tabActiva = "total";
 
@@ -586,24 +662,143 @@ function fetchAllPrices() {
         });
 }
 
-// ══════════════════════════════════════════════════
-// RENDER BOLSA
-// ══════════════════════════════════════════════════
+// ==============================================
+// RENDER BOLSA — cartera editable
+// ==============================================
 function renderBolsa() {
-    document.getElementById("listaAcciones").innerHTML = acciones.map(function(a){
-        var price  = precios[a.ticker];
+    var list = document.getElementById("listaAcciones");
+    if (!acciones.length) {
+        list.innerHTML = '<p class="mono text-[9px] text-slate-600 text-center py-4">Sin valores. Pulsa + para añadir.</p>';
+        return;
+    }
+    var totalBolsaInv = 0, totalBolsaMer = 0;
+    list.innerHTML = acciones.map(function(a, idx){
+        var price  = precios[a.ticker] || 0;
         var sub    = price * a.cant;
         var subEur = a.mon === "USD" ? sub * usd_eur : sub;
-        var link   = "https://finance.yahoo.com/quote/" + a.ticker;
-        return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-700/50 transition-all">'
+        var inv    = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
+        var gan    = subEur - inv;
+        var ganPct = inv > 0 ? gan / inv * 100 : 0;
+        var esG    = gan >= 0;
+        totalBolsaInv += inv;
+        totalBolsaMer += subEur;
+        var link = "https://finance.yahoo.com/quote/" + a.ticker;
+        var rentHTML = inv > 0
+            ? '<div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">'
+              + '<span class="mono text-[9px] text-slate-500">Rentabilidad</span>'
+              + '<span class="mono text-[10px] font-bold ' + (esG?"gain":"loss") + '">'
+              + (esG?"+":"") + fmt(gan) + " € (" + (esG?"+":"") + ganPct.toFixed(2) + "%)</span></div>"
+            : "";
+        return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 hover:border-blue-700/40 transition-all">'
+            + '<div class="flex justify-between items-center">'
             + '<div><a href="' + link + '" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">'
             + a.nombre + ' <span class="text-blue-500 text-[9px]">&#8599;</span></a>'
-            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds &middot; ' + price.toFixed(2) + ' ' + a.mon + '</p></div>'
+            + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds · ' + price.toFixed(2) + ' ' + a.mon + '</p></div>'
+            + '<div class="flex items-center gap-2">'
             + '<div class="text-right"><p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
-            + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' USD</p>' : '')
-            + '</div></div>';
+            + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' ' + a.mon + '</p>' : "")
+            + '</div>'
+            + '<button onclick="abrirModal(' + idx + ')" title="Editar"'
+            + ' style="background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">✏️</button>'
+            + '</div></div>'
+            + rentHTML
+            + '</div>';
     }).join("");
+    // Total bolsa al pie
+    var ganT = totalBolsaMer - totalBolsaInv;
+    var esGT = ganT >= 0;
+    var footer = document.getElementById("bolsaFooter");
+    if (footer) {
+        footer.className = "mt-3 pt-3 border-t border-slate-800 flex justify-between items-center";
+        footer.innerHTML = '<span class="mono text-[9px] text-slate-600 uppercase">Total bolsa</span>'
+            + '<div class="text-right">'
+            + '<p class="mono text-sm font-bold text-blue-300">' + fmt(totalBolsaMer) + ' €</p>'
+            + (totalBolsaInv > 0 ? '<p class="mono text-[9px] ' + (esGT?"gain":"loss") + '">'
+               + (esGT?"+":"") + fmt(ganT) + " € (" + (esGT?"+":"") + ganPct.toFixed(2) + "%)</p>" : "")
+            + '</div>';
+    }
 }
+
+// Modal helpers
+var _modalEditIdx = -1;
+function abrirModal(idx) {
+    _modalEditIdx = idx;
+    var a = idx === -1
+        ? { nombre:"", ticker:"", mon:"EUR", cant:0, coste:0, inv:0 }
+        : acciones[idx];
+    document.getElementById("modalTitle").innerText = idx === -1 ? "Añadir valor" : "Editar: " + a.nombre;
+    document.getElementById("m_nombre").value = a.nombre || "";
+    document.getElementById("m_ticker").value = a.ticker || "";
+    document.getElementById("m_mon").value    = a.mon    || "EUR";
+    document.getElementById("m_cant").value   = a.cant   || "";
+    document.getElementById("m_coste").value  = a.coste  || "";
+    document.getElementById("m_inv").value    = a.inv    || "";
+    document.getElementById("m_idx").value    = idx;
+    document.getElementById("m_eliminar").style.display = idx === -1 ? "none" : "block";
+    document.getElementById("modalBolsa").classList.add("open");
+}
+function cerrarModal() {
+    document.getElementById("modalBolsa").classList.remove("open");
+}
+function modalSyncCosteToInv() {
+    var c = parseFloat(document.getElementById("m_coste").value)||0;
+    var n = parseFloat(document.getElementById("m_cant").value)||0;
+    if (c && n) document.getElementById("m_inv").value = (c * n).toFixed(2);
+}
+function modalSyncInvToCoste() {
+    var inv = parseFloat(document.getElementById("m_inv").value)||0;
+    var n   = parseFloat(document.getElementById("m_cant").value)||0;
+    if (inv && n) document.getElementById("m_coste").value = (inv / n).toFixed(4);
+}
+function modalSyncCantCoste() {
+    var c = parseFloat(document.getElementById("m_coste").value)||0;
+    var n = parseFloat(document.getElementById("m_cant").value)||0;
+    if (c && n) document.getElementById("m_inv").value = (c * n).toFixed(2);
+}
+function guardarModal() {
+    var nombre = document.getElementById("m_nombre").value.trim();
+    var ticker = document.getElementById("m_ticker").value.trim().toUpperCase();
+    if (!nombre || !ticker) { alert("Introduce nombre y ticker."); return; }
+    var a = {
+        nombre: nombre,
+        ticker: ticker,
+        mon:    document.getElementById("m_mon").value,
+        cant:   parseFloat(document.getElementById("m_cant").value)||0,
+        coste:  parseFloat(document.getElementById("m_coste").value)||0,
+        inv:    parseFloat(document.getElementById("m_inv").value)||0
+    };
+    var idx = parseInt(document.getElementById("m_idx").value);
+    if (idx === -1) {
+        acciones.push(a);
+        precios[a.ticker] = 0;
+    } else {
+        var oldTicker = acciones[idx].ticker;
+        if (oldTicker !== a.ticker) { precios[a.ticker] = 0; delete precios[oldTicker]; }
+        acciones[idx] = a;
+    }
+    cerrarModal();
+    saveAcciones();
+    fetchAllPrices();
+}
+function eliminarValor() {
+    var idx = parseInt(document.getElementById("m_idx").value);
+    if (idx < 0) return;
+    if (!confirm("Eliminar " + acciones[idx].nombre + "?")) return;
+    delete precios[acciones[idx].ticker];
+    acciones.splice(idx, 1);
+    cerrarModal();
+    saveAcciones();
+    renderBolsa();
+    calcTotal();
+}
+function saveAcciones() {
+    localStorage.setItem("isukiza_acciones", JSON.stringify(acciones));
+}
+// Cerrar modal al clicar fuera
+document.addEventListener("click", function(e){
+    if (e.target.id === "modalBolsa") cerrarModal();
+});
+
 
 // ══════════════════════════════════════════════════
 // FONDOS
@@ -1276,6 +1471,10 @@ function load() {
         if (last) document.getElementById("snapMsg").innerText = "Último: " + new Date(last.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
     }
 
+    // Cargar acciones
+    var rawA = localStorage.getItem("isukiza_acciones");
+    acciones = rawA ? JSON.parse(rawA) : JSON.parse(JSON.stringify(ACCIONES_DEFAULT));
+    acciones.forEach(function(a){ if (!precios[a.ticker]) precios[a.ticker] = 0; });
     // Recalcular
     calcFondo("f1");
     calcFondo("f2");
