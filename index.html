@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -41,7 +41,7 @@
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 8px 10px;
-            font-size: 12px;
+            font-size: 14px;
             color: #e2e8f0;
             outline: none;
             transition: border-color 0.15s;
@@ -53,17 +53,17 @@
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 6px 8px;
-            font-size: 11px;
+            font-size: 13px;
             color: #e2e8f0;
             outline: none;
             text-align: right;
-            width: 100px;
+            width: 110px;
             transition: border-color 0.15s;
         }
         .inp-sm:focus { border-color: #6366f1; }
         .lbl {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 8px; font-weight: 700;
+            font-size: 10px; font-weight: 700;
             text-transform: uppercase; letter-spacing: 0.1em;
             color: #475569; display: block; margin-bottom: 4px;
         }
@@ -294,12 +294,12 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                            <div><p class="lbl">Valor Invertido</p><p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
-                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p></div>
+                            <div><p class="lbl">Valor Invertido</p><p id="f1_inv" class="mono text-base font-bold text-slate-300">&mdash;</p></div>
+                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f1_mer" class="mono text-base font-bold text-violet-300">&mdash;</p></div>
                         </div>
                         <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                            <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                            <span id="f1_rent_val" class="mono text-sm font-bold"></span>
+                            <span class="mono text-[11px] text-slate-500">Rentabilidad</span>
+                            <span id="f1_rent_val" class="mono text-base font-bold"></span>
                         </div>
                     </div>
 
@@ -332,12 +332,12 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                            <div><p class="lbl">Valor Invertido</p><p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
-                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p></div>
+                            <div><p class="lbl">Valor Invertido</p><p id="f2_inv" class="mono text-base font-bold text-slate-300">&mdash;</p></div>
+                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f2_mer" class="mono text-base font-bold text-indigo-300">&mdash;</p></div>
                         </div>
                         <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                            <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                            <span id="f2_rent_val" class="mono text-sm font-bold"></span>
+                            <span class="mono text-[11px] text-slate-500">Rentabilidad</span>
+                            <span id="f2_rent_val" class="mono text-base font-bold"></span>
                         </div>
                     </div>
 
@@ -390,7 +390,7 @@
                         <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
                             <div>
                                 <p class="lbl">Rentabilidad</p>
-                                <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
+                                <p id="indie_rent" class="mono text-base font-bold text-slate-400">&mdash;</p>
                             </div>
                             <div class="text-right">
                                 <p class="lbl">Total (mercado + efectivo)</p>
@@ -488,11 +488,11 @@
                             <div class="grid grid-cols-3 gap-3">
                                 <div>
                                     <label class="lbl">Participaciones</label>
-                                    <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
+                                    <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:14px;">
                                 </div>
                                 <div>
                                     <label class="lbl">VLP (&euro;)</label>
-                                    <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#fca5a5;">
+                                    <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:14px;color:#fca5a5;">
                                 </div>
                                 <div class="flex flex-col justify-end">
                                     <p class="lbl">Valor</p>
@@ -505,11 +505,11 @@
                             <div class="grid grid-cols-3 gap-3">
                                 <div>
                                     <label class="lbl">Participaciones</label>
-                                    <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
+                                    <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:14px;">
                                 </div>
                                 <div>
                                     <label class="lbl">VLP (&euro;)</label>
-                                    <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#f9a8d4;">
+                                    <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:14px;color:#f9a8d4;">
                                 </div>
                                 <div class="flex flex-col justify-end">
                                     <p class="lbl">Valor</p>
@@ -899,8 +899,8 @@ function renderBolsa() {
         var link = "https://finance.yahoo.com/quote/" + a.ticker;
         var rentHTML = invEur > 0
             ? '<div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">'
-              + '<span class="mono text-[9px] text-slate-500">Rentabilidad</span>'
-              + '<span class="mono text-[10px] font-bold ' + (esG?"gain":"loss") + '">'
+              + '<span class="mono text-[11px] text-slate-500">Rentabilidad</span>'
+              + '<span class="mono text-sm font-bold ' + (esG?"gain":"loss") + '">'
               + (esG?"+":"") + fmt(gan) + " € (" + (esG?"+":"") + ganPct.toFixed(2) + "%)</span></div>"
             : "";
         return '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 hover:border-blue-700/40 transition-all">'
@@ -909,7 +909,7 @@ function renderBolsa() {
             + a.nombre + ' <span class="text-blue-500 text-[9px]">&#8599;</span></a>'
             + '<p class="mono text-[9px] text-slate-500 mt-0.5">' + a.cant + ' uds · ' + price.toFixed(2) + ' ' + a.mon + '</p></div>'
             + '<div class="flex items-center gap-2">'
-            + '<div class="text-right"><p class="mono text-sm font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
+            + '<div class="text-right"><p class="mono text-base font-bold text-blue-300">' + fmt(subEur) + ' &euro;</p>'
             + (a.mon === "USD" ? '<p class="mono text-[8px] text-slate-600">' + fmt(sub) + ' ' + a.mon + '</p>' : "")
             + '</div>'
             + '<button onclick="abrirModal(' + idx + ')" title="Editar"'
@@ -926,7 +926,7 @@ function renderBolsa() {
         footer.className = "mt-3 pt-3 border-t border-slate-800 flex justify-between items-center";
         footer.innerHTML = '<span class="mono text-[9px] text-slate-600 uppercase">Total bolsa</span>'
             + '<div class="text-right">'
-            + '<p class="mono text-sm font-bold text-blue-300">' + fmt(totalBolsaMer) + ' €</p>'
+            + '<p class="mono text-base font-bold text-blue-300">' + fmt(totalBolsaMer) + ' €</p>'
             + (totalBolsaInv > 0 ? '<p class="mono text-[9px] ' + (esGT?"gain":"loss") + '">'
                + (esGT?"+":"") + fmt(ganT) + " € (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)</p>" : "")
             + '</div>';
@@ -1108,7 +1108,7 @@ function calcEfectivo() {
         var v = parseFloat(document.getElementById(c.id).value)||0;
         total += v;
         if (v > 0) {
-            filas.push('<div class="flex justify-between"><span class="mono text-[9px] text-slate-500">' + c.label + '</span><span class="mono text-[9px] text-cyan-400">' + fmt(v) + ' €</span></div>');
+            filas.push('<div class="flex justify-between"><span class="mono text-[11px] text-slate-500">' + c.label + '</span><span class="mono text-[11px] text-cyan-400">' + fmt(v) + ' €</span></div>');
         }
     });
     var desglose = document.getElementById("ef_desglose");
@@ -1389,11 +1389,11 @@ function drawSnapTable() {
         return '<div class="flex items-center bg-slate-900/40 px-3 py-2 rounded-lg gap-2">'
             + '<span class="mono text-[9px] text-slate-500 flex-shrink-0">' + fStr + '</span>'
             + '<div class="flex gap-3 flex-wrap flex-1 justify-end">'
-            + '<span class="mono text-[9px] text-cyan-400">C: ' + fmtK(s.efectivo||0) + '</span>'
-            + '<span class="mono text-[9px] text-violet-400">F: ' + fmtK(s.fondos) + '</span>'
-            + '<span class="mono text-[9px] text-emerald-400">I: ' + fmtK(s.indie) + '</span>'
-            + '<span class="mono text-[9px] text-rose-400">E: ' + fmtK(s.epsv) + '</span>'
-            + '<span class="mono text-[9px] text-green-400 font-bold">' + fmtK(s.total) + ' €</span>'
+            + '<span class="mono text-[11px] text-cyan-400">C: ' + fmtK(s.efectivo||0) + '</span>'
+            + '<span class="mono text-[11px] text-violet-400">F: ' + fmtK(s.fondos) + '</span>'
+            + '<span class="mono text-[11px] text-emerald-400">I: ' + fmtK(s.indie) + '</span>'
+            + '<span class="mono text-[11px] text-rose-400">E: ' + fmtK(s.epsv) + '</span>'
+            + '<span class="mono text-[11px] text-green-400 font-bold">' + fmtK(s.total) + ' €</span>'
             + '</div>'
             + '<button onclick="borrarSnapshot(' + realIdx + ')"'
             + ' style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:JetBrains Mono,monospace;flex-shrink:0;" title="Borrar">×</button>'
@@ -1574,3 +1574,5 @@ window.addEventListener("resize", function(){ actualizarGraficas(); drawTreemap(
 </script>
 </body>
 </html>
+
+  
