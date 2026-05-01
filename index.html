@@ -67,7 +67,6 @@
             text-transform: uppercase; letter-spacing: 0.1em;
             color: #475569; display: block; margin-bottom: 4px;
         }
-        /* Botón snapshot */
         .btn-snap {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
@@ -82,7 +81,6 @@
         }
         .btn-snap:hover { opacity: 0.85; transform: translateY(-1px); }
         .btn-snap:active { transform: scale(0.96); }
-        /* Tabs gráfica grande */
         .tab-btn {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px; font-weight: 700;
@@ -96,7 +94,6 @@
             color: #e2e8f0;
             border-color: #6366f1;
         }
-        /* Tooltip */
         .tooltip {
             position: absolute;
             background: #0f172a;
@@ -111,14 +108,12 @@
             z-index: 100;
             display: none;
         }
-        /* Flash animación al registrar */
         @keyframes flashGreen {
             0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.6); }
             50%  { box-shadow: 0 0 0 12px rgba(74,222,128,0); }
             100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
         }
         .flash { animation: flashGreen 0.6s ease-out; }
-        /* Modal bolsa */
         .modal-overlay {
             display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
             z-index:200; align-items:center; justify-content:center;
@@ -128,8 +123,69 @@
             background:#0f172a; border:1px solid #334155; border-radius:1.25rem;
             padding:28px; width:min(420px,92vw); max-height:90vh; overflow-y:auto;
         }
-        .modal-box input { margin-bottom:0; }
 
+        /* ══ COLLAPSIBLE CARDS ══ */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            gap: 10px;
+        }
+        .card-header:hover .collapse-btn { opacity: 1; }
+        .card-body {
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
+                        opacity 0.25s ease,
+                        margin-top 0.25s ease;
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .card-body.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+            margin-top: 0 !important;
+            pointer-events: none;
+        }
+        .collapse-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: rgba(30,41,59,0.8);
+            border: 1px solid #334155;
+            color: #64748b;
+            border-radius: 8px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            line-height: 1.4;
+            opacity: 0.6;
+        }
+        .collapse-btn:hover { border-color: #6366f1; color: #a5b4fc; opacity: 1; }
+        .card-summary {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        /* Botón global contraer */
+        .btn-collapse-all {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 700;
+            padding: 6px 14px; border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid #334155;
+            background: rgba(30,41,59,0.6);
+            color: #64748b;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-collapse-all:hover { border-color: #6366f1; color: #a5b4fc; }
+        .btn-collapse-all.all-collapsed { border-color: #4f46e5; color: #818cf8; background: rgba(79,70,229,0.1); }
     </style>
 </head>
 <body class="bg-[#080e1a] text-slate-100 min-h-screen p-4 md:p-10">
@@ -157,10 +213,15 @@
                     <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
                     <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
                 </div>
-                <!-- BOTÓN SNAPSHOT -->
-                <button onclick="registrarSnapshot()" class="btn-snap">
-                    📸 Registrar snapshot
-                </button>
+                <div class="flex gap-2 items-center">
+                    <!-- BOTÓN GLOBAL COLAPSAR -->
+                    <button id="btnCollapseAll" onclick="toggleAll()" class="btn-collapse-all">
+                        ▲ Contraer todo
+                    </button>
+                    <button onclick="registrarSnapshot()" class="btn-snap">
+                        📸 Registrar snapshot
+                    </button>
+                </div>
                 <p id="snapMsg" class="mono text-[9px] text-slate-600 text-right"></p>
             </div>
         </header>
@@ -168,333 +229,368 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             <!-- ══ BOLSA EN VIVO ══ -->
-            <div class="card p-6">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
-                    <div class="flex items-center gap-2">
+            <div class="card p-6" id="card-bolsa">
+                <div class="card-header mb-5" onclick="toggleCard('bolsa')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
+                        <span id="summary-bolsa" class="card-summary text-blue-300" style="display:none;"></span>
+                    </div>
+                    <div class="flex items-center gap-2" onclick="event.stopPropagation()">
                         <span id="bolsaStatus" class="badge bg-blue-950 text-blue-400">&mdash;</span>
                         <button onclick="abrirModal(-1)" title="Añadir valor"
                             style="background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;border-radius:8px;padding:3px 10px;font-size:14px;cursor:pointer;font-weight:bold;line-height:1;">+</button>
                     </div>
+                    <button class="collapse-btn" onclick="toggleCard('bolsa'); event.stopPropagation()">▲</button>
                 </div>
-                <div id="listaAcciones" class="space-y-3"></div>
-                <div id="bolsaFooter"></div>
+                <div class="card-body" id="body-bolsa">
+                    <div id="listaAcciones" class="space-y-3"></div>
+                    <div id="bolsaFooter"></div>
+                </div>
             </div>
 
             <!-- ══ FONDOS INDEXADOS ══ -->
             <div class="card p-6" id="card-fondos">
-                <div class="flex items-center justify-between mb-1">
-                    <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
+                <div class="card-header mb-1" onclick="toggleCard('fondos')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
+                        <span id="summary-fondos" class="card-summary text-violet-300" style="display:none;"></span>
+                    </div>
+                    <button class="collapse-btn" onclick="toggleCard('fondos'); event.stopPropagation()">▲</button>
                 </div>
-                <div class="flex items-center justify-between mb-4">
-                    <a href="https://myinvestor.es/" target="_blank" class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
-                        &#8599; Consultar VL en MyInvestor
-                    </a>
-                    <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
-                </div>
+                <div class="card-body" id="body-fondos">
+                    <div class="flex items-center justify-between mb-4 mt-1">
+                        <a href="https://myinvestor.es/" target="_blank" class="mono text-[9px] text-violet-500 hover:text-violet-300 transition-colors">
+                            &#8599; Consultar VL en MyInvestor
+                        </a>
+                        <span id="fondosTimestamp" class="mono text-[9px] text-slate-600">sin actualizar</span>
+                    </div>
 
-                <!-- FONDO 1 -->
-                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-4">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-slate-200 text-sm">iShares Developed World</p>
-                            <p class="mono text-[9px] text-slate-600">IE000ZYRH0Q7</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="lbl">VL Actual (&euro;)</span>
-                            <div class="flex items-center gap-1">
-                                <input type="number" id="f1_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp-sm text-violet-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;">&#10003;</button>
+                    <!-- FONDO 1 -->
+                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 mb-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-bold text-slate-200 text-sm">iShares Developed World</p>
+                                <p class="mono text-[9px] text-slate-600">IE000ZYRH0Q7</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="lbl">VL Actual (&euro;)</span>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="f1_vl" step="any" placeholder="0.0000"
+                                        oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp-sm text-violet-200">
+                                    <button onclick="marcarTS()" class="btn-ok" style="background:#4c1d95;color:#ddd6fe;">&#10003;</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="lbl">Participaciones</label>
-                            <input type="number" id="f1_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
-                        </div>
-                        <div>
-                            <label class="lbl">Coste Medio (&euro;)</label>
-                            <input type="number" id="f1_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div><p class="lbl">Valor Invertido</p><p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
-                        <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p></div>
-                    </div>
-                    <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                        <span id="f1_rent_val" class="mono text-sm font-bold"></span>
-                    </div>
-                </div>
-
-                <!-- FONDO 2 -->
-                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="font-bold text-slate-200 text-sm">iShares Emerging Markets</p>
-                            <p class="mono text-[9px] text-slate-600">IE000QAZP7L2</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="lbl">VL Actual (&euro;)</span>
-                            <div class="flex items-center gap-1">
-                                <input type="number" id="f2_vl" step="any" placeholder="0.0000"
-                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp-sm text-indigo-200">
-                                <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;">&#10003;</button>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <label class="lbl">Participaciones</label>
+                                <input type="number" id="f1_part" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Coste Medio (&euro;)</label>
+                                <input type="number" id="f1_coste" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f1')" onchange="calcFondo('f1')" class="inp">
                             </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="lbl">Participaciones</label>
-                            <input type="number" id="f2_part" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                            <div><p class="lbl">Valor Invertido</p><p id="f1_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
+                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f1_mer" class="mono text-sm font-bold text-violet-300">&mdash;</p></div>
                         </div>
-                        <div>
-                            <label class="lbl">Coste Medio (&euro;)</label>
-                            <input type="number" id="f2_coste" step="any" placeholder="0.0000"
-                                oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                        <div id="f1_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
+                            <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
+                            <span id="f1_rent_val" class="mono text-sm font-bold"></span>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                        <div><p class="lbl">Valor Invertido</p><p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
-                        <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p></div>
-                    </div>
-                    <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
-                        <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
-                        <span id="f2_rent_val" class="mono text-sm font-bold"></span>
-                    </div>
-                </div>
 
-                <!-- Total fondos + sparkline -->
-                <div class="mt-4 pt-4 border-t border-slate-700/50">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
-                        <div class="text-right">
-                            <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
-                            <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
+                    <!-- FONDO 2 -->
+                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-bold text-slate-200 text-sm">iShares Emerging Markets</p>
+                                <p class="mono text-[9px] text-slate-600">IE000QAZP7L2</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="lbl">VL Actual (&euro;)</span>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="f2_vl" step="any" placeholder="0.0000"
+                                        oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp-sm text-indigo-200">
+                                    <button onclick="marcarTS()" class="btn-ok" style="background:#1e1b4b;color:#c7d2fe;">&#10003;</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <label class="lbl">Participaciones</label>
+                                <input type="number" id="f2_part" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Coste Medio (&euro;)</label>
+                                <input type="number" id="f2_coste" step="any" placeholder="0.0000"
+                                    oninput="calcFondo('f2')" onchange="calcFondo('f2')" class="inp">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                            <div><p class="lbl">Valor Invertido</p><p id="f2_inv" class="mono text-sm font-bold text-slate-300">&mdash;</p></div>
+                            <div class="text-right"><p class="lbl">Valor Mercado</p><p id="f2_mer" class="mono text-sm font-bold text-indigo-300">&mdash;</p></div>
+                        </div>
+                        <div id="f2_rent" class="mt-2 hidden justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1.5">
+                            <span class="mono text-[9px] text-slate-500">Rentabilidad</span>
+                            <span id="f2_rent_val" class="mono text-sm font-bold"></span>
                         </div>
                     </div>
-                    <!-- SPARKLINE FONDOS -->
-                    <div class="mt-2 relative">
-                        <svg id="spark-fondos" width="100%" height="48" style="display:block;"></svg>
-                        <div id="tip-fondos" class="tooltip"></div>
+
+                    <!-- Total fondos + sparkline -->
+                    <div class="mt-4 pt-4 border-t border-slate-700/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total fondos</span>
+                            <div class="text-right">
+                                <p id="totalFondosValor" class="mono text-lg font-bold text-violet-300">&mdash;</p>
+                                <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
+                            </div>
+                        </div>
+                        <div class="mt-2 relative">
+                            <svg id="spark-fondos" width="100%" height="48" style="display:block;"></svg>
+                            <div id="tip-fondos" class="tooltip"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- ══ INDIE MYINVESTOR ══ -->
             <div class="card p-6" id="card-indie">
-                <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase mb-4">&#127807; Cartera Indie MyInvestor</h2>
-                <div class="space-y-3">
-                    <div>
-                        <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
-                        <input type="number" id="indie_mer" step="any" placeholder="0.00"
-                            oninput="calcIndie()" onchange="calcIndie()"
-                            class="inp" style="color:#6ee7b7; border-color:#064e3b;">
+                <div class="card-header mb-4" onclick="toggleCard('indie')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase">&#127807; Cartera Indie MyInvestor</h2>
+                        <span id="summary-indie" class="card-summary text-emerald-300" style="display:none;"></span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="lbl">Invertido (&euro;)</label>
-                            <input type="number" id="indie_inv" step="any" placeholder="0.00"
-                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
-                        </div>
-                        <div>
-                            <label class="lbl">Efectivo (&euro;)</label>
-                            <input type="number" id="indie_ef" step="any" placeholder="0.00"
-                                oninput="calcIndie()" onchange="calcIndie()" class="inp">
-                        </div>
-                    </div>
-                    <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
-                        <div>
-                            <p class="lbl">Rentabilidad</p>
-                            <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="lbl">Total (mercado + efectivo)</p>
-                            <p id="indie_total" class="mono text-base font-bold text-emerald-300">&mdash;</p>
-                        </div>
-                    </div>
+                    <button class="collapse-btn" onclick="toggleCard('indie'); event.stopPropagation()">▲</button>
                 </div>
-                <!-- SPARKLINE INDIE -->
-                <div class="mt-4 pt-3 border-t border-slate-800 relative">
-                    <p class="lbl mb-1" style="color:#34d399">Evolución mercado + efectivo</p>
-                    <svg id="spark-indie" width="100%" height="48" style="display:block;"></svg>
-                    <div id="tip-indie" class="tooltip"></div>
+                <div class="card-body" id="body-indie">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="lbl" style="color:#6ee7b7">Valor de Mercado (&euro;)</label>
+                            <input type="number" id="indie_mer" step="any" placeholder="0.00"
+                                oninput="calcIndie()" onchange="calcIndie()"
+                                class="inp" style="color:#6ee7b7; border-color:#064e3b;">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="lbl">Invertido (&euro;)</label>
+                                <input type="number" id="indie_inv" step="any" placeholder="0.00"
+                                    oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Efectivo (&euro;)</label>
+                                <input type="number" id="indie_ef" step="any" placeholder="0.00"
+                                    oninput="calcIndie()" onchange="calcIndie()" class="inp">
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                            <div>
+                                <p class="lbl">Rentabilidad</p>
+                                <p id="indie_rent" class="mono text-sm font-bold text-slate-400">&mdash;</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="lbl">Total (mercado + efectivo)</p>
+                                <p id="indie_total" class="mono text-base font-bold text-emerald-300">&mdash;</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                        <p class="lbl mb-1" style="color:#34d399">Evolución mercado + efectivo</p>
+                        <svg id="spark-indie" width="100%" height="48" style="display:block;"></svg>
+                        <div id="tip-indie" class="tooltip"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- == EFECTIVO == -->
+            <!-- ══ EFECTIVO ══ -->
             <div class="card p-6 border-l-4 border-l-cyan-600" id="card-efectivo">
-                <h2 class="text-sm font-bold text-cyan-300 tracking-widest uppercase mb-5">&#128181; Efectivo</h2>
-                <div class="space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="lbl" style="color:#67e8f9">Abanca (&euro;)</label>
-                            <input type="number" id="ef_abanca" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
-                        </div>
-                        <div>
-                            <label class="lbl" style="color:#67e8f9">Santander (&euro;)</label>
-                            <input type="number" id="ef_santander" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
-                        </div>
+                <div class="card-header mb-5" onclick="toggleCard('efectivo')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-cyan-300 tracking-widest uppercase">&#128181; Efectivo</h2>
+                        <span id="summary-efectivo" class="card-summary text-cyan-300" style="display:none;"></span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="lbl" style="color:#67e8f9">Kutxabank (&euro;)</label>
-                            <input type="number" id="ef_kutxa" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
-                        </div>
-                        <div>
-                            <label class="lbl" style="color:#67e8f9">MyInvestor (&euro;)</label>
-                            <input type="number" id="ef_myinvestor" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
-                        <input type="number" id="ef_casa" step="any" placeholder="0.00"
-                            oninput="calcEfectivo()" onchange="calcEfectivo()"
-                            class="inp" style="color:#67e8f9; border-color:#164e63;">
-                    </div>
-                    <div class="pt-3 border-t border-slate-800">
-                        <!-- Desglose -->
-                        <div id="ef_desglose" class="space-y-1 mb-3 hidden"></div>
-                        <div class="flex justify-between items-center">
-                            <span class="mono text-[9px] text-slate-600 uppercase">Total efectivo</span>
-                            <span id="ef_total" class="mono text-lg font-bold text-cyan-300">&mdash;</span>
-                        </div>
-                    </div>
+                    <button class="collapse-btn" onclick="toggleCard('efectivo'); event.stopPropagation()">▲</button>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-800 relative">
-                    <p class="lbl mb-1" style="color:#22d3ee">Evolución efectivo</p>
-                    <svg id="spark-ef" width="100%" height="48" style="display:block;"></svg>
-                    <div id="tip-ef" class="tooltip"></div>
+                <div class="card-body" id="body-efectivo">
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">Abanca (&euro;)</label>
+                                <input type="number" id="ef_abanca" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">Santander (&euro;)</label>
+                                <input type="number" id="ef_santander" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">Kutxabank (&euro;)</label>
+                                <input type="number" id="ef_kutxa" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">MyInvestor (&euro;)</label>
+                                <input type="number" id="ef_myinvestor" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
+                            <input type="number" id="ef_casa" step="any" placeholder="0.00"
+                                oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        </div>
+                        <div class="pt-3 border-t border-slate-800">
+                            <div id="ef_desglose" class="space-y-1 mb-3 hidden"></div>
+                            <div class="flex justify-between items-center">
+                                <span class="mono text-[9px] text-slate-600 uppercase">Total efectivo</span>
+                                <span id="ef_total" class="mono text-lg font-bold text-cyan-300">&mdash;</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                        <p class="lbl mb-1" style="color:#22d3ee">Evolución efectivo</p>
+                        <svg id="spark-ef" width="100%" height="48" style="display:block;"></svg>
+                        <div id="tip-ef" class="tooltip"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- ══ JUBILACION EPSV ══ -->
             <div class="card p-6 border-l-4 border-l-rose-600" id="card-epsv">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
-                    <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924"
-                       target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">VLP &#8599;</a>
+                <div class="card-header mb-5" onclick="toggleCard('epsv')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
+                        <span id="summary-epsv" class="card-summary text-rose-300" style="display:none;"></span>
+                    </div>
+                    <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                        <a href="https://www.santanderassetmanagement.es/buscadorproductos/#/detalle?tipo=epsv&codigo=312924"
+                           target="_blank" class="badge bg-rose-950 text-rose-400 hover:bg-rose-900 transition-colors cursor-pointer">VLP &#8599;</a>
+                    </div>
+                    <button class="collapse-btn" onclick="toggleCard('epsv'); event.stopPropagation()">▲</button>
                 </div>
-                <p class="mono text-[9px] text-slate-600 mb-4 uppercase tracking-widest">Actualiza el VLP para sincronizar ambos planes</p>
-
-                <div class="space-y-4">
-                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                        <p class="mono text-[9px] text-rose-400 uppercase font-bold mb-3">Tu plan</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="lbl">Participaciones</label>
-                                <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
+                <div class="card-body" id="body-epsv">
+                    <p class="mono text-[9px] text-slate-600 mb-4 uppercase tracking-widest">Actualiza el VLP para sincronizar ambos planes</p>
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                            <p class="mono text-[9px] text-rose-400 uppercase font-bold mb-3">Tu plan</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="lbl">Participaciones</label>
+                                    <input type="number" id="p1" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
+                                </div>
+                                <div>
+                                    <label class="lbl">VLP (&euro;)</label>
+                                    <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#fca5a5;">
+                                </div>
+                                <div class="flex flex-col justify-end">
+                                    <p class="lbl">Valor</p>
+                                    <p id="res1" class="mono text-base font-bold text-rose-400">0,00 &euro;</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#fca5a5;">
-                            </div>
-                            <div class="flex flex-col justify-end">
-                                <p class="lbl">Valor</p>
-                                <p id="res1" class="mono text-base font-bold text-rose-400">0,00 &euro;</p>
+                        </div>
+                        <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                            <p class="mono text-[9px] text-pink-400 uppercase font-bold mb-3">Su plan</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="lbl">Participaciones</label>
+                                    <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
+                                </div>
+                                <div>
+                                    <label class="lbl">VLP (&euro;)</label>
+                                    <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#f9a8d4;">
+                                </div>
+                                <div class="flex flex-col justify-end">
+                                    <p class="lbl">Valor</p>
+                                    <p id="res2" class="mono text-base font-bold text-pink-400">0,00 &euro;</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-                        <p class="mono text-[9px] text-pink-400 uppercase font-bold mb-3">Su plan</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="lbl">Participaciones</label>
-                                <input type="number" id="p2" step="any" oninput="calcEPSV()" onchange="calcEPSV()" placeholder="0" class="inp" style="font-size:11px;">
-                            </div>
-                            <div>
-                                <label class="lbl">VLP (&euro;)</label>
-                                <input type="number" id="vlp_m" step="any" oninput="syncVLP(this.value)" onchange="syncVLP(this.value)" placeholder="0.00" class="inp" style="font-size:11px;color:#f9a8d4;">
-                            </div>
-                            <div class="flex flex-col justify-end">
-                                <p class="lbl">Valor</p>
-                                <p id="res2" class="mono text-base font-bold text-pink-400">0,00 &euro;</p>
-                            </div>
-                        </div>
+                    <div class="mt-4 flex justify-between items-center border-t border-slate-800 pt-4">
+                        <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
+                        <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
                     </div>
-                </div>
-
-                <div class="mt-4 flex justify-between items-center border-t border-slate-800 pt-4">
-                    <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
-                    <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
-                </div>
-
-                <!-- SPARKLINE EPSV -->
-                <div class="mt-4 pt-3 border-t border-slate-800 relative">
-                    <p class="lbl mb-1" style="color:#fda4af">Evolución EPSV</p>
-                    <svg id="spark-epsv" width="100%" height="48" style="display:block;"></svg>
-                    <div id="tip-epsv" class="tooltip"></div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                        <p class="lbl mb-1" style="color:#fda4af">Evolución EPSV</p>
+                        <svg id="spark-epsv" width="100%" height="48" style="display:block;"></svg>
+                        <div id="tip-epsv" class="tooltip"></div>
+                    </div>
                 </div>
             </div>
 
         </div><!-- end grid -->
 
-        <!-- == DISTRIBUCION PATRIMONIO == -->
+        <!-- ══ DISTRIBUCION PATRIMONIO ══ -->
         <div class="card p-6 mt-6" id="card-treemap">
-            <div class="mb-5">
-                <h2 class="text-sm font-bold text-slate-300 tracking-widest uppercase">&#11835; Distribución del Patrimonio</h2>
-                <p id="treemap-total" class="mono text-[9px] text-slate-600 mt-1"></p>
-            </div>
-            <div class="flex flex-col md:flex-row items-center gap-8">
-                <div style="position:relative;flex-shrink:0;">
-                    <svg id="treemap-svg" width="220" height="220" style="display:block;"></svg>
-                    <div id="treemap-tip" class="tooltip"></div>
-                    <div id="donut-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px;">
-                        <p id="donut-center-pct"   class="mono font-bold" style="font-size:22px;color:#e2e8f0;line-height:1;"></p>
-                        <p id="donut-center-label" class="mono"           style="font-size:9px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;"></p>
-                        <p id="donut-center-val"   class="mono"           style="font-size:10px;color:#94a3b8;margin-top:2px;"></p>
-                    </div>
+            <div class="card-header mb-5" onclick="toggleCard('treemap')">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <h2 class="text-sm font-bold text-slate-300 tracking-widest uppercase">&#11835; Distribución del Patrimonio</h2>
+                    <span id="summary-treemap" class="card-summary" style="display:none;"></span>
                 </div>
-                <div id="treemap-legend" class="flex flex-col gap-3 flex-1 w-full"></div>
+                <p id="treemap-total" class="mono text-[9px] text-slate-600"></p>
+                <button class="collapse-btn" onclick="toggleCard('treemap'); event.stopPropagation()">▲</button>
+            </div>
+            <div class="card-body" id="body-treemap">
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <div style="position:relative;flex-shrink:0;">
+                        <svg id="treemap-svg" width="220" height="220" style="display:block;"></svg>
+                        <div id="treemap-tip" class="tooltip"></div>
+                        <div id="donut-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px;">
+                            <p id="donut-center-pct"   class="mono font-bold" style="font-size:22px;color:#e2e8f0;line-height:1;"></p>
+                            <p id="donut-center-label" class="mono"           style="font-size:9px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;"></p>
+                            <p id="donut-center-val"   class="mono"           style="font-size:10px;color:#94a3b8;margin-top:2px;"></p>
+                        </div>
+                    </div>
+                    <div id="treemap-legend" class="flex flex-col gap-3 flex-1 w-full"></div>
+                </div>
             </div>
         </div>
 
-                <!-- ══ SECCIÓN GRÁFICA GRANDE ══ -->
+        <!-- ══ SECCIÓN GRÁFICA GRANDE ══ -->
         <div class="card p-6 mt-6" id="card-total">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
+            <div class="card-header mb-6" onclick="toggleCard('evolucion')">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
                     <h2 class="text-sm font-bold text-green-300 tracking-widest uppercase">&#128202; Evolución del Patrimonio</h2>
-                    <p id="histCount" class="mono text-[9px] text-slate-600 mt-1">0 registros guardados</p>
+                    <span id="summary-evolucion" class="card-summary text-green-300" style="display:none;"></span>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center">
-                    <button class="tab-btn active" onclick="setTab('total')" id="tab-total">Total</button>
-                    <button class="tab-btn" onclick="setTab('fondos')" id="tab-fondos">Fondos</button>
-                    <button class="tab-btn" onclick="setTab('indie')" id="tab-indie">Indie</button>
-                    <button class="tab-btn" onclick="setTab('epsv')" id="tab-epsv">EPSV</button>
-                    <button class="tab-btn" onclick="setTab('efectivo')" id="tab-efectivo">Efectivo</button>
-                    <button onclick="exportarHistorial()" class="tab-btn" style="color:#67e8f9;border-color:#164e63;" title="Exportar historial a JSON">&#8659; Export</button>
-                    <label class="tab-btn" style="color:#a78bfa;border-color:#2e1065;cursor:pointer;" title="Importar historial desde JSON">&#8657; Import<input type="file" id="importFile" accept=".json" onchange="importarHistorial(event)" style="display:none;"></label>
-                    <button onclick="borrarHistorial()" class="tab-btn" style="color:#f87171;border-color:#450a0a;" title="Borrar todo el historial">&#128465;</button>
+                <p id="histCount" class="mono text-[9px] text-slate-600">0 registros guardados</p>
+                <button class="collapse-btn" onclick="toggleCard('evolucion'); event.stopPropagation()">▲</button>
+            </div>
+            <div class="card-body" id="body-evolucion">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div></div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <button class="tab-btn active" onclick="setTab('total')" id="tab-total">Total</button>
+                        <button class="tab-btn" onclick="setTab('fondos')" id="tab-fondos">Fondos</button>
+                        <button class="tab-btn" onclick="setTab('indie')" id="tab-indie">Indie</button>
+                        <button class="tab-btn" onclick="setTab('epsv')" id="tab-epsv">EPSV</button>
+                        <button class="tab-btn" onclick="setTab('efectivo')" id="tab-efectivo">Efectivo</button>
+                        <button onclick="exportarHistorial()" class="tab-btn" style="color:#67e8f9;border-color:#164e63;" title="Exportar historial a JSON">&#8659; Export</button>
+                        <label class="tab-btn" style="color:#a78bfa;border-color:#2e1065;cursor:pointer;" title="Importar historial desde JSON">&#8657; Import<input type="file" id="importFile" accept=".json" onchange="importarHistorial(event)" style="display:none;"></label>
+                        <button onclick="borrarHistorial()" class="tab-btn" style="color:#f87171;border-color:#450a0a;" title="Borrar todo el historial">&#128465;</button>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Gráfica SVG grande -->
-            <div class="relative" style="height:220px;">
-                <svg id="chart-big" width="100%" height="100%" style="display:block; overflow:visible;"></svg>
-                <div id="tip-big" class="tooltip"></div>
-            </div>
-
-            <!-- Eje X fechas -->
-            <div id="chart-xaxis" class="flex justify-between mt-1 px-1">
-            </div>
-
-            <!-- Tabla últimos snapshots -->
-            <div class="mt-6 pt-4 border-t border-slate-800">
-                <p class="mono text-[9px] text-slate-600 uppercase tracking-widest mb-3">Últimos registros</p>
-                <div id="snapTable" class="space-y-1"></div>
+                <div class="relative" style="height:220px;">
+                    <svg id="chart-big" width="100%" height="100%" style="display:block; overflow:visible;"></svg>
+                    <div id="tip-big" class="tooltip"></div>
+                </div>
+                <div id="chart-xaxis" class="flex justify-between mt-1 px-1"></div>
+                <div class="mt-6 pt-4 border-t border-slate-800">
+                    <p class="mono text-[9px] text-slate-600 uppercase tracking-widest mb-3">Últimos registros</p>
+                    <div id="snapTable" class="space-y-1"></div>
+                </div>
             </div>
         </div>
 
@@ -565,7 +661,6 @@
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-// Cartera de acciones — se carga desde localStorage
 var ACCIONES_DEFAULT = [
     { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD", coste: 0, inv: 0 },
     { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR", coste: 0, inv: 0 },
@@ -574,24 +669,147 @@ var ACCIONES_DEFAULT = [
 var acciones = [];
 var precios  = {};
 var usd_eur  = 0.92;
-var historial = []; // array de snapshots
+var historial = [];
 var tabActiva = "total";
 
 // ══════════════════════════════════════════════════
-// FETCH BOLSA — multi-proxy con fallback y timeout
+// COLLAPSIBLE CARDS
 // ══════════════════════════════════════════════════
+// IDs lógicos → ID del body y del card
+var CARDS = {
+    bolsa:     { body: "body-bolsa",     card: "card-bolsa"    },
+    fondos:    { body: "body-fondos",    card: "card-fondos"   },
+    indie:     { body: "body-indie",     card: "card-indie"    },
+    efectivo:  { body: "body-efectivo",  card: "card-efectivo" },
+    epsv:      { body: "body-epsv",      card: "card-epsv"     },
+    treemap:   { body: "body-treemap",   card: "card-treemap"  },
+    evolucion: { body: "body-evolucion", card: "card-total"    }
+};
+// Estado: true = colapsado
+var colapsado = {};
 
-// Proxies CORS en orden de preferencia
+function toggleCard(id) {
+    colapsado[id] = !colapsado[id];
+    applyCollapse(id);
+    saveCollapseState();
+    updateGlobalBtn();
+}
+
+function applyCollapse(id) {
+    var cfg = CARDS[id];
+    if (!cfg) return;
+    var body = document.getElementById(cfg.body);
+    var card = document.getElementById(cfg.card);
+    var btn  = card ? card.querySelector(".collapse-btn") : null;
+    var sum  = document.getElementById("summary-" + id);
+    if (!body) return;
+
+    if (colapsado[id]) {
+        body.classList.add("collapsed");
+        if (btn)  btn.textContent = "▼";
+        if (sum)  { sum.style.display = "inline"; updateSummary(id); }
+        // Reduce padding del card cuando colapsado
+        if (card) card.style.paddingBottom = "16px";
+    } else {
+        body.classList.remove("collapsed");
+        if (btn)  btn.textContent = "▲";
+        if (sum)  sum.style.display = "none";
+        if (card) card.style.paddingBottom = "";
+        // Redibujar sparklines si se expande
+        setTimeout(function(){ actualizarGraficas(); }, 50);
+    }
+}
+
+function updateSummary(id) {
+    var el = document.getElementById("summary-" + id);
+    if (!el) return;
+    var v = getValues();
+    var txt = "";
+    switch(id) {
+        case "bolsa":
+            txt = v.bolsa > 0 ? fmt(v.bolsa) + " €" : "—";
+            break;
+        case "fondos":
+            txt = v.fondos > 0 ? fmt(v.fondos) + " €" : "—";
+            // añadir rentabilidad si existe
+            var tInv=0, tMer=0;
+            ["f1","f2"].forEach(function(fid){
+                tInv += (parseFloat(document.getElementById(fid+"_part").value)||0)*(parseFloat(document.getElementById(fid+"_coste").value)||0);
+                tMer += (parseFloat(document.getElementById(fid+"_part").value)||0)*(parseFloat(document.getElementById(fid+"_vl").value)||0);
+            });
+            if (tInv > 0) {
+                var ganF = tMer-tInv, pctF = ganF/tInv*100;
+                txt += "  " + (ganF>=0?"+":"") + pctF.toFixed(2) + "%";
+            }
+            break;
+        case "indie":
+            txt = v.indie > 0 ? fmt(v.indie) + " €" : "—";
+            break;
+        case "efectivo":
+            txt = v.efectivo > 0 ? fmt(v.efectivo) + " €" : "—";
+            break;
+        case "epsv":
+            txt = v.epsv > 0 ? fmt(v.epsv) + " €" : "—";
+            break;
+        case "treemap":
+            txt = v.total > 0 ? fmt(v.total) + " € total" : "—";
+            break;
+        case "evolucion":
+            txt = historial.length + " snapshot" + (historial.length!==1?"s":"");
+            break;
+    }
+    el.textContent = txt;
+}
+
+function toggleAll() {
+    var allCollapsed = Object.keys(CARDS).every(function(id){ return colapsado[id]; });
+    Object.keys(CARDS).forEach(function(id){
+        colapsado[id] = !allCollapsed;
+        applyCollapse(id);
+    });
+    saveCollapseState();
+    updateGlobalBtn();
+}
+
+function updateGlobalBtn() {
+    var btn = document.getElementById("btnCollapseAll");
+    if (!btn) return;
+    var allCollapsed = Object.keys(CARDS).every(function(id){ return colapsado[id]; });
+    if (allCollapsed) {
+        btn.textContent = "▼ Expandir todo";
+        btn.classList.add("all-collapsed");
+    } else {
+        btn.textContent = "▲ Contraer todo";
+        btn.classList.remove("all-collapsed");
+    }
+}
+
+function saveCollapseState() {
+    localStorage.setItem("isukiza_collapse", JSON.stringify(colapsado));
+}
+
+function loadCollapseState() {
+    var raw = localStorage.getItem("isukiza_collapse");
+    colapsado = raw ? JSON.parse(raw) : {};
+    // Por defecto todo expandido — solo aplicar si hay algo guardado
+    Object.keys(CARDS).forEach(function(id){
+        if (colapsado[id] === undefined) colapsado[id] = false;
+        applyCollapse(id);
+    });
+    updateGlobalBtn();
+}
+
+// ══════════════════════════════════════════════════
+// FETCH BOLSA
+// ══════════════════════════════════════════════════
 var PROXIES = [
     function(url){ return "https://api.allorigins.win/get?url=" + encodeURIComponent(url); },
     function(url){ return "https://corsproxy.io/?" + encodeURIComponent(url); },
     function(url){ return "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url); }
 ];
 
-// Extrae precio de la respuesta según el proxy usado
 function extraerPrecio(text) {
     var data = typeof text === "string" ? JSON.parse(text) : text;
-    // allorigins envuelve en {contents:...}
     if (data.contents) data = JSON.parse(data.contents);
     var meta = data.chart.result[0].meta;
     var p = meta.regularMarketPrice;
@@ -600,7 +818,6 @@ function extraerPrecio(text) {
     return p;
 }
 
-// Fetch con timeout
 function fetchConTimeout(url, ms) {
     ms = ms || 6000;
     return new Promise(function(resolve, reject) {
@@ -615,10 +832,8 @@ function fetchConTimeout(url, ms) {
     });
 }
 
-// Intenta cada proxy en cadena hasta obtener un precio válido
 function fetchPrice(ticker) {
     var yahooUrl = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker;
-
     function intentar(idx) {
         if (idx >= PROXIES.length) return Promise.reject(new Error("Todos los proxies fallaron para " + ticker));
         var proxyUrl = PROXIES[idx](yahooUrl);
@@ -635,20 +850,14 @@ function fetchPrice(ticker) {
 
 function fetchAllPrices() {
     setStatus("Actualizando bolsa...", "amber");
-
     fetchPrice("EURUSD=X")
         .then(function(v){ usd_eur = 1 / v; })
         .catch(function(){ usd_eur = 0.92; })
         .then(function(){
             return Promise.all(acciones.map(function(a){
                 return fetchPrice(a.ticker)
-                    .then(function(p){
-                        precios[a.ticker] = p;
-                        console.log(a.ticker + ": " + p);
-                    })
-                    .catch(function(e){
-                        console.warn("Sin precio para " + a.ticker + ": " + e.message);
-                    });
+                    .then(function(p){ precios[a.ticker] = p; })
+                    .catch(function(e){ console.warn("Sin precio para " + a.ticker + ": " + e.message); });
             }));
         })
         .then(function(){
@@ -659,7 +868,6 @@ function fetchAllPrices() {
         })
         .catch(function(e){
             console.warn("fetchAllPrices error:", e);
-            // Aun con error parcial, renderizar con los precios que tengamos
             try { renderBolsa(); } catch(e2){}
             try { calcTotal();   } catch(e2){}
             document.getElementById("bolsaStatus").innerText = "parcial";
@@ -667,9 +875,9 @@ function fetchAllPrices() {
         });
 }
 
-// ==============================================
-// RENDER BOLSA — cartera editable
-// ==============================================
+// ══════════════════════════════════════════════════
+// RENDER BOLSA
+// ══════════════════════════════════════════════════
 function renderBolsa() {
     var list = document.getElementById("listaAcciones");
     if (!acciones.length) {
@@ -681,7 +889,6 @@ function renderBolsa() {
         var price   = precios[a.ticker] || 0;
         var sub     = price * a.cant;
         var subEur  = a.mon === "USD" ? sub * usd_eur : sub;
-        // inv y coste se guardan en la moneda del valor → convertir a EUR para comparar
         var invRaw  = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
         var invEur  = a.mon === "USD" ? invRaw * usd_eur : invRaw;
         var gan     = subEur - invEur;
@@ -711,7 +918,6 @@ function renderBolsa() {
             + rentHTML
             + '</div>';
     }).join("");
-    // Total bolsa al pie
     var ganT    = totalBolsaMer - totalBolsaInv;
     var ganPctT = totalBolsaInv > 0 ? ganT / totalBolsaInv * 100 : 0;
     var esGT    = ganT >= 0;
@@ -725,6 +931,8 @@ function renderBolsa() {
                + (esGT?"+":"") + fmt(ganT) + " € (" + (esGT?"+":"") + ganPctT.toFixed(2) + "%)</p>" : "")
             + '</div>';
     }
+    // Actualizar summary bolsa si está colapsada
+    if (colapsado["bolsa"]) updateSummary("bolsa");
 }
 
 // Modal helpers
@@ -745,9 +953,7 @@ function abrirModal(idx) {
     document.getElementById("m_eliminar").style.display = idx === -1 ? "none" : "block";
     document.getElementById("modalBolsa").classList.add("open");
 }
-function cerrarModal() {
-    document.getElementById("modalBolsa").classList.remove("open");
-}
+function cerrarModal() { document.getElementById("modalBolsa").classList.remove("open"); }
 function modalSyncCosteToInv() {
     var c = parseFloat(document.getElementById("m_coste").value)||0;
     var n = parseFloat(document.getElementById("m_cant").value)||0;
@@ -768,25 +974,20 @@ function guardarModal() {
     var ticker = document.getElementById("m_ticker").value.trim().toUpperCase();
     if (!nombre || !ticker) { alert("Introduce nombre y ticker."); return; }
     var a = {
-        nombre: nombre,
-        ticker: ticker,
+        nombre: nombre, ticker: ticker,
         mon:    document.getElementById("m_mon").value,
         cant:   parseFloat(document.getElementById("m_cant").value)||0,
         coste:  parseFloat(document.getElementById("m_coste").value)||0,
         inv:    parseFloat(document.getElementById("m_inv").value)||0
     };
     var idx = parseInt(document.getElementById("m_idx").value);
-    if (idx === -1) {
-        acciones.push(a);
-        precios[a.ticker] = 0;
-    } else {
+    if (idx === -1) { acciones.push(a); precios[a.ticker] = 0; }
+    else {
         var oldTicker = acciones[idx].ticker;
         if (oldTicker !== a.ticker) { precios[a.ticker] = 0; delete precios[oldTicker]; }
         acciones[idx] = a;
     }
-    cerrarModal();
-    saveAcciones();
-    fetchAllPrices();
+    cerrarModal(); saveAcciones(); fetchAllPrices();
 }
 function eliminarValor() {
     var idx = parseInt(document.getElementById("m_idx").value);
@@ -794,19 +995,10 @@ function eliminarValor() {
     if (!confirm("Eliminar " + acciones[idx].nombre + "?")) return;
     delete precios[acciones[idx].ticker];
     acciones.splice(idx, 1);
-    cerrarModal();
-    saveAcciones();
-    renderBolsa();
-    calcTotal();
+    cerrarModal(); saveAcciones(); renderBolsa(); calcTotal();
 }
-function saveAcciones() {
-    localStorage.setItem("isukiza_acciones", JSON.stringify(acciones));
-}
-// Cerrar modal al clicar fuera
-document.addEventListener("click", function(e){
-    if (e.target.id === "modalBolsa") cerrarModal();
-});
-
+function saveAcciones() { localStorage.setItem("isukiza_acciones", JSON.stringify(acciones)); }
+document.addEventListener("click", function(e){ if (e.target.id === "modalBolsa") cerrarModal(); });
 
 // ══════════════════════════════════════════════════
 // FONDOS
@@ -820,10 +1012,8 @@ function calcFondo(id) {
     var gan    = valMer - valInv;
     var ganPct = valInv > 0 ? gan/valInv*100 : 0;
     var esG    = gan >= 0;
-
     document.getElementById(id+"_inv").innerText = valInv > 0 ? fmt(valInv)+" \u20AC" : "\u2014";
     document.getElementById(id+"_mer").innerText = valMer > 0 ? fmt(valMer)+" \u20AC" : "\u2014";
-
     var box = document.getElementById(id+"_rent");
     var val = document.getElementById(id+"_rent_val");
     if (valInv > 0) {
@@ -833,9 +1023,7 @@ function calcFondo(id) {
     } else {
         box.classList.add("hidden"); box.classList.remove("flex");
     }
-    calcTotalFondos();
-    calcTotal();
-    save();
+    calcTotalFondos(); calcTotal(); save();
 }
 
 function calcTotalFondos() {
@@ -851,6 +1039,7 @@ function calcTotalFondos() {
     var el = document.getElementById("totalFondosRentab");
     el.className = "mono text-[10px] " + (tInv>0 ? (esG?"gain":"loss") : "text-slate-600");
     el.innerText = tInv > 0 ? (esG?"+":"") + fmt(gan) + " \u20AC (" + (esG?"+":"") + pct.toFixed(2) + "%)" : "";
+    if (colapsado["fondos"]) updateSummary("fondos");
 }
 
 function marcarTS() {
@@ -879,8 +1068,8 @@ function calcIndie() {
         el.innerText = "\u2014";
     }
     document.getElementById("indie_total").innerText = tot > 0 ? fmt(tot)+" \u20AC" : "\u2014";
-    calcTotal();
-    save();
+    calcTotal(); save();
+    if (colapsado["indie"]) updateSummary("indie");
 }
 
 // ══════════════════════════════════════════════════
@@ -893,8 +1082,8 @@ function calcEPSV() {
     document.getElementById("res1").innerText    = fmt(r1)    + " \u20AC";
     document.getElementById("res2").innerText    = fmt(r2)    + " \u20AC";
     document.getElementById("totalEPSV").innerText = fmt(r1+r2) + " \u20AC";
-    calcTotal();
-    save();
+    calcTotal(); save();
+    if (colapsado["epsv"]) updateSummary("epsv");
 }
 function syncVLP(v) {
     document.getElementById("vlp").value   = v;
@@ -902,9 +1091,9 @@ function syncVLP(v) {
     calcEPSV();
 }
 
-// ==============================================
+// ══════════════════════════════════════════════════
 // EFECTIVO
-// ==============================================
+// ══════════════════════════════════════════════════
 function calcEfectivo() {
     var campos = [
         { id: "ef_abanca",    label: "Abanca"     },
@@ -923,38 +1112,30 @@ function calcEfectivo() {
         }
     });
     var desglose = document.getElementById("ef_desglose");
-    if (filas.length > 1) {
-        desglose.innerHTML = filas.join("");
-        desglose.classList.remove("hidden");
-    } else {
-        desglose.classList.add("hidden");
-    }
+    if (filas.length > 1) { desglose.innerHTML = filas.join(""); desglose.classList.remove("hidden"); }
+    else { desglose.classList.add("hidden"); }
     document.getElementById("ef_total").innerText = total > 0 ? fmt(total)+" €" : "—";
-    calcTotal();
-    save();
+    calcTotal(); save();
+    if (colapsado["efectivo"]) updateSummary("efectivo");
 }
 
-// ==============================================
+// ══════════════════════════════════════════════════
 // TOTAL GLOBAL
 // ══════════════════════════════════════════════════
 function getValues() {
-    // Bolsa
     var bolsa = 0;
     acciones.forEach(function(a){
         var sub = precios[a.ticker] * a.cant;
         bolsa += a.mon==="USD" ? sub*usd_eur : sub;
     });
-    // Fondos
     var fondos = 0;
     ["f1","f2"].forEach(function(id){
         fondos += (parseFloat(document.getElementById(id+"_part").value)||0)
                 * (parseFloat(document.getElementById(id+"_vl").value)||0);
     });
-    // Indie
     var indieMer = parseFloat(document.getElementById("indie_mer").value)||0;
     var indieEf  = parseFloat(document.getElementById("indie_ef").value) ||0;
     var indie    = indieMer + indieEf;
-    // EPSV
     var vlp = parseFloat(document.getElementById("vlp").value)||0;
     var epsv = ((parseFloat(document.getElementById("p1").value)||0)
               + (parseFloat(document.getElementById("p2").value)||0)) * vlp;
@@ -972,8 +1153,6 @@ function calcTotal() {
     if (document.getElementById("treemap-svg")) drawTreemap();
     document.getElementById("totalPatrimonio").innerText =
         v.total.toLocaleString("es-ES",{style:"currency",currency:"EUR"});
-
-    // Rentabilidad fondos en header
     var tInv=0, tMer=0;
     ["f1","f2"].forEach(function(id){
         tInv += (parseFloat(document.getElementById(id+"_part").value)||0)*(parseFloat(document.getElementById(id+"_coste").value)||0);
@@ -989,6 +1168,10 @@ function calcTotal() {
         rEl.className = "mono text-[10px] mt-1 text-slate-600";
         rEl.innerText = "Introduce VL y participaciones";
     }
+    // Actualizar summaries de todos los colapsados
+    Object.keys(CARDS).forEach(function(id){
+        if (colapsado[id]) updateSummary(id);
+    });
 }
 
 // ══════════════════════════════════════════════════
@@ -996,42 +1179,27 @@ function calcTotal() {
 // ══════════════════════════════════════════════════
 function registrarSnapshot() {
     var v = getValues();
-    if (v.total === 0) {
-        showToast("Introduce datos antes de registrar", "#7c2d12", "#f97316");
-        return;
-    }
+    if (v.total === 0) { showToast("Introduce datos antes de registrar", "#7c2d12", "#f97316"); return; }
     var snap = {
         fecha: new Date().toISOString(),
-        total: v.total,
-        fondos: v.fondos,
-        indie: v.indie,
-        epsv: v.epsv,
-        bolsa: v.bolsa,
-        efectivo: v.efectivo
+        total: v.total, fondos: v.fondos, indie: v.indie,
+        epsv: v.epsv, bolsa: v.bolsa, efectivo: v.efectivo
     };
     historial.push(snap);
     saveHistorial();
     actualizarGraficas();
     showToast("✓ Snapshot registrado", "#14532d", "#4ade80");
-
-    // Flash en header
     var card = document.querySelector("header .card");
-    card.classList.remove("flash");
-    void card.offsetWidth;
-    card.classList.add("flash");
-
-    // Mensaje
+    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
     var ts = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
     document.getElementById("snapMsg").innerText = "Último: " + ts;
+    if (colapsado["evolucion"]) updateSummary("evolucion");
 }
 
 function showToast(msg, bg, color) {
     var t = document.getElementById("snapToast");
-    t.style.background = bg || "#14532d";
-    t.style.borderColor = color || "#4ade80";
-    t.style.color = color || "#4ade80";
-    t.innerText = msg;
-    t.style.opacity = "1";
+    t.style.background = bg||"#14532d"; t.style.borderColor = color||"#4ade80"; t.style.color = color||"#4ade80";
+    t.innerText = msg; t.style.opacity = "1";
     setTimeout(function(){ t.style.opacity = "0"; }, 2500);
 }
 
@@ -1040,31 +1208,21 @@ function borrarSnapshot(idx) {
     if (!s) return;
     var fStr = new Date(s.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
     if (!confirm("Borrar el registro del " + fStr + "?")) return;
-    historial.splice(idx, 1);
-    saveHistorial();
-    actualizarGraficas();
+    historial.splice(idx, 1); saveHistorial(); actualizarGraficas();
 }
 
 function borrarHistorial() {
     if (!confirm("¿Borrar todo el historial de snapshots?")) return;
-    historial = [];
-    saveHistorial();
-    actualizarGraficas();
+    historial = []; saveHistorial(); actualizarGraficas();
 }
 
 function exportarHistorial() {
-    if (historial.length === 0) {
-        showToast("No hay registros que exportar", "#7c2d12", "#f97316");
-        return;
-    }
+    if (historial.length === 0) { showToast("No hay registros que exportar", "#7c2d12", "#f97316"); return; }
     var json = JSON.stringify(historial, null, 2);
     var blob = new Blob([json], { type: "application/json" });
     var url  = URL.createObjectURL(blob);
     var a    = document.createElement("a");
-    var fecha = new Date().toISOString().slice(0,10);
-    a.href     = url;
-    a.download = "isukiza_historial_" + fecha + ".json";
-    a.click();
+    a.href = url; a.download = "isukiza_historial_" + new Date().toISOString().slice(0,10) + ".json"; a.click();
     URL.revokeObjectURL(url);
     showToast("↓ Historial exportado", "#14532d", "#4ade80");
 }
@@ -1077,42 +1235,30 @@ function importarHistorial(event) {
         try {
             var data = JSON.parse(e.target.result);
             if (!Array.isArray(data)) throw new Error("Formato incorrecto");
-            // Merge: combina y deduplica por fecha
             var mapaExistente = {};
             historial.forEach(function(s){ mapaExistente[s.fecha] = true; });
             var nuevos = data.filter(function(s){ return !mapaExistente[s.fecha]; });
             historial = historial.concat(nuevos);
             historial.sort(function(a,b){ return new Date(a.fecha) - new Date(b.fecha); });
-            saveHistorial();
-            actualizarGraficas();
+            saveHistorial(); actualizarGraficas();
             showToast("↑ " + nuevos.length + " registro(s) importado(s)", "#14532d", "#4ade80");
-        } catch(err) {
-            showToast("Error al leer el archivo", "#7c2d12", "#f97316");
-        }
-        // Reset input para permitir reimportar el mismo archivo
+        } catch(err) { showToast("Error al leer el archivo", "#7c2d12", "#f97316"); }
         event.target.value = "";
     };
     reader.readAsText(file);
 }
 
-// ==============================================
-// GRÁFICAS — sparklines y gráfica grande
+// ══════════════════════════════════════════════════
+// GRÁFICAS
 // ══════════════════════════════════════════════════
 var COLORES = {
-    total:  "#4ade80",
-    efectivo: "#22d3ee",
-    fondos: "#a78bfa",
-    indie:  "#34d399",
-    epsv:   "#fb7185"
+    total:"#4ade80", efectivo:"#22d3ee", fondos:"#a78bfa", indie:"#34d399", epsv:"#fb7185"
 };
 
 function makePath(data, W, H, color, filled) {
     if (data.length < 2) return "";
-    var min = Math.min.apply(null, data);
-    var max = Math.max.apply(null, data);
-    var rng = max - min || 1;
-    var pad = 4;
-    var h = H - pad*2;
+    var min = Math.min.apply(null, data); var max = Math.max.apply(null, data);
+    var rng = max - min || 1; var pad = 4; var h = H - pad*2;
     var xs = data.map(function(_,i){ return pad + i * (W - pad*2) / (data.length-1); });
     var ys = data.map(function(v){ return pad + h - (v - min)/rng * h; });
     var d = "M " + xs[0] + " " + ys[0];
@@ -1130,31 +1276,22 @@ function makePath(data, W, H, color, filled) {
 
 function drawDots(xs, ys, color, svgId, field, tipId) {
     var svg = document.getElementById(svgId);
-    // Elimina puntos anteriores
     var old = svg.querySelectorAll(".snap-dot");
     old.forEach(function(el){ el.parentNode.removeChild(el); });
-
     xs.forEach(function(x, i) {
         var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        circle.setAttribute("cx", x);
-        circle.setAttribute("cy", ys[i]);
-        circle.setAttribute("r", "3");
-        circle.setAttribute("fill", color);
-        circle.setAttribute("class", "snap-dot");
-        circle.style.cursor = "pointer";
+        circle.setAttribute("cx", x); circle.setAttribute("cy", ys[i]);
+        circle.setAttribute("r", "3"); circle.setAttribute("fill", color);
+        circle.setAttribute("class", "snap-dot"); circle.style.cursor = "pointer";
         (function(snap, cx, cy){
-            circle.addEventListener("mouseenter", function(e){
+            circle.addEventListener("mouseenter", function(){
                 var tip = document.getElementById(tipId);
-                var rect = document.getElementById(svgId).getBoundingClientRect();
                 tip.style.display = "block";
                 var fechaStr = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
                 tip.innerText = fechaStr + "  " + fmt(snap[field]) + " \u20AC";
-                tip.style.left = (cx + 6) + "px";
-                tip.style.top  = (cy - 28) + "px";
+                tip.style.left = (cx + 6) + "px"; tip.style.top = (cy - 28) + "px";
             });
-            circle.addEventListener("mouseleave", function(){
-                document.getElementById(tipId).style.display = "none";
-            });
+            circle.addEventListener("mouseleave", function(){ document.getElementById(tipId).style.display = "none"; });
         })(historial[i], x, ys[i]);
         svg.appendChild(circle);
     });
@@ -1184,37 +1321,23 @@ function drawBigChart() {
     var H   = 200;
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     svg.innerHTML = "";
-
     var data = historial.map(function(s){ return s[tabActiva]; });
     if (data.length < 2) {
         svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="11">Registra al menos 2 snapshots para ver la gráfica</text>';
-        document.getElementById("chart-xaxis").innerHTML = "";
-        return;
+        document.getElementById("chart-xaxis").innerHTML = ""; return;
     }
-
-    var color = COLORES[tabActiva];
-    var pad   = 8;
-    var min   = Math.min.apply(null, data);
-    var max   = Math.max.apply(null, data);
-    var rng   = max - min || 1;
-    var h     = H - pad*2 - 20; // 20px para etiquetas eje Y
-    var xs    = data.map(function(_,i){ return pad + i*(W-pad*2)/(data.length-1); });
-    var ys    = data.map(function(v){ return pad + h - (v-min)/rng*h; });
-
-    // Grid lines horizontales
-    var nGrid = 4;
-    var gridSvg = "";
+    var color = COLORES[tabActiva]; var pad = 8;
+    var min = Math.min.apply(null, data); var max = Math.max.apply(null, data);
+    var rng = max - min || 1; var h = H - pad*2 - 20;
+    var xs = data.map(function(_,i){ return pad + i*(W-pad*2)/(data.length-1); });
+    var ys = data.map(function(v){ return pad + h - (v-min)/rng*h; });
+    var nGrid = 4; var gridSvg = "";
     for (var g=0; g<=nGrid; g++) {
-        var yg = pad + h/nGrid*g;
-        var val = max - (max-min)/nGrid*g;
-        gridSvg += '<line x1="' + pad + '" y1="' + yg + '" x2="' + (W-pad) + '" y2="' + yg
-            + '" stroke="#1e293b" stroke-width="1"/>';
-        gridSvg += '<text x="' + (pad+2) + '" y="' + (yg-3) + '" fill="#334155" font-family="JetBrains Mono" font-size="8">'
-            + fmtK(val) + '</text>';
+        var yg = pad + h/nGrid*g; var val = max - (max-min)/nGrid*g;
+        gridSvg += '<line x1="' + pad + '" y1="' + yg + '" x2="' + (W-pad) + '" y2="' + yg + '" stroke="#1e293b" stroke-width="1"/>';
+        gridSvg += '<text x="' + (pad+2) + '" y="' + (yg-3) + '" fill="#334155" font-family="JetBrains Mono" font-size="8">' + fmtK(val) + '</text>';
     }
     svg.innerHTML = gridSvg;
-
-    // Path + área
     var d = "M " + xs[0] + " " + ys[0];
     for (var i=1; i<xs.length; i++) {
         var mx = (xs[i-1]+xs[i])/2;
@@ -1223,31 +1346,23 @@ function drawBigChart() {
     var area = d + " L " + xs[xs.length-1] + " " + (pad+h) + " L " + xs[0] + " " + (pad+h) + " Z";
     svg.innerHTML += '<path d="' + area + '" fill="' + color + '" fill-opacity="0.07"/>';
     svg.innerHTML += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>';
-
-    // Dots interactivos grandes
     xs.forEach(function(x, i){
         var circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        circle.setAttribute("cx", x);
-        circle.setAttribute("cy", ys[i]);
-        circle.setAttribute("r", "4");
-        circle.setAttribute("fill", color);
-        circle.setAttribute("stroke", "#080e1a");
-        circle.setAttribute("stroke-width", "2");
+        circle.setAttribute("cx", x); circle.setAttribute("cy", ys[i]);
+        circle.setAttribute("r", "4"); circle.setAttribute("fill", color);
+        circle.setAttribute("stroke", "#080e1a"); circle.setAttribute("stroke-width", "2");
         circle.style.cursor = "pointer";
         (function(snap, cx, cy){
             circle.addEventListener("mouseenter", function(){
                 tip.style.display = "block";
                 var fechaStr = new Date(snap.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
                 tip.innerText = fechaStr + "  " + fmt(snap[tabActiva]) + " \u20AC";
-                tip.style.left = (cx + 8) + "px";
-                tip.style.top  = (cy - 36) + "px";
+                tip.style.left = (cx + 8) + "px"; tip.style.top = (cy - 36) + "px";
             });
             circle.addEventListener("mouseleave", function(){ tip.style.display = "none"; });
         })(historial[i], x, ys[i]);
         svg.appendChild(circle);
     });
-
-    // Eje X con fechas
     var xaxis = document.getElementById("chart-xaxis");
     var step  = Math.max(1, Math.floor(historial.length / 5));
     var labels = [];
@@ -1255,9 +1370,7 @@ function drawBigChart() {
         if (j === 0 || j === historial.length-1 || j % step === 0) {
             var fStr = new Date(historial[j].fecha).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"});
             labels.push('<span class="mono text-[8px] text-slate-600">' + fStr + '</span>');
-        } else {
-            labels.push('<span></span>');
-        }
+        } else { labels.push('<span></span>'); }
     }
     xaxis.innerHTML = labels.join("");
 }
@@ -1283,16 +1396,15 @@ function drawSnapTable() {
             + '<span class="mono text-[9px] text-green-400 font-bold">' + fmtK(s.total) + ' €</span>'
             + '</div>'
             + '<button onclick="borrarSnapshot(' + realIdx + ')"'
-            + ' style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:JetBrains Mono,monospace;flex-shrink:0;"'
-            + ' title="Borrar">×</button>'
+            + ' style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:JetBrains Mono,monospace;flex-shrink:0;" title="Borrar">×</button>'
             + '</div>';
     });
     el.innerHTML = rows.join("");
 }
 
-// ==============================================
+// ══════════════════════════════════════════════════
 // DONUT CHART
-// ==============================================
+// ══════════════════════════════════════════════════
 var TREEMAP_CATS = [
     { key: 'bolsa',    label: 'Bolsa',    color: '#3b82f6' },
     { key: 'fondos',   label: 'Fondos',   color: '#8b5cf6' },
@@ -1306,45 +1418,33 @@ function drawTreemap() {
     var tip    = document.getElementById('treemap-tip');
     var legend = document.getElementById('treemap-legend');
     if (!svg) return;
-    svg.innerHTML = '';
-    legend.innerHTML = '';
-    var v = getValues();
-    var total = v.total;
+    svg.innerHTML = ''; legend.innerHTML = '';
+    var v = getValues(); var total = v.total;
     document.getElementById('treemap-total').innerText =
         total > 0 ? total.toLocaleString('es-ES',{style:'currency',currency:'EUR'}) : '';
     if (total <= 0) {
         svg.innerHTML = '<text x="110" y="110" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="10">Sin datos</text>';
         return;
     }
-    var items = TREEMAP_CATS.map(function(c){
-        return { key:c.key, label:c.label, color:c.color, value: v[c.key]||0 };
-    }).filter(function(i){ return i.value > 0; });
-
-    var CX=110, CY=110, R=90, ri=54, GAP=0.022;
-    var angle = -Math.PI / 2;
-
+    var items = TREEMAP_CATS.map(function(c){ return { key:c.key, label:c.label, color:c.color, value: v[c.key]||0 }; })
+                            .filter(function(i){ return i.value > 0; });
+    var CX=110, CY=110, R=90, ri=54, GAP=0.022; var angle = -Math.PI / 2;
     items.forEach(function(item) {
-        var slice = (item.value / total) * Math.PI * 2;
-        var end   = angle + slice - GAP;
-        var x1=CX+R*Math.cos(angle),   y1=CY+R*Math.sin(angle);
-        var x2=CX+R*Math.cos(end),     y2=CY+R*Math.sin(end);
-        var x3=CX+ri*Math.cos(end),    y3=CY+ri*Math.sin(end);
-        var x4=CX+ri*Math.cos(angle),  y4=CY+ri*Math.sin(angle);
+        var slice = (item.value / total) * Math.PI * 2; var end = angle + slice - GAP;
+        var x1=CX+R*Math.cos(angle),  y1=CY+R*Math.sin(angle);
+        var x2=CX+R*Math.cos(end),    y2=CY+R*Math.sin(end);
+        var x3=CX+ri*Math.cos(end),   y3=CY+ri*Math.sin(end);
+        var x4=CX+ri*Math.cos(angle), y4=CY+ri*Math.sin(angle);
         var lg = slice > Math.PI ? 1 : 0;
         var d  = 'M '+x1+' '+y1+' A '+R+' '+R+' 0 '+lg+' 1 '+x2+' '+y2
                + ' L '+x3+' '+y3+' A '+ri+' '+ri+' 0 '+lg+' 0 '+x4+' '+y4+' Z';
         var path = document.createElementNS('http://www.w3.org/2000/svg','path');
-        path.setAttribute('d', d);
-        path.setAttribute('fill', item.color);
-        path.setAttribute('fill-opacity','0.82');
-        path.style.cursor = 'pointer';
-        path.style.transition = 'fill-opacity 0.15s';
-        var pct  = (item.value / total * 100).toFixed(1);
-        var midA = angle + slice / 2;
+        path.setAttribute('d', d); path.setAttribute('fill', item.color);
+        path.setAttribute('fill-opacity','0.82'); path.style.cursor = 'pointer'; path.style.transition = 'fill-opacity 0.15s';
+        var pct  = (item.value / total * 100).toFixed(1); var midA = angle + slice / 2;
         (function(it, p, ma){
             path.addEventListener('mouseenter', function(){
-                path.setAttribute('fill-opacity','1');
-                tip.style.display = 'block';
+                path.setAttribute('fill-opacity','1'); tip.style.display = 'block';
                 tip.innerHTML = '<b style="color:'+it.color+'">'+it.label+'</b><br>'+fmt(it.value)+' € &nbsp;<b>'+p+'%</b>';
                 tip.style.left = Math.max(0, CX+(R+10)*Math.cos(ma)-55)+'px';
                 tip.style.top  = Math.max(0, CY+(R+10)*Math.sin(ma)-38)+'px';
@@ -1354,16 +1454,13 @@ function drawTreemap() {
                 document.getElementById('donut-center-val').innerText   = fmt(it.value)+' €';
             });
             path.addEventListener('mouseleave', function(){
-                path.setAttribute('fill-opacity','0.82');
-                tip.style.display = 'none';
+                path.setAttribute('fill-opacity','0.82'); tip.style.display = 'none';
                 document.getElementById('donut-center-pct').innerText   = '';
                 document.getElementById('donut-center-label').innerText = '';
                 document.getElementById('donut-center-val').innerText   = '';
             });
         })(item, pct, midA);
-        svg.appendChild(path);
-        angle += slice;
-        // Leyenda
+        svg.appendChild(path); angle += slice;
         var row = document.createElement('div');
         row.className = 'flex items-center justify-between gap-3 w-full';
         row.innerHTML =
@@ -1384,15 +1481,13 @@ function actualizarGraficas() {
     drawSparkline("spark-indie",  "indie",  COLORES.indie,  "tip-indie");
     drawSparkline("spark-epsv",   "epsv",   COLORES.epsv,   "tip-epsv");
     drawSparkline("spark-ef",     "efectivo", COLORES.efectivo, "tip-ef");
-    drawBigChart();
-    drawSnapTable();
+    drawBigChart(); drawSnapTable();
 }
 
 function setTab(tab) {
     tabActiva = tab;
     ["total","fondos","indie","epsv","efectivo"].forEach(function(t){
-        var btn = document.getElementById("tab-"+t);
-        btn.classList.toggle("active", t===tab);
+        document.getElementById("tab-"+t).classList.toggle("active", t===tab);
     });
     drawBigChart();
 }
@@ -1400,16 +1495,14 @@ function setTab(tab) {
 // ══════════════════════════════════════════════════
 // UTILIDADES
 // ══════════════════════════════════════════════════
-function fmt(n) {
-    return (n||0).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2});
-}
+function fmt(n) { return (n||0).toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtK(n) {
     if (!n) return "0";
     if (Math.abs(n) >= 1000) return (n/1000).toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1}) + "k";
     return (n||0).toLocaleString("es-ES",{minimumFractionDigits:0,maximumFractionDigits:0});
 }
 function setStatus(msg, color) {
-    var s   = document.getElementById("status");
+    var s = document.getElementById("status");
     var map = {amber:"text-amber-400",green:"text-green-400",red:"text-red-400"};
     s.className = "mono text-[10px] mt-2 " + (map[color]||"text-slate-400");
     s.innerText = msg;
@@ -1441,59 +1534,37 @@ function save() {
     }));
 }
 
-function saveHistorial() {
-    localStorage.setItem("isukiza_hist", JSON.stringify(historial));
-}
+function saveHistorial() { localStorage.setItem("isukiza_hist", JSON.stringify(historial)); }
 
 function load() {
-    // Datos del formulario
     var raw = localStorage.getItem("isukiza_v4");
     var d   = raw ? JSON.parse(raw) : {};
     var set = function(id, val){ var el=document.getElementById(id); if(el && val) el.value=val; };
-    set("f1_vl",    d.f1_vl);
-    set("f1_part",  d.f1_part);
-    set("f1_coste", d.f1_coste);
-    set("f2_vl",    d.f2_vl);
-    set("f2_part",  d.f2_part);
-    set("f2_coste", d.f2_coste);
-    set("indie_mer", d.indie_mer);
-    set("indie_inv", d.indie_inv);
-    set("indie_ef",  d.indie_ef);
-    set("ef_abanca",     d.ef_abanca);
-    set("ef_santander",  d.ef_santander);
-    set("ef_kutxa",      d.ef_kutxa);
-    set("ef_myinvestor", d.ef_myinvestor);
-    set("ef_casa",       d.ef_casa);
+    set("f1_vl",    d.f1_vl);   set("f1_part",  d.f1_part);  set("f1_coste", d.f1_coste);
+    set("f2_vl",    d.f2_vl);   set("f2_part",  d.f2_part);  set("f2_coste", d.f2_coste);
+    set("indie_mer", d.indie_mer); set("indie_inv", d.indie_inv); set("indie_ef",  d.indie_ef);
+    set("ef_abanca", d.ef_abanca); set("ef_santander", d.ef_santander);
+    set("ef_kutxa",  d.ef_kutxa);  set("ef_myinvestor", d.ef_myinvestor); set("ef_casa", d.ef_casa);
     set("p1",  d.p1  || "1376.6933");
     set("p2",  d.p2  || "1975.6095");
     set("vlp", d.vlp);
     document.getElementById("vlp_m").value = d.vlp || "";
     if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
-
-    // Historial
     var rawH = localStorage.getItem("isukiza_hist");
     historial = rawH ? JSON.parse(rawH) : [];
     if (d.vlp) {
-        var ts = new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
         var last = historial[historial.length-1];
         if (last) document.getElementById("snapMsg").innerText = "Último: " + new Date(last.fecha).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
     }
-
-    // Cargar acciones
     var rawA = localStorage.getItem("isukiza_acciones");
     acciones = rawA ? JSON.parse(rawA) : JSON.parse(JSON.stringify(ACCIONES_DEFAULT));
     acciones.forEach(function(a){ if (!precios[a.ticker]) precios[a.ticker] = 0; });
-    // Recalcular
-    calcFondo("f1");
-    calcFondo("f2");
-    calcIndie();
-    calcEPSV();
-    calcEfectivo();
-
-    // Gráficas (con pequeño delay para que el SVG tenga dimensiones)
-    setTimeout(actualizarGraficas, 100);
-
-    // Bolsa
+    calcFondo("f1"); calcFondo("f2"); calcIndie(); calcEPSV(); calcEfectivo();
+    // Cargar estado de colapso DESPUÉS de calcular (para que summaries tengan datos)
+    setTimeout(function(){
+        loadCollapseState();
+        actualizarGraficas();
+    }, 100);
     fetchAllPrices();
     setInterval(fetchAllPrices, 5*60*1000);
 }
