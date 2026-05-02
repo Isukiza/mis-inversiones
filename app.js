@@ -1,5 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + MIGRATION
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + FLEXIBLE IMPORT
  */
 
 // ══════════════════════════════════════════════════
@@ -112,16 +112,13 @@ const Storage = {
     saveCollapseState() { localStorage.setItem("isukiza_collapse", JSON.stringify(State.colapsado)); },
 
     loadAll() {
-        // Intentar cargar datos cifrados
         let d = this._load("isukiza_v4_enc");
         
         // MIGRACIÓN: Si no hay datos cifrados pero sí antiguos, migramos
         if (!d && localStorage.getItem("isukiza_v4")) {
-            console.log("Migrando datos antiguos...");
             d = JSON.parse(localStorage.getItem("isukiza_v4"));
             State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
             State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
-            // Guardamos inmediatamente en el nuevo formato
             this.saveData(); this.saveHistorial(); this.saveAcciones();
         } else {
             d = d || {};
@@ -449,7 +446,6 @@ const App = {
         const pass = document.getElementById("masterPassword").value;
         if (!pass) return;
         State.masterKey = pass;
-        
         const hasEncData = localStorage.getItem("isukiza_v4_enc");
         if (hasEncData) {
             const testLoad = Storage._load("isukiza_v4_enc");
@@ -459,7 +455,6 @@ const App = {
                 return;
             }
         }
-
         Storage.loadAll();
         document.getElementById("modalAuth").style.display = "none";
         setTimeout(() => {
@@ -561,26 +556,31 @@ const App = {
     importarJSON(jsonStr) {
         try {
             const data = JSON.parse(jsonStr);
-            // Si el JSON tiene el formato antiguo, lo adaptamos
-            if (data.acciones) State.acciones = data.acciones;
-            if (data.historial) State.historial = data.historial;
             
-            // Rellenar inputs si vienen en el JSON
-            const keys = ["f1_vl", "f1_part", "f1_coste", "f2_vl", "f2_part", "f2_coste", "indie_mer", "indie_inv", "indie_ef", "p1", "p2", "vlp", "ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"];
-            keys.forEach(k => {
-                if (data[k] !== undefined) {
-                    const el = document.getElementById(k);
-                    if (el) el.value = data[k];
-                }
-            });
-
-            // Guardar todo cifrado inmediatamente
-            Storage.saveData();
-            Storage.saveHistorial();
-            Storage.saveAcciones();
+            // CASO 1: Es una lista (Historial de snapshots)
+            if (Array.isArray(data)) {
+                State.historial = data;
+                Storage.saveHistorial();
+                UI.showToast("✓ Historial importado");
+            } 
+            // CASO 2: Es un objeto (Configuración completa)
+            else {
+                if (data.acciones) State.acciones = data.acciones;
+                if (data.historial) State.historial = data.historial;
+                const keys = ["f1_vl", "f1_part", "f1_coste", "f2_vl", "f2_part", "f2_coste", "indie_mer", "indie_inv", "indie_ef", "p1", "p2", "vlp", "ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"];
+                keys.forEach(k => {
+                    if (data[k] !== undefined) {
+                        const el = document.getElementById(k);
+                        if (el) el.value = data[k];
+                    }
+                });
+                Storage.saveData();
+                Storage.saveHistorial();
+                Storage.saveAcciones();
+                UI.showToast("✓ Configuración importada");
+            }
             
             this.calculateAll();
-            UI.showToast("✓ Datos importados y cifrados");
         } catch (e) {
             alert("Error al importar JSON: " + e.message);
         }
