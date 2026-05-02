@@ -1,5 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + DEBUG IMPORT
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + FAITHFUL IMPORT
  */
 
 // ══════════════════════════════════════════════════
@@ -67,10 +67,7 @@ const Crypto = {
             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
             if (!decrypted) return null;
             return JSON.parse(decrypted);
-        } catch (e) { 
-            console.error("Error descifrando:", e);
-            return null; 
-        }
+        } catch (e) { return null; }
     }
 };
 
@@ -118,15 +115,13 @@ const Storage = {
 
     loadAll() {
         let d = this._load("isukiza_v4_enc");
-        
         if (!d && localStorage.getItem("isukiza_v4")) {
-            console.log("Migrando datos antiguos...");
             try {
                 d = JSON.parse(localStorage.getItem("isukiza_v4"));
                 State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
                 State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
                 this.saveData(); this.saveHistorial(); this.saveAcciones();
-            } catch(e) { console.error("Error en migración:", e); }
+            } catch(e) {}
         } else {
             d = d || {};
             State.historial = this._load("isukiza_hist_enc") || [];
@@ -372,8 +367,9 @@ const Charts = {
         const W = svg.clientWidth || svg.parentElement.clientWidth || 300;
         const H = 48;
         svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-        const data = State.historial.map(s => s[field]);
-        if (data.length < 2) {
+        const data = State.historial.map(s => s[field] || 0);
+        // Solo dibujamos si hay datos y no son todos cero
+        if (data.length < 2 || data.every(v => v === 0)) {
             svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#334155" font-size="9">Sin datos</text>';
             return;
         }
@@ -410,7 +406,7 @@ const Charts = {
         if (!svg) return;
         const W = svg.clientWidth || 600; const H = 200;
         svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-        const data = State.historial.map(s => s[State.tabActiva]);
+        const data = State.historial.map(s => s[State.tabActiva] || 0);
         if (data.length < 2) {
             svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#334155">Registra snapshots</text>';
             return;
@@ -564,26 +560,36 @@ const App = {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
-            console.log("Archivo leído con éxito");
-            this.importarJSON(e.target.result);
-        };
-        reader.onerror = () => alert("Error al leer el archivo");
+        reader.onload = (e) => this.importarJSON(e.target.result);
         reader.readAsText(file);
     },
 
     importarJSON(jsonStr) {
         try {
-            const data = JSON.parse(jsonStr);
-            console.log("JSON parseado:", data);
+            let data = JSON.parse(jsonStr);
             
+            const processHistorial = (hist) => {
+                return hist.map(s => {
+                    // Importación fiel: si el dato existe en el JSON, se usa. Si no, se pone 0.
+                    return {
+                        fecha: s.fecha || new Date().toISOString(),
+                        total: parseFloat(s.total) || 0,
+                        fondos: parseFloat(s.fondos) || 0,
+                        indie: parseFloat(s.indie) || 0,
+                        epsv: parseFloat(s.epsv) || 0,
+                        bolsa: parseFloat(s.bolsa) || 0,
+                        efectivo: parseFloat(s.efectivo) || 0
+                    };
+                });
+            };
+
             if (Array.isArray(data)) {
-                State.historial = data;
+                State.historial = processHistorial(data);
                 Storage.saveHistorial();
-                UI.showToast("✓ Historial importado");
+                UI.showToast("✓ Historial importado fielmente");
             } else {
                 if (data.acciones) State.acciones = data.acciones;
-                if (data.historial) State.historial = data.historial;
+                if (data.historial) State.historial = processHistorial(data.historial);
                 const keys = ["f1_vl", "f1_part", "f1_coste", "f2_vl", "f2_part", "f2_coste", "indie_mer", "indie_inv", "indie_ef", "p1", "p2", "vlp", "ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"];
                 keys.forEach(k => {
                     if (data[k] !== undefined) {
@@ -596,19 +602,11 @@ const App = {
                 Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
             }
-            
-            // Forzar recálculo y dibujo
             this.calculateAll();
             UI.renderBolsa();
             UI.refreshCharts();
-            
-            // Limpiar el input de archivo para permitir re-importar el mismo
             document.getElementById("importFile").value = "";
-            
-        } catch (e) { 
-            console.error("Error importando:", e);
-            alert("Error al importar JSON: " + e.message); 
-        }
+        } catch (e) { alert("Error al importar JSON: " + e.message); }
     },
 
     exportarHistorial() {
