@@ -1,5 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + FLEXIBLE IMPORT
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + FINAL FIX
  */
 
 // ══════════════════════════════════════════════════
@@ -553,18 +553,22 @@ const App = {
         this.calculateAll();
     },
 
+    importarHistorialEvent(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => this.importarJSON(e.target.result);
+        reader.readAsText(file);
+    },
+
     importarJSON(jsonStr) {
         try {
             const data = JSON.parse(jsonStr);
-            
-            // CASO 1: Es una lista (Historial de snapshots)
             if (Array.isArray(data)) {
                 State.historial = data;
                 Storage.saveHistorial();
                 UI.showToast("✓ Historial importado");
-            } 
-            // CASO 2: Es un objeto (Configuración completa)
-            else {
+            } else {
                 if (data.acciones) State.acciones = data.acciones;
                 if (data.historial) State.historial = data.historial;
                 const keys = ["f1_vl", "f1_part", "f1_coste", "f2_vl", "f2_part", "f2_coste", "indie_mer", "indie_inv", "indie_ef", "p1", "p2", "vlp", "ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"];
@@ -579,11 +583,27 @@ const App = {
                 Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
             }
-            
             this.calculateAll();
-        } catch (e) {
-            alert("Error al importar JSON: " + e.message);
-        }
+        } catch (e) { alert("Error al importar JSON: " + e.message); }
+    },
+
+    exportarHistorial() {
+        const data = JSON.stringify(State.historial, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `isukiza_historial_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    borrarHistorial() {
+        if (!confirm("¿Borrar TODO el historial? Esta acción no se puede deshacer.")) return;
+        State.historial = [];
+        Storage.saveHistorial();
+        this.calculateAll();
+        UI.showToast("Historial borrado", "#450a0a", "#f87171");
     }
 };
 
@@ -613,6 +633,5 @@ window.setTab = (tab) => {
     });
     Charts.drawBigChart();
 };
-window.importarJSON = (str) => App.importarJSON(str);
 window.App = App;
 window.UI = UI;
