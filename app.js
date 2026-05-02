@@ -1,6 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS
- * Estructura organizada por responsabilidades
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION
  */
 
 // ══════════════════════════════════════════════════
@@ -39,7 +38,7 @@ const Config = {
 };
 
 // ══════════════════════════════════════════════════
-// 2. ESTADO GLOBAL (Encapsulado)
+// 2. ESTADO GLOBAL
 // ══════════════════════════════════════════════════
 let State = {
     acciones: [],
@@ -48,13 +47,44 @@ let State = {
     historial: [],
     tabActiva: "total",
     colapsado: {},
-    _modalEditIdx: -1
+    _modalEditIdx: -1,
+    masterKey: null // La clave se mantiene solo en memoria
 };
 
 // ══════════════════════════════════════════════════
-// 3. MÓDULO DE PERSISTENCIA (Storage)
+// 3. MÓDULO DE SEGURIDAD (Crypto)
+// ══════════════════════════════════════════════════
+const Crypto = {
+    encrypt(data) {
+        if (!State.masterKey) return data;
+        const str = typeof data === 'string' ? data : JSON.stringify(data);
+        return CryptoJS.AES.encrypt(str, State.masterKey).toString();
+    },
+    decrypt(ciphertext) {
+        if (!State.masterKey || !ciphertext) return null;
+        try {
+            const bytes = CryptoJS.AES.decrypt(ciphertext, State.masterKey);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            return JSON.parse(decrypted);
+        } catch (e) {
+            return null;
+        }
+    }
+};
+
+// ══════════════════════════════════════════════════
+// 4. MÓDULO DE PERSISTENCIA (Storage)
 // ══════════════════════════════════════════════════
 const Storage = {
+    _save(key, data) {
+        const encrypted = Crypto.encrypt(data);
+        localStorage.setItem(key, encrypted);
+    },
+    _load(key) {
+        const encrypted = localStorage.getItem(key);
+        return Crypto.decrypt(encrypted);
+    },
+
     saveData() {
         const data = {
             f1_vl: document.getElementById("f1_vl").value,
@@ -76,25 +106,15 @@ const Storage = {
             ef_casa:      document.getElementById("ef_casa").value,
             ts:  document.getElementById("fondosTimestamp").innerText
         };
-        localStorage.setItem("isukiza_v4", JSON.stringify(data));
+        this._save("isukiza_v4_enc", data);
     },
 
-    saveHistorial() {
-        localStorage.setItem("isukiza_hist", JSON.stringify(State.historial));
-    },
-
-    saveAcciones() {
-        localStorage.setItem("isukiza_acciones", JSON.stringify(State.acciones));
-    },
-
-    saveCollapseState() {
-        localStorage.setItem("isukiza_collapse", JSON.stringify(State.colapsado));
-    },
+    saveHistorial() { this._save("isukiza_hist_enc", State.historial); },
+    saveAcciones() { this._save("isukiza_acciones_enc", State.acciones); },
+    saveCollapseState() { localStorage.setItem("isukiza_collapse", JSON.stringify(State.colapsado)); },
 
     loadAll() {
-        const raw = localStorage.getItem("isukiza_v4");
-        const d = raw ? JSON.parse(raw) : {};
-        
+        const d = this._load("isukiza_v4_enc") || {};
         const setVal = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
         
         setVal("f1_vl", d.f1_vl); setVal("f1_part", d.f1_part); setVal("f1_coste", d.f1_coste);
@@ -102,42 +122,34 @@ const Storage = {
         setVal("indie_mer", d.indie_mer); setVal("indie_inv", d.indie_inv); setVal("indie_ef", d.indie_ef);
         setVal("ef_abanca", d.ef_abanca); setVal("ef_santander", d.ef_santander);
         setVal("ef_kutxa", d.ef_kutxa); setVal("ef_myinvestor", d.ef_myinvestor); setVal("ef_casa", d.ef_casa);
-        setVal("p1", d.p1 || "1376.6933");
-        setVal("p2", d.p2 || "1975.6095");
-        setVal("vlp", d.vlp);
+        setVal("p1", d.p1 || "1376.6933"); setVal("p2", d.p2 || "1975.6095"); setVal("vlp", d.vlp);
         
         if (document.getElementById("vlp_m")) document.getElementById("vlp_m").value = d.vlp || "";
         if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
 
-        State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
-        State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
+        State.historial = this._load("isukiza_hist_enc") || [];
+        State.acciones = this._load("isukiza_acciones_enc") || Config.ACCIONES_DEFAULT;
         State.colapsado = JSON.parse(localStorage.getItem("isukiza_collapse") || "{}");
-
-        // Inicializar precios
         State.acciones.forEach(a => { if (!State.precios[a.ticker]) State.precios[a.ticker] = 0; });
     }
 };
 
 // ══════════════════════════════════════════════════
-// 4. MÓDULO DE FINANZAS (API)
+// 5. MÓDULO DE FINANZAS (API)
 // ══════════════════════════════════════════════════
 const Finance = {
     async fetchPrice(ticker) {
         const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-        
         for (let i = 0; i < Config.PROXIES.length; i++) {
             try {
                 const proxyUrl = Config.PROXIES[i](yahooUrl);
                 const response = await fetch(proxyUrl);
                 const data = await response.json();
                 return this.extractPrice(data);
-            } catch (e) {
-                console.warn(`Proxy ${i} falló para ${ticker}: ${e.message}`);
-            }
+            } catch (e) { console.warn(`Proxy ${i} falló para ${ticker}`); }
         }
-        throw new Error(`Todos los proxies fallaron para ${ticker}`);
+        throw new Error(`Fallo total para ${ticker}`);
     },
-
     extractPrice(data) {
         let contents = data.contents ? JSON.parse(data.contents) : data;
         const meta = contents.chart.result[0].meta;
@@ -145,24 +157,12 @@ const Finance = {
         if (!p) throw new Error("Precio no disponible");
         return p;
     },
-
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
-        try {
-            const v = await this.fetchPrice("EURUSD=X");
-            State.usd_eur = 1 / v;
-        } catch (e) {
-            State.usd_eur = 0.92;
-        }
-
+        try { const v = await this.fetchPrice("EURUSD=X"); State.usd_eur = 1 / v; } catch (e) { State.usd_eur = 0.92; }
         const promises = State.acciones.map(async a => {
-            try {
-                State.precios[a.ticker] = await this.fetchPrice(a.ticker);
-            } catch (e) {
-                console.warn(`Sin precio para ${a.ticker}`);
-            }
+            try { State.precios[a.ticker] = await this.fetchPrice(a.ticker); } catch (e) {}
         });
-
         await Promise.all(promises);
         document.getElementById("bolsaStatus").innerText = "live";
         UI.setStatus(`Bolsa actualizada ${new Date().toLocaleTimeString("es-ES")}`, "green");
@@ -172,38 +172,33 @@ const Finance = {
 };
 
 // ══════════════════════════════════════════════════
-// 5. MÓDULO DE INTERFAZ (UI)
+// 6. MÓDULO DE INTERFAZ (UI)
 // ══════════════════════════════════════════════════
 const UI = {
     fmt(n) { return (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-    
     fmtK(n) {
         if (!n) return "0";
         if (Math.abs(n) >= 1000) return (n / 1000).toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "k";
         return (n || 0).toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     },
-
     setStatus(msg, color) {
         const s = document.getElementById("status");
         const map = { amber: "text-amber-400", green: "text-green-400", red: "text-red-400" };
         s.className = `mono text-[10px] mt-2 ${map[color] || "text-slate-400"}`;
         s.innerText = msg;
     },
-
     showToast(msg, bg = "#14532d", color = "#4ade80") {
         const t = document.getElementById("snapToast");
         t.style.background = bg; t.style.borderColor = color; t.style.color = color;
         t.innerText = msg; t.style.opacity = "1";
         setTimeout(() => { t.style.opacity = "0"; }, 2500);
     },
-
     toggleCard(id) {
         State.colapsado[id] = !State.colapsado[id];
         this.applyCollapse(id);
         Storage.saveCollapseState();
         this.updateGlobalBtn();
     },
-
     applyCollapse(id) {
         const cfg = Config.CARDS[id];
         if (!cfg) return;
@@ -212,7 +207,6 @@ const UI = {
         const btn = card ? card.querySelector(".collapse-btn") : null;
         const sum = document.getElementById(`summary-${id}`);
         if (!body) return;
-
         if (State.colapsado[id]) {
             body.classList.add("collapsed");
             if (btn) btn.textContent = "▼";
@@ -226,7 +220,6 @@ const UI = {
             setTimeout(() => { this.refreshCharts(); }, 50);
         }
     },
-
     updateSummary(id) {
         const el = document.getElementById(`summary-${id}`);
         if (!el) return;
@@ -250,7 +243,6 @@ const UI = {
         }
         el.textContent = txt;
     },
-
     updateGlobalBtn() {
         const btn = document.getElementById("btnCollapseAll");
         if (!btn) return;
@@ -258,7 +250,6 @@ const UI = {
         btn.textContent = allCollapsed ? "▼ Expandir todo" : "▲ Contraer todo";
         btn.classList.toggle("all-collapsed", allCollapsed);
     },
-
     renderBolsa() {
         const list = document.getElementById("listaAcciones");
         if (!State.acciones.length) {
@@ -276,7 +267,6 @@ const UI = {
             const ganPct = invEur > 0 ? gan / invEur * 100 : 0;
             const esG = gan >= 0;
             totalBolsaInv += invEur; totalBolsaMer += subEur;
-            
             const rentHTML = invEur > 0 ? `
                 <div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">
                     <span class="mono text-[11px] text-slate-500">Rentabilidad</span>
@@ -284,7 +274,6 @@ const UI = {
                         ${esG ? "+" : ""}${this.fmt(gan)} € (${esG ? "+" : ""}${ganPct.toFixed(2)}%)
                     </span>
                 </div>` : "";
-
             return `
                 <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 hover:border-blue-700/40 transition-all">
                     <div class="flex justify-between items-center">
@@ -299,13 +288,12 @@ const UI = {
                                 <p class="mono text-base font-bold text-blue-300">${this.fmt(subEur)} &euro;</p>
                                 ${a.mon === "USD" ? `<p class="mono text-[8px] text-slate-600">${this.fmt(sub)} ${a.mon}</p>` : ""}
                             </div>
-                            <button onclick="UI.abrirModal(${idx})" class="btn-edit" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">✏️</button>
+                            <button onclick="UI.abrirModal(${idx})" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">✏️</button>
                         </div>
                     </div>
                     ${rentHTML}
                 </div>`;
         }).join("");
-
         const ganT = totalBolsaMer - totalBolsaInv;
         const esGT = ganT >= 0;
         const footer = document.getElementById("bolsaFooter");
@@ -318,7 +306,6 @@ const UI = {
                 </div>`;
         }
     },
-
     abrirModal(idx) {
         State._modalEditIdx = idx;
         const a = idx === -1 ? { nombre: "", ticker: "", mon: "EUR", cant: "", coste: "", inv: "" } : State.acciones[idx];
@@ -332,9 +319,7 @@ const UI = {
         document.getElementById("m_eliminar").style.display = idx === -1 ? "none" : "block";
         document.getElementById("modalBolsa").classList.add("open");
     },
-
     cerrarModal() { document.getElementById("modalBolsa").classList.remove("open"); },
-
     refreshCharts() {
         Charts.drawTreemap();
         Charts.drawSparkline("spark-fondos", "fondos", Config.COLORES.fondos, "tip-fondos");
@@ -347,7 +332,7 @@ const UI = {
 };
 
 // ══════════════════════════════════════════════════
-// 6. MÓDULO DE GRÁFICAS (Charts)
+// 7. MÓDULO DE GRÁFICAS (Charts)
 // ══════════════════════════════════════════════════
 const Charts = {
     makePath(data, W, H, color, filled) {
@@ -368,7 +353,6 @@ const Charts = {
         }
         return { svg: path, xs, ys };
     },
-
     drawSparkline(svgId, field, color, tipId) {
         const svg = document.getElementById(svgId);
         if (!svg) return;
@@ -383,18 +367,15 @@ const Charts = {
         const r = this.makePath(data, W, H, color, true);
         svg.innerHTML = r.svg;
     },
-
     drawTreemap() {
         const svg = document.getElementById('treemap-svg');
         if (!svg) return;
         svg.innerHTML = '';
         const v = App.getValues();
         if (v.total <= 0) return;
-        
         const items = Config.TREEMAP_CATS.map(c => ({ ...c, value: v[c.key] || 0 })).filter(i => i.value > 0);
         const CX = 110, CY = 110, R = 90, ri = 54, GAP = 0.022;
         let angle = -Math.PI / 2;
-
         items.forEach(item => {
             const slice = (item.value / v.total) * Math.PI * 2;
             const end = angle + slice - GAP;
@@ -404,7 +385,6 @@ const Charts = {
             const x4 = CX + ri * Math.cos(angle), y4 = CY + ri * Math.sin(angle);
             const lg = slice > Math.PI ? 1 : 0;
             const d = `M ${x1} ${y1} A ${R} ${R} 0 ${lg} 1 ${x2} ${y2} L ${x3} ${y3} A ${ri} ${ri} 0 ${lg} 0 ${x4} ${y4} Z`;
-            
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', d); path.setAttribute('fill', item.color);
             path.setAttribute('fill-opacity', '0.82');
@@ -412,7 +392,6 @@ const Charts = {
             angle += slice;
         });
     },
-
     drawBigChart() {
         const svg = document.getElementById("chart-big");
         if (!svg) return;
@@ -426,7 +405,6 @@ const Charts = {
         const r = this.makePath(data, W, H, Config.COLORES[State.tabActiva], true);
         svg.innerHTML = r.svg;
     },
-
     drawSnapTable() {
         const el = document.getElementById("snapTable");
         if (!el) return;
@@ -451,17 +429,37 @@ const Charts = {
 };
 
 // ══════════════════════════════════════════════════
-// 7. MÓDULO PRINCIPAL (App) - Orquestador
+// 8. MÓDULO PRINCIPAL (App)
 // ══════════════════════════════════════════════════
 const App = {
     init() {
+        // No cargamos nada hasta que se desbloquee
+        document.getElementById("masterPassword").addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
+    },
+
+    unlock() {
+        const pass = document.getElementById("masterPassword").value;
+        if (!pass) return;
+        State.masterKey = pass;
+        
+        // Intentar cargar datos. Si es la primera vez o la clave es correcta, funcionará.
         Storage.loadAll();
+        
+        // Verificación simple: si hay datos cifrados pero el descifrado falló, la clave es mal
+        const hasData = localStorage.getItem("isukiza_v4_enc");
+        if (hasData && !Storage._load("isukiza_v4_enc")) {
+            document.getElementById("authError").classList.remove("hidden");
+            State.masterKey = null;
+            return;
+        }
+
+        // Éxito: ocultar modal y arrancar app
+        document.getElementById("modalAuth").style.display = "none";
         this.calculateAll();
         UI.updateGlobalBtn();
         Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
         Finance.updateAllPrices();
         setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
-        
         window.addEventListener("resize", () => UI.refreshCharts());
         document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
     },
@@ -472,14 +470,12 @@ const App = {
             const sub = (State.precios[a.ticker] || 0) * a.cant;
             bolsa += a.mon === "USD" ? sub * State.usd_eur : sub;
         });
-        
         const f = this.getFondosTotals();
         const indie = (parseFloat(document.getElementById("indie_mer").value) || 0) + (parseFloat(document.getElementById("indie_ef").value) || 0);
         const vlp = parseFloat(document.getElementById("vlp").value) || 0;
         const epsv = ((parseFloat(document.getElementById("p1").value) || 0) + (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
         const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"]
             .reduce((acc, id) => acc + (parseFloat(document.getElementById(id).value) || 0), 0);
-
         return { bolsa, fondos: f.tMer, indie, epsv, efectivo, total: bolsa + f.tMer + indie + epsv + efectivo };
     },
 
@@ -496,7 +492,6 @@ const App = {
     calculateAll() {
         const v = this.getValues();
         document.getElementById("totalPatrimonio").innerText = v.total.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
-        
         const f = this.getFondosTotals();
         const ganF = f.tMer - f.tInv;
         const rEl = document.getElementById("totalRentab");
@@ -504,7 +499,6 @@ const App = {
             rEl.className = `mono text-[10px] mt-1 ${ganF >= 0 ? "gain" : "loss"}`;
             rEl.innerText = `Fondos: ${ganF >= 0 ? "+" : ""}${UI.fmt(ganF)} € (${(ganF / f.tInv * 100).toFixed(2)}%)`;
         }
-        
         UI.refreshCharts();
         Object.keys(Config.CARDS).forEach(id => { if (State.colapsado[id]) UI.updateSummary(id); });
         Storage.saveData();
@@ -540,7 +534,6 @@ const App = {
         };
         if (State._modalEditIdx === -1) State.acciones.push(a);
         else State.acciones[State._modalEditIdx] = a;
-        
         Storage.saveAcciones();
         UI.cerrarModal();
         Finance.updateAllPrices();
@@ -560,7 +553,7 @@ const App = {
 // Inicialización
 window.onload = () => App.init();
 
-// Exponer funciones necesarias al objeto window para los onclick del HTML
+// Exponer funciones al objeto window
 window.toggleCard = (id) => UI.toggleCard(id);
 window.toggleAll = () => UI.toggleAll();
 window.registrarSnapshot = () => App.registrarSnapshot();
@@ -583,5 +576,5 @@ window.setTab = (tab) => {
     });
     Charts.drawBigChart();
 };
-window.UI = UI; // Para los botones de edición
-window.App = App; // Para los botones de borrado
+window.App = App;
+window.UI = UI;
