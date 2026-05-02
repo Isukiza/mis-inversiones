@@ -442,26 +442,31 @@ const App = {
         if (!pass) return;
         State.masterKey = pass;
         
-        // Intentar cargar datos. Si es la primera vez o la clave es correcta, funcionará.
-        Storage.loadAll();
-        
-        // Verificación simple: si hay datos cifrados pero el descifrado falló, la clave es mal
+        // Verificación: si hay datos cifrados, intentamos descifrar una muestra
         const hasData = localStorage.getItem("isukiza_v4_enc");
-        if (hasData && !Storage._load("isukiza_v4_enc")) {
-            document.getElementById("authError").classList.remove("hidden");
-            State.masterKey = null;
-            return;
+        if (hasData) {
+            const testLoad = Storage._load("isukiza_v4_enc");
+            if (!testLoad) {
+                document.getElementById("authError").classList.remove("hidden");
+                State.masterKey = null;
+                return;
+            }
         }
 
-        // Éxito: ocultar modal y arrancar app
+        // Éxito o primera vez: cargar datos y arrancar app
+        Storage.loadAll();
         document.getElementById("modalAuth").style.display = "none";
-        this.calculateAll();
-        UI.updateGlobalBtn();
-        Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
-        Finance.updateAllPrices();
-        setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
-        window.addEventListener("resize", () => UI.refreshCharts());
-        document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+        
+        // Pequeño delay para asegurar que el DOM está listo tras ocultar el modal
+        setTimeout(() => {
+            this.calculateAll();
+            UI.updateGlobalBtn();
+            Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
+            Finance.updateAllPrices();
+            setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
+            window.addEventListener("resize", () => UI.refreshCharts());
+            document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+        }, 50);
     },
 
     getValues() {
