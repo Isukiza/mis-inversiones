@@ -1,5 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + MIGRATION
  */
 
 // ══════════════════════════════════════════════════
@@ -48,7 +48,7 @@ let State = {
     tabActiva: "total",
     colapsado: {},
     _modalEditIdx: -1,
-    masterKey: null // La clave se mantiene solo en memoria
+    masterKey: null
 };
 
 // ══════════════════════════════════════════════════
@@ -66,9 +66,7 @@ const Crypto = {
             const bytes = CryptoJS.AES.decrypt(ciphertext, State.masterKey);
             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
             return JSON.parse(decrypted);
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 };
 
@@ -114,21 +112,33 @@ const Storage = {
     saveCollapseState() { localStorage.setItem("isukiza_collapse", JSON.stringify(State.colapsado)); },
 
     loadAll() {
-        const d = this._load("isukiza_v4_enc") || {};
-        const setVal = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
+        // Intentar cargar datos cifrados
+        let d = this._load("isukiza_v4_enc");
         
+        // MIGRACIÓN: Si no hay datos cifrados pero sí antiguos, migramos
+        if (!d && localStorage.getItem("isukiza_v4")) {
+            console.log("Migrando datos antiguos...");
+            d = JSON.parse(localStorage.getItem("isukiza_v4"));
+            State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
+            State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
+            // Guardamos inmediatamente en el nuevo formato
+            this.saveData(); this.saveHistorial(); this.saveAcciones();
+        } else {
+            d = d || {};
+            State.historial = this._load("isukiza_hist_enc") || [];
+            State.acciones = this._load("isukiza_acciones_enc") || Config.ACCIONES_DEFAULT;
+        }
+
+        const setVal = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
         setVal("f1_vl", d.f1_vl); setVal("f1_part", d.f1_part); setVal("f1_coste", d.f1_coste);
         setVal("f2_vl", d.f2_vl); setVal("f2_part", d.f2_part); setVal("f2_coste", d.f2_coste);
         setVal("indie_mer", d.indie_mer); setVal("indie_inv", d.indie_inv); setVal("indie_ef", d.indie_ef);
         setVal("ef_abanca", d.ef_abanca); setVal("ef_santander", d.ef_santander);
         setVal("ef_kutxa", d.ef_kutxa); setVal("ef_myinvestor", d.ef_myinvestor); setVal("ef_casa", d.ef_casa);
         setVal("p1", d.p1 || "1376.6933"); setVal("p2", d.p2 || "1975.6095"); setVal("vlp", d.vlp);
-        
         if (document.getElementById("vlp_m")) document.getElementById("vlp_m").value = d.vlp || "";
         if (d.ts) document.getElementById("fondosTimestamp").innerText = d.ts;
 
-        State.historial = this._load("isukiza_hist_enc") || [];
-        State.acciones = this._load("isukiza_acciones_enc") || Config.ACCIONES_DEFAULT;
         State.colapsado = JSON.parse(localStorage.getItem("isukiza_collapse") || "{}");
         State.acciones.forEach(a => { if (!State.precios[a.ticker]) State.precios[a.ticker] = 0; });
     }
@@ -146,7 +156,7 @@ const Finance = {
                 const response = await fetch(proxyUrl);
                 const data = await response.json();
                 return this.extractPrice(data);
-            } catch (e) { console.warn(`Proxy ${i} falló para ${ticker}`); }
+            } catch (e) { }
         }
         throw new Error(`Fallo total para ${ticker}`);
     },
@@ -154,8 +164,7 @@ const Finance = {
         let contents = data.contents ? JSON.parse(data.contents) : data;
         const meta = contents.chart.result[0].meta;
         let p = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
-        if (!p) throw new Error("Precio no disponible");
-        return p;
+        return p || 0;
     },
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
@@ -433,7 +442,6 @@ const Charts = {
 // ══════════════════════════════════════════════════
 const App = {
     init() {
-        // No cargamos nada hasta que se desbloquee
         document.getElementById("masterPassword").addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
     },
 
@@ -442,9 +450,8 @@ const App = {
         if (!pass) return;
         State.masterKey = pass;
         
-        // Verificación: si hay datos cifrados, intentamos descifrar una muestra
-        const hasData = localStorage.getItem("isukiza_v4_enc");
-        if (hasData) {
+        const hasEncData = localStorage.getItem("isukiza_v4_enc");
+        if (hasEncData) {
             const testLoad = Storage._load("isukiza_v4_enc");
             if (!testLoad) {
                 document.getElementById("authError").classList.remove("hidden");
@@ -453,11 +460,8 @@ const App = {
             }
         }
 
-        // Éxito o primera vez: cargar datos y arrancar app
         Storage.loadAll();
         document.getElementById("modalAuth").style.display = "none";
-        
-        // Pequeño delay para asegurar que el DOM está listo tras ocultar el modal
         setTimeout(() => {
             this.calculateAll();
             UI.updateGlobalBtn();
@@ -552,6 +556,34 @@ const App = {
         UI.cerrarModal();
         UI.renderBolsa();
         this.calculateAll();
+    },
+
+    importarJSON(jsonStr) {
+        try {
+            const data = JSON.parse(jsonStr);
+            // Si el JSON tiene el formato antiguo, lo adaptamos
+            if (data.acciones) State.acciones = data.acciones;
+            if (data.historial) State.historial = data.historial;
+            
+            // Rellenar inputs si vienen en el JSON
+            const keys = ["f1_vl", "f1_part", "f1_coste", "f2_vl", "f2_part", "f2_coste", "indie_mer", "indie_inv", "indie_ef", "p1", "p2", "vlp", "ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"];
+            keys.forEach(k => {
+                if (data[k] !== undefined) {
+                    const el = document.getElementById(k);
+                    if (el) el.value = data[k];
+                }
+            });
+
+            // Guardar todo cifrado inmediatamente
+            Storage.saveData();
+            Storage.saveHistorial();
+            Storage.saveAcciones();
+            
+            this.calculateAll();
+            UI.showToast("✓ Datos importados y cifrados");
+        } catch (e) {
+            alert("Error al importar JSON: " + e.message);
+        }
     }
 };
 
@@ -581,5 +613,6 @@ window.setTab = (tab) => {
     });
     Charts.drawBigChart();
 };
+window.importarJSON = (str) => App.importarJSON(str);
 window.App = App;
 window.UI = UI;
