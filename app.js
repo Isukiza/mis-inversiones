@@ -1,5 +1,5 @@
 /**
- * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + FINAL FIX
+ * PATRIMONIO FAMILIAR ISUKIZA - MODULAR JS + ENCRYPTION + DEBUG IMPORT
  */
 
 // ══════════════════════════════════════════════════
@@ -65,8 +65,12 @@ const Crypto = {
         try {
             const bytes = CryptoJS.AES.decrypt(ciphertext, State.masterKey);
             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            if (!decrypted) return null;
             return JSON.parse(decrypted);
-        } catch (e) { return null; }
+        } catch (e) { 
+            console.error("Error descifrando:", e);
+            return null; 
+        }
     }
 };
 
@@ -80,6 +84,7 @@ const Storage = {
     },
     _load(key) {
         const encrypted = localStorage.getItem(key);
+        if (!encrypted) return null;
         return Crypto.decrypt(encrypted);
     },
 
@@ -114,12 +119,14 @@ const Storage = {
     loadAll() {
         let d = this._load("isukiza_v4_enc");
         
-        // MIGRACIÓN: Si no hay datos cifrados pero sí antiguos, migramos
         if (!d && localStorage.getItem("isukiza_v4")) {
-            d = JSON.parse(localStorage.getItem("isukiza_v4"));
-            State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
-            State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
-            this.saveData(); this.saveHistorial(); this.saveAcciones();
+            console.log("Migrando datos antiguos...");
+            try {
+                d = JSON.parse(localStorage.getItem("isukiza_v4"));
+                State.historial = JSON.parse(localStorage.getItem("isukiza_hist") || "[]");
+                State.acciones = JSON.parse(localStorage.getItem("isukiza_acciones") || JSON.stringify(Config.ACCIONES_DEFAULT));
+                this.saveData(); this.saveHistorial(); this.saveAcciones();
+            } catch(e) { console.error("Error en migración:", e); }
         } else {
             d = d || {};
             State.historial = this._load("isukiza_hist_enc") || [];
@@ -557,13 +564,19 @@ const App = {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => this.importarJSON(e.target.result);
+        reader.onload = (e) => {
+            console.log("Archivo leído con éxito");
+            this.importarJSON(e.target.result);
+        };
+        reader.onerror = () => alert("Error al leer el archivo");
         reader.readAsText(file);
     },
 
     importarJSON(jsonStr) {
         try {
             const data = JSON.parse(jsonStr);
+            console.log("JSON parseado:", data);
+            
             if (Array.isArray(data)) {
                 State.historial = data;
                 Storage.saveHistorial();
@@ -583,8 +596,19 @@ const App = {
                 Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
             }
+            
+            // Forzar recálculo y dibujo
             this.calculateAll();
-        } catch (e) { alert("Error al importar JSON: " + e.message); }
+            UI.renderBolsa();
+            UI.refreshCharts();
+            
+            // Limpiar el input de archivo para permitir re-importar el mismo
+            document.getElementById("importFile").value = "";
+            
+        } catch (e) { 
+            console.error("Error importando:", e);
+            alert("Error al importar JSON: " + e.message); 
+        }
     },
 
     exportarHistorial() {
