@@ -424,11 +424,13 @@ const Charts = {
         const rows = State.historial.slice().reverse().map((s, idx) => {
             const realIdx = State.historial.length - 1 - idx;
             const fStr = new Date(s.fecha).toLocaleString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+            // Aseguramos que el total se lea correctamente del objeto
+            const totalVal = parseFloat(s.total) || 0;
             return `
                 <div class="flex items-center bg-slate-900/40 px-3 py-2 rounded-lg gap-2">
                     <span class="mono text-[9px] text-slate-500">${fStr}</span>
                     <div class="flex gap-3 flex-1 justify-end">
-                        <span class="mono text-[11px] text-green-400 font-bold">${UI.fmtK(s.total)} €</span>
+                        <span class="mono text-[11px] text-green-400 font-bold">${UI.fmt(totalVal)} €</span>
                     </div>
                     <button onclick="App.borrarSnapshot(${realIdx})" style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:JetBrains Mono,monospace;flex-shrink:0;">×</button>
                 </div>`;
