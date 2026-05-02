@@ -489,16 +489,24 @@
             </div>
             <div class="space-y-4">
                 <input type="password" id="masterPassword" class="inp text-center text-lg tracking-widest" placeholder="••••••••" autofocus>
+                <!-- Recordar en este dispositivo -->
+                <label class="flex items-center justify-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="rememberKey" style="width:14px;height:14px;accent-color:#6366f1;cursor:pointer;">
+                    <span class="mono text-[10px] text-slate-400">Recordar en este dispositivo</span>
+                </label>
                 <button onclick="App.unlock()" class="btn-snap w-full py-3 text-sm">Desbloquear Patrimonio</button>
                 <p id="authError" class="text-red-400 text-[10px] mono hidden">⚠️ Clave incorrecta o datos corruptos</p>
             </div>
-            <div class="mt-8 pt-4 border-t border-slate-800">
-                <p class="text-[9px] text-slate-600 mono uppercase tracking-tighter">La clave no se guarda en el navegador y es necesaria para cada sesión.</p>
+            <div class="mt-8 pt-4 border-t border-slate-800 flex flex-col gap-2">
+                <p class="text-[9px] text-slate-600 mono uppercase tracking-tighter">La clave se guarda cifrada solo en este navegador.</p>
+                <button onclick="App.olvidarDispositivo()" class="mono text-[9px] text-slate-600 hover:text-red-400 transition-colors text-center" style="background:none;border:none;cursor:pointer;">
+                    🗑 Olvidar este dispositivo
+                </button>
             </div>
         </div>
     </div>
 
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js"></script>
 </body>
 </html>

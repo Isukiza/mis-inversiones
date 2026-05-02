@@ -707,6 +707,30 @@ const App = {
     init() {
         const pw = document.getElementById("masterPassword");
         if (pw) pw.addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
+
+        // Auto-unlock si hay clave guardada en este dispositivo
+        const savedKey = localStorage.getItem("isukiza_master_key");
+        if (savedKey) {
+            State.masterKey = savedKey;
+            const hasEncData = localStorage.getItem("isukiza_v4_enc");
+            if (!hasEncData || Storage._load("isukiza_v4_enc") !== null) {
+                Storage.loadAll();
+                document.getElementById("modalAuth").style.display = "none";
+                setTimeout(() => {
+                    this.calculateAll();
+                    UI.updateGlobalBtn();
+                    Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
+                    Finance.updateAllPrices();
+                    setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
+                    window.addEventListener("resize", () => UI.refreshCharts());
+                    document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+                }, 50);
+                return;
+            }
+            // Si la clave guardada no funciona, limpiarla y pedir de nuevo
+            localStorage.removeItem("isukiza_master_key");
+            State.masterKey = null;
+        }
     },
 
     unlock() {
@@ -722,6 +746,13 @@ const App = {
                 State.masterKey = null;
                 return;
             }
+        }
+        // Guardar clave si el checkbox está marcado
+        const remember = document.getElementById("rememberKey");
+        if (remember && remember.checked) {
+            localStorage.setItem("isukiza_master_key", pass);
+        } else {
+            localStorage.removeItem("isukiza_master_key");
         }
         Storage.loadAll();
         document.getElementById("modalAuth").style.display = "none";
@@ -909,6 +940,11 @@ const App = {
         Storage.saveHistorial();
         this.calculateAll();
         UI.showToast("Historial borrado", "#450a0a", "#f87171");
+    },
+
+    olvidarDispositivo() {
+        localStorage.removeItem("isukiza_master_key");
+        UI.showToast("Dispositivo olvidado — próxima vez pedirá clave", "#1e293b", "#94a3b8");
     }
 };
 
@@ -963,3 +999,4 @@ window.modalSyncCantCoste = () => {
 
 window.App = App;
 window.UI  = UI;
+window.olvidarDispositivo = () => App.olvidarDispositivo();
