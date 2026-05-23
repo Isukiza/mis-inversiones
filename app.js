@@ -21,7 +21,8 @@ const Config = {
         evolucion: { body: "body-evolucion", card: "card-total"    }
     },
     COLORES: {
-        total: "#4ade80", efectivo: "#22d3ee", fondos: "#a78bfa", indie: "#34d399", epsv: "#fb7185"
+        total: "#4ade80", efectivo: "#22d3ee", fondos: "#a78bfa",
+        indie: "#34d399", epsv: "#fb7185", bolsa: "#3b82f6"
     },
     TREEMAP_CATS: [
         { key: 'bolsa',    label: 'Bolsa',    color: '#3b82f6' },
@@ -114,7 +115,6 @@ const Storage = {
     saveCollapseState(){ localStorage.setItem("isukiza_collapse", JSON.stringify(State.colapsado)); },
 
     loadAll() {
-        // Intentar cargar datos cifrados; si no existen, migrar desde los sin cifrar
         let d = this._load("isukiza_v4_enc");
         if (!d && localStorage.getItem("isukiza_v4")) {
             try {
@@ -495,7 +495,6 @@ const Charts = {
         const r = this.makePath(data, W, H, color, true);
         if (!r) return;
         svg.innerHTML = r.svg;
-        // Dots interactivos
         r.xs.forEach((x, i) => {
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("cx", x); circle.setAttribute("cy", r.ys[i]);
@@ -520,7 +519,7 @@ const Charts = {
         const tipEl  = document.getElementById('treemap-tip');
         const legend = document.getElementById('treemap-legend');
         if (!svg) return;
-        svg.innerHTML = ''; 
+        svg.innerHTML = '';
         if (legend) legend.innerHTML = '';
         const v = App.getValues();
         const total = v.total;
@@ -580,7 +579,6 @@ const Charts = {
             svg.appendChild(path);
             angle += slice;
 
-            // Leyenda
             if (legend) {
                 const row = document.createElement('div');
                 row.className = 'flex items-center justify-between gap-3 w-full';
@@ -621,7 +619,6 @@ const Charts = {
         const xs    = data.map((_, i) => pad + i * (W - pad * 2) / (data.length - 1));
         const ys    = data.map(v => pad + h - (v - min) / rng * h);
 
-        // Grid
         let gridSvg = "";
         for (let g = 0; g <= 4; g++) {
             const yg  = pad + h / 4 * g;
@@ -657,7 +654,6 @@ const Charts = {
             svg.appendChild(circle);
         });
 
-        // Eje X
         const xaxis = document.getElementById("chart-xaxis");
         const step  = Math.max(1, Math.floor(State.historial.length / 5));
         const labels = State.historial.map((s, j) => {
@@ -683,11 +679,16 @@ const Charts = {
         const rows = State.historial.slice().reverse().map((s, idx) => {
             const realIdx = State.historial.length - 1 - idx;
             const fStr = new Date(s.fecha).toLocaleString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+            // Mostrar bolsa solo si tiene valor (compatibilidad con snapshots antiguos)
+            const bolsaHtml = (s.bolsa > 0)
+                ? `<span class="mono text-[11px] text-blue-400">B: ${UI.fmtK(s.bolsa)}</span>`
+                : "";
             return `
                 <div class="flex items-center bg-slate-900/40 px-3 py-2 rounded-lg gap-2">
                     <span class="mono text-[9px] text-slate-500 flex-shrink-0">${fStr}</span>
                     <div class="flex gap-3 flex-wrap flex-1 justify-end">
                         <span class="mono text-[11px] text-cyan-400">C: ${UI.fmtK(s.efectivo || 0)}</span>
+                        ${bolsaHtml}
                         <span class="mono text-[11px] text-violet-400">F: ${UI.fmtK(s.fondos)}</span>
                         <span class="mono text-[11px] text-emerald-400">I: ${UI.fmtK(s.indie)}</span>
                         <span class="mono text-[11px] text-rose-400">E: ${UI.fmtK(s.epsv)}</span>
@@ -708,7 +709,6 @@ const App = {
         const pw = document.getElementById("masterPassword");
         if (pw) pw.addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
 
-        // Auto-unlock si hay clave guardada en este dispositivo
         const savedKey = localStorage.getItem("isukiza_master_key");
         if (savedKey) {
             State.masterKey = savedKey;
@@ -727,7 +727,6 @@ const App = {
                 }, 50);
                 return;
             }
-            // Si la clave guardada no funciona, limpiarla y pedir de nuevo
             localStorage.removeItem("isukiza_master_key");
             State.masterKey = null;
         }
@@ -737,7 +736,6 @@ const App = {
         const pass = document.getElementById("masterPassword").value;
         if (!pass) return;
         State.masterKey = pass;
-        // Validar clave si ya hay datos cifrados
         const hasEncData = localStorage.getItem("isukiza_v4_enc");
         if (hasEncData) {
             const testLoad = Storage._load("isukiza_v4_enc");
@@ -747,7 +745,6 @@ const App = {
                 return;
             }
         }
-        // Guardar clave si el checkbox está marcado
         const remember = document.getElementById("rememberKey");
         if (remember && remember.checked) {
             localStorage.setItem("isukiza_master_key", pass);
@@ -795,7 +792,6 @@ const App = {
     },
 
     calculateAll() {
-        // Actualizar todos los DOMs de cada sección
         UI.updateFondoDOM("f1");
         UI.updateFondoDOM("f2");
         UI.updateTotalFondosDOM();
@@ -803,12 +799,10 @@ const App = {
         UI.updateEPSVDOM();
         UI.updateEfectivoDOM();
 
-        // Total patrimonio
         const v = this.getValues();
         document.getElementById("totalPatrimonio").innerText =
             v.total.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
-        // Rentabilidad fondos en header
         const f    = this.getFondosTotals();
         const ganF = f.tMer - f.tInv;
         const rEl  = document.getElementById("totalRentab");
@@ -820,7 +814,6 @@ const App = {
             rEl.innerText = "Introduce VL y participaciones";
         }
 
-        // Gráficas y summaries
         UI.refreshCharts();
         Object.keys(Config.CARDS).forEach(id => { if (State.colapsado[id]) UI.updateSummary(id); });
         Storage.saveData();
@@ -830,9 +823,13 @@ const App = {
         const v = this.getValues();
         if (v.total === 0) { UI.showToast("Introduce datos primero", "#7c2d12", "#f97316"); return; }
         State.historial.push({
-            fecha: new Date().toISOString(),
-            total: v.total, fondos: v.fondos, indie: v.indie,
-            epsv: v.epsv, bolsa: v.bolsa, efectivo: v.efectivo
+            fecha:    new Date().toISOString(),
+            total:    v.total,
+            bolsa:    v.bolsa,
+            fondos:   v.fondos,
+            indie:    v.indie,
+            epsv:     v.epsv,
+            efectivo: v.efectivo
         });
         Storage.saveHistorial();
         UI.refreshCharts();
@@ -899,10 +896,10 @@ const App = {
             const processHistorial = hist => hist.map(s => ({
                 fecha:    s.fecha    || new Date().toISOString(),
                 total:    parseFloat(s.total)    || 0,
+                bolsa:    parseFloat(s.bolsa)    || 0,
                 fondos:   parseFloat(s.fondos)   || 0,
                 indie:    parseFloat(s.indie)     || 0,
                 epsv:     parseFloat(s.epsv)      || 0,
-                bolsa:    parseFloat(s.bolsa)     || 0,
                 efectivo: parseFloat(s.efectivo)  || 0
             }));
             if (Array.isArray(data)) {
@@ -976,8 +973,9 @@ window.marcarTS = () => {
 };
 window.setTab = tab => {
     State.tabActiva = tab;
-    ["total", "fondos", "indie", "epsv", "efectivo"].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.toggle("active", t === tab);
+    ["total", "bolsa", "fondos", "indie", "epsv", "efectivo"].forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (el) el.classList.toggle("active", t === tab);
     });
     Charts.drawBigChart();
 };
