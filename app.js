@@ -806,7 +806,17 @@ const App = {
         const f    = this.getFondosTotals();
         const ganF = f.tMer - f.tInv;
         const rEl  = document.getElementById("totalRentab");
-        if (f.tInv > 0) {
+
+        // Variación vs último snapshot
+        if (State.historial.length > 0) {
+            const last     = State.historial[State.historial.length - 1];
+            const diff     = v.total - last.total;
+            const diffPct  = last.total > 0 ? diff / last.total * 100 : 0;
+            const esG      = diff >= 0;
+            const lastFStr = new Date(last.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" });
+            rEl.className  = `mono text-[10px] mt-1 ${esG ? "gain" : "loss"}`;
+            rEl.innerText  = `vs ${lastFStr}  ${esG ? "+" : ""}${UI.fmt(diff)} € (${esG ? "+" : ""}${diffPct.toFixed(2)}%)`;
+        } else if (f.tInv > 0) {
             rEl.className = `mono text-[10px] mt-1 ${ganF >= 0 ? "gain" : "loss"}`;
             rEl.innerText = `Fondos: ${ganF >= 0 ? "+" : ""}${UI.fmt(ganF)} € (${(ganF / f.tInv * 100).toFixed(2)}%)`;
         } else {
