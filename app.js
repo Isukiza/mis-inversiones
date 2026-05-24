@@ -401,14 +401,23 @@ const UI = {
 
             // Badge señal: 🟢 por encima de entrada, 🔴 por debajo + % diario
             const esPorEncima = invEur === 0 || subEur >= invEur;
-            const dayEsG      = changePct >= 0;
+            const rawPct      = State.cambios[a.ticker];
+            // Yahoo puede devolver el % ya como número entero (1.62) o como decimal (0.0162)
+            // Si el valor absoluto es > 1 asumimos que ya viene en %, si no multiplicamos x100
+            const dayPct      = (rawPct !== undefined && rawPct !== null)
+                ? (Math.abs(rawPct) < 1 ? rawPct * 100 : rawPct)
+                : null;
+            const dayEsG      = dayPct === null ? true : dayPct >= 0;
             const badgeColor  = esPorEncima
                 ? "background:#052e16;border:1px solid #166534;color:#4ade80;"
                 : "background:#2d0a0a;border:1px solid #7f1d1d;color:#f87171;";
+            const dayStr      = dayPct !== null
+                ? `<span style="color:${dayEsG ? "#4ade80" : "#f87171"}">${dayEsG ? "+" : ""}${dayPct.toFixed(2)}% hoy</span>`
+                : "";
             const badgeHTML = price > 0 ? `
                 <div style="${badgeColor}border-radius:8px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;white-space:nowrap;">
                     <span>${esPorEncima ? "🟢" : "🔴"}</span>
-                    <span style="color:${dayEsG ? "#4ade80" : "#f87171"}">${dayEsG ? "+" : ""}${(changePct * 100).toFixed(2)}% hoy</span>
+                    ${dayStr}
                 </div>` : "";
 
             const rentHTML = invEur > 0 ? `
@@ -1035,5 +1044,3 @@ window.modalSyncCantCoste = () => {
 window.App = App;
 window.UI  = UI;
 window.olvidarDispositivo = () => App.olvidarDispositivo();
- 
-   
