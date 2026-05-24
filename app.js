@@ -44,6 +44,7 @@ const Config = {
 let State = {
     acciones: [],
     precios: {},
+    cambios: {},
     usd_eur: 0.92,
     historial: [],
     tabActiva: "total",
@@ -175,14 +176,23 @@ const Finance = {
     extractPrice(data) {
         let contents = data.contents ? JSON.parse(data.contents) : data;
         const meta = contents.chart.result[0].meta;
-        return meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
+        return {
+            price:     meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0,
+            changePct: meta.regularMarketChangePercent || 0
+        };
     },
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
-        try { const v = await this.fetchPrice("EURUSD=X"); State.usd_eur = 1 / v; }
-        catch (e) { State.usd_eur = 0.92; }
+        try {
+            const r = await this.fetchPrice("EURUSD=X");
+            State.usd_eur = 1 / (r.price || 1);
+        } catch (e) { State.usd_eur = 0.92; }
         const promises = State.acciones.map(async a => {
-            try { State.precios[a.ticker] = await this.fetchPrice(a.ticker); } catch (e) {}
+            try {
+                const r = await this.fetchPrice(a.ticker);
+                State.precios[a.ticker] = r.price;
+                State.cambios[a.ticker] = r.changePct;
+            } catch (e) {}
         });
         await Promise.all(promises);
         document.getElementById("bolsaStatus").innerText = "live";
@@ -378,15 +388,29 @@ const UI = {
         }
         let totalBolsaInv = 0, totalBolsaMer = 0;
         list.innerHTML = State.acciones.map((a, idx) => {
-            const price  = State.precios[a.ticker] || 0;
-            const sub    = price * a.cant;
-            const subEur = a.mon === "USD" ? sub * State.usd_eur : sub;
-            const invRaw = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
-            const invEur = a.mon === "USD" ? invRaw * State.usd_eur : invRaw;
-            const gan    = subEur - invEur;
-            const ganPct = invEur > 0 ? gan / invEur * 100 : 0;
-            const esG    = gan >= 0;
-            totalBolsaInv += invEur; totalBolsaMer += subEur;
+            const price     = State.precios[a.ticker] || 0;
+            const changePct = State.cambios[a.ticker] || 0;
+            const sub       = price * a.cant;
+            const subEur    = a.mon === "USD" ? sub * State.usd_eur : sub;
+            const invRaw    = parseFloat(a.inv) || (parseFloat(a.coste) * a.cant) || 0;
+            const invEur    = a.mon === "USD" ? invRaw * State.usd_eur : invRaw;
+            const gan       = subEur - invEur;
+            const ganPct    = invEur > 0 ? gan / invEur * 100 : 0;
+            const esG       = gan >= 0;
+            totalBolsaInv  += invEur; totalBolsaMer += subEur;
+
+            // Badge señal: 🟢 por encima de entrada, 🔴 por debajo + % diario
+            const esPorEncima = invEur === 0 || subEur >= invEur;
+            const dayEsG      = changePct >= 0;
+            const badgeColor  = esPorEncima
+                ? "background:#052e16;border:1px solid #166534;color:#4ade80;"
+                : "background:#2d0a0a;border:1px solid #7f1d1d;color:#f87171;";
+            const badgeHTML = price > 0 ? `
+                <div style="${badgeColor}border-radius:8px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;white-space:nowrap;">
+                    <span>${esPorEncima ? "🟢" : "🔴"}</span>
+                    <span style="color:${dayEsG ? "#4ade80" : "#f87171"}">${dayEsG ? "+" : ""}${(changePct * 100).toFixed(2)}% hoy</span>
+                </div>` : "";
+
             const rentHTML = invEur > 0 ? `
                 <div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">
                     <span class="mono text-[11px] text-slate-500">Rentabilidad</span>
@@ -398,9 +422,12 @@ const UI = {
                 <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 hover:border-blue-700/40 transition-all">
                     <div class="flex justify-between items-center">
                         <div>
-                            <a href="https://finance.yahoo.com/quote/${a.ticker}" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">
-                                ${a.nombre} <span class="text-blue-500 text-[9px]">&#8599;</span>
-                            </a>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <a href="https://finance.yahoo.com/quote/${a.ticker}" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">
+                                    ${a.nombre} <span class="text-blue-500 text-[9px]">&#8599;</span>
+                                </a>
+                                ${badgeHTML}
+                            </div>
                             <p class="mono text-[9px] text-slate-500 mt-0.5">${a.cant} uds · ${price.toFixed(2)} ${a.mon}</p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1008,3 +1035,5 @@ window.modalSyncCantCoste = () => {
 window.App = App;
 window.UI  = UI;
 window.olvidarDispositivo = () => App.olvidarDispositivo();
+ 
+   
