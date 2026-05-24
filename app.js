@@ -175,11 +175,16 @@ const Finance = {
     },
     extractPrice(data) {
         let contents = data.contents ? JSON.parse(data.contents) : data;
-        const meta = contents.chart.result[0].meta;
-        return {
-            price:     meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0,
-            changePct: meta.regularMarketChangePercent || 0
-        };
+        const meta  = contents.chart.result[0].meta;
+        const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
+        const prev  = meta.chartPreviousClose || meta.previousClose || 0;
+        let changePct = meta.regularMarketChangePercent;
+        if (!changePct && prev > 0 && price > 0) {
+            changePct = (price - prev) / prev * 100;
+        } else if (changePct && Math.abs(changePct) < 1) {
+            changePct = changePct * 100;
+        }
+        return { price, changePct: changePct || 0 };
     },
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
