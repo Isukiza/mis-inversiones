@@ -178,13 +178,15 @@ const Finance = {
         const meta  = contents.chart.result[0].meta;
         const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
         const prev  = meta.chartPreviousClose || meta.previousClose || 0;
+        // regularMarketChangePercent viene siempre en decimal (ej: -0.7971 = -0.79%)
+        // si no viene, lo calculamos desde precio y cierre anterior
         let changePct = meta.regularMarketChangePercent;
-        if (!changePct && prev > 0 && price > 0) {
-            changePct = (price - prev) / prev * 100;
-        } else if (changePct && Math.abs(changePct) < 1) {
+        if (changePct === undefined || changePct === null) {
+            changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
+        } else {
             changePct = changePct * 100;
         }
-        return { price, changePct: changePct || 0 };
+        return { price, changePct };
     },
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
