@@ -403,11 +403,8 @@ const UI = {
             // Badge señal: 🟢 por encima de entrada, 🔴 por debajo + % diario
             const esPorEncima = invEur === 0 || subEur >= invEur;
             const rawPct      = State.cambios[a.ticker];
-            // Yahoo puede devolver el % ya como número entero (1.62) o como decimal (0.0162)
-            // Si el valor absoluto es > 1 asumimos que ya viene en %, si no multiplicamos x100
-            const dayPct      = (rawPct !== undefined && rawPct !== null)
-                ? (Math.abs(rawPct) < 1 ? rawPct * 100 : rawPct)
-                : null;
+            // changePct ya viene calculado como % real (ej: -0.39)
+            const dayPct      = (rawPct !== undefined && rawPct !== null) ? rawPct : null;
             const dayEsG      = dayPct === null ? true : dayPct >= 0;
             const badgeColor  = esPorEncima
                 ? "background:#052e16;border:1px solid #166534;color:#4ade80;"
