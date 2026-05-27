@@ -14,10 +14,10 @@
          style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>')">
     </div>
 
-    <div class="max-w-5xl mx-auto relative">
+    <div class="max-w-7xl mx-auto relative">
 
         <!-- ══ HEADER ══ -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-6 gap-4">
             <div>
                 <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
                 <h1 class="text-4xl font-extrabold text-white" style="letter-spacing:-0.03em">
@@ -27,13 +27,13 @@
                     <span class="spin">&#10227;</span> Conectando con mercados...
                 </p>
             </div>
-            <div class="flex flex-col items-end gap-3">
+            <div class="flex flex-col items-end gap-2">
                 <div class="card px-8 py-5 text-center min-w-[240px]">
                     <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
                     <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
                     <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
                 </div>
-                <div class="flex gap-2 items-center">
+                <div class="flex gap-1 items-center">
                     <!-- BOTÓN GLOBAL COLAPSAR -->
                     <button id="btnCollapseAll" onclick="toggleAll()" class="btn-collapse-all">
                         ▲ Contraer todo
@@ -46,11 +46,11 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
 
             <!-- ══ BOLSA EN VIVO ══ -->
-            <div class="card p-6" id="card-bolsa">
-                <div class="card-header mb-5" onclick="toggleCard('bolsa')">
+            <div class="card p-4" id="card-bolsa">
+                <div class="card-header mb-3" onclick="toggleCard('bolsa')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <h2 class="text-sm font-bold text-blue-300 tracking-widest uppercase">&#128200; Bolsa en Vivo</h2>
                         <span id="summary-bolsa" class="card-summary text-blue-300" style="display:none;"></span>
@@ -69,8 +69,8 @@
             </div>
 
             <!-- ══ FONDOS INDEXADOS ══ -->
-            <div class="card p-6" id="card-fondos">
-                <div class="card-header mb-1" onclick="toggleCard('fondos')">
+            <div class="card p-4" id="card-fondos">
+                <div class="card-header mb-2" onclick="toggleCard('fondos')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <h2 class="text-sm font-bold text-violet-300 tracking-widest uppercase">&#127757; Fondos Indexados</h2>
                         <span id="summary-fondos" class="card-summary text-violet-300" style="display:none;"></span>
@@ -170,8 +170,8 @@
                                 <p id="totalFondosRentab" class="mono text-[10px] text-slate-600"></p>
                             </div>
                         </div>
-                        <div class="mt-2 relative">
-                            <svg id="spark-fondos" width="100%" height="48" style="display:block;"></svg>
+                        <div class="mt-2 relative h-20">
+                            <svg id="spark-fondos" width="100%" height="80" style="display:block;"></svg>
                             <div id="tip-fondos" class="tooltip"></div>
                         </div>
                     </div>
@@ -179,8 +179,8 @@
             </div>
 
             <!-- ══ INDIE MYINVESTOR ══ -->
-            <div class="card p-6" id="card-indie">
-                <div class="card-header mb-4" onclick="toggleCard('indie')">
+            <div class="card p-4" id="card-indie">
+                <div class="card-header mb-2" onclick="toggleCard('indie')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <h2 class="text-sm font-bold text-emerald-300 tracking-widest uppercase">&#127807; Cartera Indie MyInvestor</h2>
                         <span id="summary-indie" class="card-summary text-emerald-300" style="display:none;"></span>
@@ -218,17 +218,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative h-20">
                         <p class="lbl mb-1" style="color:#34d399">Evolución mercado + efectivo</p>
-                        <svg id="spark-indie" width="100%" height="48" style="display:block;"></svg>
+                        <svg id="spark-indie" width="100%" height="80" style="display:block;"></svg>
                         <div id="tip-indie" class="tooltip"></div>
                     </div>
                 </div>
             </div>
 
             <!-- ══ EFECTIVO ══ -->
-            <div class="card p-6 border-l-4 border-l-cyan-600" id="card-efectivo">
-                <div class="card-header mb-5" onclick="toggleCard('efectivo')">
+            <div class="card p-4 border-l-4 border-l-cyan-600" id="card-efectivo">
+                <div class="card-header mb-3" onclick="toggleCard('efectivo')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <h2 class="text-sm font-bold text-cyan-300 tracking-widest uppercase">&#128181; Efectivo</h2>
                         <span id="summary-efectivo" class="card-summary text-cyan-300" style="display:none;"></span>
@@ -279,17 +279,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative h-20">
                         <p class="lbl mb-1" style="color:#22d3ee">Evolución efectivo</p>
-                        <svg id="spark-ef" width="100%" height="48" style="display:block;"></svg>
+                        <svg id="spark-ef" width="100%" height="80" style="display:block;"></svg>
                         <div id="tip-ef" class="tooltip"></div>
                     </div>
                 </div>
             </div>
 
             <!-- ══ JUBILACION EPSV ══ -->
-            <div class="card p-6 border-l-4 border-l-rose-600" id="card-epsv">
-                <div class="card-header mb-5" onclick="toggleCard('epsv')">
+            <div class="card p-4 border-l-4 border-l-rose-600" id="card-epsv">
+                <div class="card-header mb-3" onclick="toggleCard('epsv')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <h2 class="text-sm font-bold text-rose-300 tracking-widest uppercase">&#128737; Jubilaci&oacute;n EPSV</h2>
                         <span id="summary-epsv" class="card-summary text-rose-300" style="display:none;"></span>
@@ -342,9 +342,9 @@
                         <span class="mono text-[9px] text-slate-600 uppercase">Total EPSV</span>
                         <span id="totalEPSV" class="mono text-lg font-bold text-rose-300">0,00 &euro;</span>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800 relative">
+                    <div class="mt-4 pt-3 border-t border-slate-800 relative h-20">
                         <p class="lbl mb-1" style="color:#fda4af">Evolución EPSV</p>
-                        <svg id="spark-epsv" width="100%" height="48" style="display:block;"></svg>
+                        <svg id="spark-epsv" width="100%" height="80" style="display:block;"></svg>
                         <div id="tip-epsv" class="tooltip"></div>
                     </div>
                 </div>
@@ -352,9 +352,12 @@
 
         </div><!-- end grid -->
 
+        <!-- ══ DISTRIBUCION PATRIMONIO + EVOLUCION ══ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+        
         <!-- ══ DISTRIBUCION PATRIMONIO ══ -->
-        <div class="card p-6 mt-6" id="card-treemap">
-            <div class="card-header mb-5" onclick="toggleCard('treemap')">
+        <div class="card p-4" id="card-treemap">
+                <div class="card-header mb-3" onclick="toggleCard('treemap')">
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                     <h2 class="text-sm font-bold text-slate-300 tracking-widest uppercase">&#11835; Distribución del Patrimonio</h2>
                     <span id="summary-treemap" class="card-summary" style="display:none;"></span>
@@ -379,8 +382,8 @@
         </div>
 
         <!-- ══ SECCIÓN GRÁFICA GRANDE ══ -->
-        <div class="card p-6 mt-6" id="card-total">
-            <div class="card-header mb-6" onclick="toggleCard('evolucion')">
+        <div class="card p-4" id="card-total">
+                <div class="card-header mb-4" onclick="toggleCard('evolucion')">
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                     <h2 class="text-sm font-bold text-green-300 tracking-widest uppercase">&#128202; Evolución del Patrimonio</h2>
                     <span id="summary-evolucion" class="card-summary text-green-300" style="display:none;"></span>
@@ -404,8 +407,8 @@
                         <button onclick="App.borrarHistorial()" class="tab-btn" style="color:#f87171;border-color:#450a0a;" title="Borrar todo el historial">&#128465;</button>
                     </div>
                 </div>
-                <div class="relative" style="height:220px;">
-                    <svg id="chart-big" width="100%" height="100%" style="display:block; overflow:visible;"></svg>
+                <div class="relative" style="height:280px;">
+                    <svg id="chart-big" width="100%" height="100%" style="display:block; overflow:visible; background:rgba(15,23,42,0.3); border-radius:0.75rem;"></svg>
                     <div id="tip-big" class="tooltip"></div>
                 </div>
                 <div id="chart-xaxis" class="flex justify-between mt-1 px-1"></div>
@@ -415,6 +418,8 @@
                 </div>
             </div>
         </div>
+        
+        </div><!-- end grid treemap+evolucion -->
 
     </div><!-- end container -->
 
