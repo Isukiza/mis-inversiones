@@ -178,14 +178,8 @@ const Finance = {
         const meta  = contents.chart.result[0].meta;
         const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
         const prev  = meta.chartPreviousClose || meta.previousClose || 0;
-        // regularMarketChangePercent viene siempre en decimal (ej: -0.7971 = -0.79%)
-        // si no viene, lo calculamos desde precio y cierre anterior
-        let changePct = meta.regularMarketChangePercent;
-        if (changePct === undefined || changePct === null) {
-            changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
-        } else {
-            changePct = changePct * 100;
-        }
+        // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
+        const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
         return { price, changePct };
     },
     async updateAllPrices() {
