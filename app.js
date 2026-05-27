@@ -197,21 +197,25 @@ const Finance = {
         }
     },
     async updateAllPrices() {
+        console.log("[Isukiza] updateAllPrices iniciado");
         UI.setStatus("Actualizando bolsa...", "amber");
         try {
             const r = await this.fetchPrice("EURUSD=X");
             State.usd_eur = 1 / (r.price || 1);
+            console.log("[Isukiza] Tipo de cambio EUR/USD:", State.usd_eur);
         } catch (e) { 
-            console.warn('Error obteniendo EURUSD:', e);
+            console.warn('[Isukiza] Error obteniendo EURUSD:', e);
             State.usd_eur = 0.92; 
         }
         const promises = State.acciones.map(async a => {
             try {
+                console.log(`[Isukiza] Obteniendo precio para ${a.ticker}...`);
                 const r = await this.fetchPrice(a.ticker);
                 State.precios[a.ticker] = r.price;
                 State.cambios[a.ticker] = r.changePct;
+                console.log(`[Isukiza] ${a.ticker}: ${r.price}eur (${r.changePct.toFixed(2)}%)`);
             } catch (e) {
-                console.warn(`No se pudo obtener precio para ${a.ticker}:`, e);
+                console.warn(`[Isukiza] No se pudo obtener precio para ${a.ticker}:`, e);
                 State.precios[a.ticker] = 0;
             }
         });
@@ -219,6 +223,7 @@ const Finance = {
         const bolsaStatusEl = document.getElementById("bolsaStatus");
         if (bolsaStatusEl) bolsaStatusEl.innerText = "live";
         UI.setStatus(`Bolsa actualizada ${new Date().toLocaleTimeString("es-ES")}`, "green");
+        console.log("[Isukiza] updateAllPrices completado");
         UI.renderBolsa();
         App.calculateAll();
     }
@@ -761,30 +766,46 @@ const Charts = {
 // ══════════════════════════════════════════════════
 const App = {
     init() {
+        console.log("[Isukiza] Inicializando...");
         const pw = document.getElementById("masterPassword");
         if (pw) pw.addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
 
         const savedKey = localStorage.getItem("isukiza_master_key");
         if (savedKey) {
+            console.log("[Isukiza] Clave guardada detectada, desbloqueando automaticamente...");
             State.masterKey = savedKey;
             const hasEncData = localStorage.getItem("isukiza_v4_enc");
             if (!hasEncData || Storage._load("isukiza_v4_enc") !== null) {
-                Storage.loadAll();
-                document.getElementById("modalAuth").style.display = "none";
-                setTimeout(() => {
-                    this.calculateAll();
-                    UI.updateGlobalBtn();
-                    Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
-                    Finance.updateAllPrices();
-                    setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
-                    window.addEventListener("resize", () => UI.refreshCharts());
-                    document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
-                }, 50);
+                try {
+                    Storage.loadAll();
+                    const modalAuth = document.getElementById("modalAuth");
+                    if (modalAuth) modalAuth.style.display = "none";
+                    console.log("[Isukiza] Datos cargados, iniciando UI...");
+                    setTimeout(() => {
+                        try {
+                            this.calculateAll();
+                            UI.updateGlobalBtn();
+                            Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
+                            console.log("[Isukiza] Iniciando descarga de precios...");
+                            Finance.updateAllPrices().catch(e => console.error("[Isukiza] Error en updateAllPrices:", e));
+                            setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
+                            window.addEventListener("resize", () => UI.refreshCharts());
+                            document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+                        } catch (e) {
+                            console.error("[Isukiza] Error en inicializacion:", e);
+                        }
+                    }, 50);
+                } catch (e) {
+                    console.error("[Isukiza] Error cargando datos:", e);
+                    localStorage.removeItem("isukiza_master_key");
+                    State.masterKey = null;
+                }
                 return;
             }
             localStorage.removeItem("isukiza_master_key");
             State.masterKey = null;
         }
+        console.log("[Isukiza] Esperando desbloqueo manual...");
     },
 
     unlock() {
