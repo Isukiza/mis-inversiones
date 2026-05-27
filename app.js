@@ -166,64 +166,38 @@ const Finance = {
         for (let i = 0; i < Config.PROXIES.length; i++) {
             try {
                 const proxyUrl = Config.PROXIES[i](yahooUrl);
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
-                const response = await fetch(proxyUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const response = await fetch(proxyUrl);
                 const data = await response.json();
                 return this.extractPrice(data);
-            } catch (e) { 
-                console.warn(`Proxy ${i} falló para ${ticker}:`, e.message); 
-            }
+            } catch (e) { console.warn(`Proxy ${i} falló para ${ticker}:`, e.message); }
         }
         throw new Error(`Fallo total para ${ticker}`);
     },
     extractPrice(data) {
-        try {
-            let contents = data.contents ? JSON.parse(data.contents) : data;
-            if (!contents.chart || !contents.chart.result || !contents.chart.result[0]) {
-                throw new Error('Estructura de datos inválida');
-            }
-            const meta  = contents.chart.result[0].meta;
-            const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
-            const prev  = meta.chartPreviousClose || meta.previousClose || 0;
-            // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
-            const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
-            return { price, changePct };
-        } catch (e) {
-            console.error('Error extrayendo precio:', e);
-            throw e;
-        }
+        let contents = data.contents ? JSON.parse(data.contents) : data;
+        const meta  = contents.chart.result[0].meta;
+        const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
+        const prev  = meta.chartPreviousClose || meta.previousClose || 0;
+        // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
+        const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
+        return { price, changePct };
     },
     async updateAllPrices() {
-        console.log("[Isukiza] updateAllPrices iniciado");
         UI.setStatus("Actualizando bolsa...", "amber");
         try {
             const r = await this.fetchPrice("EURUSD=X");
             State.usd_eur = 1 / (r.price || 1);
-            console.log("[Isukiza] Tipo de cambio EUR/USD:", State.usd_eur);
-        } catch (e) { 
-            console.warn('[Isukiza] Error obteniendo EURUSD:', e);
-            State.usd_eur = 0.92; 
-        }
+        } catch (e) { State.usd_eur = 0.92; }
         const promises = State.acciones.map(async a => {
             try {
-                console.log(`[Isukiza] Obteniendo precio para ${a.ticker}...`);
                 const r = await this.fetchPrice(a.ticker);
                 State.precios[a.ticker] = r.price;
                 State.cambios[a.ticker] = r.changePct;
-                console.log(`[Isukiza] ${a.ticker}: ${r.price}eur (${r.changePct.toFixed(2)}%)`);
-            } catch (e) {
-                console.warn(`[Isukiza] No se pudo obtener precio para ${a.ticker}:`, e);
-                State.precios[a.ticker] = 0;
-            }
+            } catch (e) {}
         });
         await Promise.all(promises);
-        const bolsaStatusEl = document.getElementById("bolsaStatus");
-        if (bolsaStatusEl) bolsaStatusEl.innerText = "live";
+        document.getElementById("bolsaStatus").innerText = "live";
         UI.setStatus(`Bolsa actualizada ${new Date().toLocaleTimeString("es-ES")}`, "green");
-        console.log("[Isukiza] updateAllPrices completado");
         UI.renderBolsa();
         App.calculateAll();
     }
@@ -507,6 +481,7 @@ const UI = {
     cerrarModal() { document.getElementById("modalBolsa").classList.remove("open"); },
 
     refreshCharts() {
+        Charts.drawHeaderDonut();
         Charts.drawTreemap();
         Charts.drawSparkline("spark-fondos", "fondos",   Config.COLORES.fondos,    "tip-fondos");
         Charts.drawSparkline("spark-indie",  "indie",    Config.COLORES.indie,     "tip-indie");
@@ -726,6 +701,67 @@ const Charts = {
         if (xaxis) xaxis.innerHTML = labels.join("");
     },
 
+    drawHeaderDonut() {
+        const svg    = document.getElementById('header-donut-svg');
+        const legend = document.getElementById('header-donut-legend');
+        if (!svg) return;
+        svg.innerHTML = '';
+        if (legend) legend.innerHTML = '';
+        const v = App.getValues();
+        const total = v.total;
+        if (total <= 0) return;
+        const items = Config.TREEMAP_CATS
+            .map(c => ({ ...c, value: v[c.key] || 0 }))
+            .filter(i => i.value > 0);
+        const CX = 80, CY = 80, R = 68, ri = 44, GAP = 0.025;
+        let angle = -Math.PI / 2;
+        const tipEl = document.getElementById('header-donut-tip');
+        items.forEach(item => {
+            const slice = (item.value / total) * Math.PI * 2;
+            const end   = angle + slice - GAP;
+            const x1 = CX + R  * Math.cos(angle), y1 = CY + R  * Math.sin(angle);
+            const x2 = CX + R  * Math.cos(end),   y2 = CY + R  * Math.sin(end);
+            const x3 = CX + ri * Math.cos(end),   y3 = CY + ri * Math.sin(end);
+            const x4 = CX + ri * Math.cos(angle), y4 = CY + ri * Math.sin(angle);
+            const lg  = slice > Math.PI ? 1 : 0;
+            const d   = `M ${x1} ${y1} A ${R} ${R} 0 ${lg} 1 ${x2} ${y2} L ${x3} ${y3} A ${ri} ${ri} 0 ${lg} 0 ${x4} ${y4} Z`;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('fill', item.color);
+            path.setAttribute('fill-opacity', '0.82');
+            path.style.cursor = 'pointer';
+            path.style.transition = 'fill-opacity 0.15s';
+            const pct  = (item.value / total * 100).toFixed(1);
+            const midA = angle + slice / 2;
+            path.addEventListener('mouseenter', () => {
+                path.setAttribute('fill-opacity', '1');
+                const cp = document.getElementById('header-donut-pct');
+                const cl = document.getElementById('header-donut-label');
+                if (cp) { cp.style.color = item.color; cp.innerText = pct + '%'; }
+                if (cl) cl.innerText = item.label;
+            });
+            path.addEventListener('mouseleave', () => {
+                path.setAttribute('fill-opacity', '0.82');
+                const cp = document.getElementById('header-donut-pct');
+                const cl = document.getElementById('header-donut-label');
+                if (cp) cp.innerText = '';
+                if (cl) cl.innerText = '';
+            });
+            svg.appendChild(path);
+            angle += slice;
+            // Leyenda compacta
+            if (legend) {
+                const item_el = document.createElement('div');
+                item_el.className = 'flex items-center gap-1';
+                item_el.innerHTML = `
+                    <span style="width:7px;height:7px;border-radius:2px;background:${item.color};display:inline-block;flex-shrink:0;"></span>
+                    <span class="mono" style="font-size:9px;color:#94a3b8;">${item.label}</span>
+                    <span class="mono font-bold" style="font-size:9px;color:${item.color};">${pct}%</span>`;
+                legend.appendChild(item_el);
+            }
+        });
+    },
+
     drawSnapTable() {
         const el = document.getElementById("snapTable");
         if (!el) return;
@@ -766,46 +802,30 @@ const Charts = {
 // ══════════════════════════════════════════════════
 const App = {
     init() {
-        console.log("[Isukiza] Inicializando...");
         const pw = document.getElementById("masterPassword");
         if (pw) pw.addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
 
         const savedKey = localStorage.getItem("isukiza_master_key");
         if (savedKey) {
-            console.log("[Isukiza] Clave guardada detectada, desbloqueando automaticamente...");
             State.masterKey = savedKey;
             const hasEncData = localStorage.getItem("isukiza_v4_enc");
             if (!hasEncData || Storage._load("isukiza_v4_enc") !== null) {
-                try {
-                    Storage.loadAll();
-                    const modalAuth = document.getElementById("modalAuth");
-                    if (modalAuth) modalAuth.style.display = "none";
-                    console.log("[Isukiza] Datos cargados, iniciando UI...");
-                    setTimeout(() => {
-                        try {
-                            this.calculateAll();
-                            UI.updateGlobalBtn();
-                            Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
-                            console.log("[Isukiza] Iniciando descarga de precios...");
-                            Finance.updateAllPrices().catch(e => console.error("[Isukiza] Error en updateAllPrices:", e));
-                            setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
-                            window.addEventListener("resize", () => UI.refreshCharts());
-                            document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
-                        } catch (e) {
-                            console.error("[Isukiza] Error en inicializacion:", e);
-                        }
-                    }, 50);
-                } catch (e) {
-                    console.error("[Isukiza] Error cargando datos:", e);
-                    localStorage.removeItem("isukiza_master_key");
-                    State.masterKey = null;
-                }
+                Storage.loadAll();
+                document.getElementById("modalAuth").style.display = "none";
+                setTimeout(() => {
+                    this.calculateAll();
+                    UI.updateGlobalBtn();
+                    Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
+                    Finance.updateAllPrices();
+                    setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
+                    window.addEventListener("resize", () => UI.refreshCharts());
+                    document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+                }, 50);
                 return;
             }
             localStorage.removeItem("isukiza_master_key");
             State.masterKey = null;
         }
-        console.log("[Isukiza] Esperando desbloqueo manual...");
     },
 
     unlock() {

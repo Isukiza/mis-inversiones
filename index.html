@@ -14,10 +14,11 @@
          style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>')">
     </div>
 
-    <div class="max-w-5xl mx-auto relative">
+    <div class="max-w-7xl mx-auto relative">
 
         <!-- ══ HEADER ══ -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-800 pb-8 gap-6">
+        <header class="grid grid-cols-1 md:grid-cols-3 items-center mb-10 border-b border-slate-800 pb-8 gap-6">
+            <!-- Columna izquierda: título -->
             <div>
                 <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
                 <h1 class="text-4xl font-extrabold text-white" style="letter-spacing:-0.03em">
@@ -27,6 +28,19 @@
                     <span class="spin">&#10227;</span> Conectando con mercados...
                 </p>
             </div>
+            <!-- Columna central: donut compacto -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="relative" style="width:160px;height:160px;">
+                    <svg id="header-donut-svg" width="160" height="160" style="display:block;"></svg>
+                    <div id="header-donut-tip" class="tooltip"></div>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:70px;">
+                        <p id="header-donut-pct"   class="mono font-bold" style="font-size:16px;color:#e2e8f0;line-height:1;"></p>
+                        <p id="header-donut-label" class="mono"           style="font-size:8px;color:#64748b;margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;"></p>
+                    </div>
+                </div>
+                <div id="header-donut-legend" class="flex flex-wrap justify-center gap-x-3 gap-y-1"></div>
+            </div>
+            <!-- Columna derecha: total + botones -->
             <div class="flex flex-col items-end gap-3">
                 <div class="card px-8 py-5 text-center min-w-[240px]">
                     <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
@@ -34,7 +48,6 @@
                     <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <!-- BOTÓN GLOBAL COLAPSAR -->
                     <button id="btnCollapseAll" onclick="toggleAll()" class="btn-collapse-all">
                         ▲ Contraer todo
                     </button>
@@ -46,7 +59,7 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
             <!-- ══ BOLSA EN VIVO ══ -->
             <div class="card p-6" id="card-bolsa">
