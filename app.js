@@ -166,37 +166,58 @@ const Finance = {
         for (let i = 0; i < Config.PROXIES.length; i++) {
             try {
                 const proxyUrl = Config.PROXIES[i](yahooUrl);
-                const response = await fetch(proxyUrl);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
+                const response = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 return this.extractPrice(data);
-            } catch (e) { console.warn(`Proxy ${i} falló para ${ticker}:`, e.message); }
+            } catch (e) { 
+                console.warn(`Proxy ${i} falló para ${ticker}:`, e.message); 
+            }
         }
         throw new Error(`Fallo total para ${ticker}`);
     },
     extractPrice(data) {
-        let contents = data.contents ? JSON.parse(data.contents) : data;
-        const meta  = contents.chart.result[0].meta;
-        const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
-        const prev  = meta.chartPreviousClose || meta.previousClose || 0;
-        // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
-        const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
-        return { price, changePct };
+        try {
+            let contents = data.contents ? JSON.parse(data.contents) : data;
+            if (!contents.chart || !contents.chart.result || !contents.chart.result[0]) {
+                throw new Error('Estructura de datos inválida');
+            }
+            const meta  = contents.chart.result[0].meta;
+            const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
+            const prev  = meta.chartPreviousClose || meta.previousClose || 0;
+            // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
+            const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
+            return { price, changePct };
+        } catch (e) {
+            console.error('Error extrayendo precio:', e);
+            throw e;
+        }
     },
     async updateAllPrices() {
         UI.setStatus("Actualizando bolsa...", "amber");
         try {
             const r = await this.fetchPrice("EURUSD=X");
             State.usd_eur = 1 / (r.price || 1);
-        } catch (e) { State.usd_eur = 0.92; }
+        } catch (e) { 
+            console.warn('Error obteniendo EURUSD:', e);
+            State.usd_eur = 0.92; 
+        }
         const promises = State.acciones.map(async a => {
             try {
                 const r = await this.fetchPrice(a.ticker);
                 State.precios[a.ticker] = r.price;
                 State.cambios[a.ticker] = r.changePct;
-            } catch (e) {}
+            } catch (e) {
+                console.warn(`No se pudo obtener precio para ${a.ticker}:`, e);
+                State.precios[a.ticker] = 0;
+            }
         });
         await Promise.all(promises);
-        document.getElementById("bolsaStatus").innerText = "live";
+        const bolsaStatusEl = document.getElementById("bolsaStatus");
+        if (bolsaStatusEl) bolsaStatusEl.innerText = "live";
         UI.setStatus(`Bolsa actualizada ${new Date().toLocaleTimeString("es-ES")}`, "green");
         UI.renderBolsa();
         App.calculateAll();
