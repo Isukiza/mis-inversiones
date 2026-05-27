@@ -16,37 +16,67 @@
 
     <div class="max-w-7xl mx-auto relative">
 
-        <!-- ══ HEADER ══ -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-6 gap-4">
-            <div>
-                <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
-                <h1 class="text-4xl font-extrabold text-white" style="letter-spacing:-0.03em">
-                    ISUKIZA <span class="text-blue-500">&#9679;</span> LIVE
-                </h1>
-                <p id="status" class="mono text-[10px] text-amber-400 mt-2">
-                    <span class="spin">&#10227;</span> Conectando con mercados...
-                </p>
+        <!-- ══ HEADER CON TREEMAP ══ -->
+        <header class="mb-6 border-b border-slate-800 pb-6">
+            <!-- Primera fila: Logo + Total Global + Botones -->
+            <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-4">
+                <div>
+                    <p class="mono text-[10px] text-slate-600 tracking-[0.3em] mb-1">PATRIMONIO FAMILIAR</p>
+                    <h1 class="text-4xl font-extrabold text-white" style="letter-spacing:-0.03em">
+                        ISUKIZA <span class="text-blue-500">&#9679;</span> LIVE
+                    </h1>
+                    <p id="status" class="mono text-[10px] text-amber-400 mt-2">
+                        <span class="spin">&#10227;</span> Conectando con mercados...
+                    </p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <div class="card px-8 py-5 text-center min-w-[240px]">
+                        <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
+                        <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
+                        <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+                    </div>
+                    <div class="flex gap-1 items-center">
+                        <!-- BOTÓN GLOBAL COLAPSAR -->
+                        <button id="btnCollapseAll" onclick="toggleAll()" class="btn-collapse-all">
+                            ▲ Contraer todo
+                        </button>
+                        <button onclick="registrarSnapshot()" class="btn-snap">
+                            📸 Registrar snapshot
+                        </button>
+                    </div>
+                    <p id="snapMsg" class="mono text-[9px] text-slate-600 text-right"></p>
+                </div>
             </div>
-            <div class="flex flex-col items-end gap-2">
-                <div class="card px-8 py-5 text-center min-w-[240px]">
-                    <p class="mono text-[9px] text-slate-500 tracking-[0.2em] mb-2">TOTAL GLOBAL</p>
-                    <p id="totalPatrimonio" class="mono text-4xl font-bold text-green-400">&mdash;</p>
-                    <p id="totalRentab" class="mono text-[10px] text-slate-500 mt-1">&mdash;</p>
+            
+            <!-- Segunda fila: Treemap -->
+            <div class="card p-4" id="card-treemap">
+                <div class="card-header mb-3" onclick="toggleCard('treemap')">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-slate-300 tracking-widest uppercase">&#11835; Distribución del Patrimonio</h2>
+                        <span id="summary-treemap" class="card-summary" style="display:none;"></span>
+                    </div>
+                    <p id="treemap-total" class="mono text-[9px] text-slate-600"></p>
+                    <button class="collapse-btn" onclick="toggleCard('treemap'); event.stopPropagation()">▲</button>
                 </div>
-                <div class="flex gap-1 items-center">
-                    <!-- BOTÓN GLOBAL COLAPSAR -->
-                    <button id="btnCollapseAll" onclick="toggleAll()" class="btn-collapse-all">
-                        ▲ Contraer todo
-                    </button>
-                    <button onclick="registrarSnapshot()" class="btn-snap">
-                        📸 Registrar snapshot
-                    </button>
+                <div class="card-body" id="body-treemap">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div style="position:relative;flex-shrink:0;">
+                            <svg id="treemap-svg" width="220" height="220" style="display:block;"></svg>
+                            <div id="treemap-tip" class="tooltip"></div>
+                            <div id="donut-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px;">
+                                <p id="donut-center-pct"   class="mono font-bold" style="font-size:22px;color:#e2e8f0;line-height:1;"></p>
+                                <p id="donut-center-label" class="mono"           style="font-size:9px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;"></p>
+                                <p id="donut-center-val"   class="mono"           style="font-size:10px;color:#94a3b8;margin-top:2px;"></p>
+                            </div>
+                        </div>
+                        <div id="treemap-legend" class="flex flex-col gap-3 flex-1 w-full"></div>
+                    </div>
                 </div>
-                <p id="snapMsg" class="mono text-[9px] text-slate-600 text-right"></p>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <!-- ══ GRID PRINCIPAL: 3 COLUMNAS EN FILA 1 ══ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
 
             <!-- ══ BOLSA EN VIVO ══ -->
             <div class="card p-4" id="card-bolsa">
@@ -226,6 +256,11 @@
                 </div>
             </div>
 
+        </div><!-- end grid fila 1 -->
+
+        <!-- ══ GRID SECUNDARIO: 2 COLUMNAS EN FILA 2 ══ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
             <!-- ══ EFECTIVO ══ -->
             <div class="card p-4 border-l-4 border-l-cyan-600" id="card-efectivo">
                 <div class="card-header mb-3" onclick="toggleCard('efectivo')">
@@ -239,44 +274,36 @@
                     <div class="space-y-3">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="lbl" style="color:#67e8f9">Abanca (&euro;)</label>
+                                <label class="lbl">Abanca (&euro;)</label>
                                 <input type="number" id="ef_abanca" step="any" placeholder="0.00"
-                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()" class="inp">
                             </div>
                             <div>
-                                <label class="lbl" style="color:#67e8f9">Santander (&euro;)</label>
+                                <label class="lbl">Santander (&euro;)</label>
                                 <input type="number" id="ef_santander" step="any" placeholder="0.00"
-                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()" class="inp">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="lbl" style="color:#67e8f9">Kutxabank (&euro;)</label>
+                                <label class="lbl">Kutxa (&euro;)</label>
                                 <input type="number" id="ef_kutxa" step="any" placeholder="0.00"
-                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()" class="inp">
                             </div>
                             <div>
-                                <label class="lbl" style="color:#67e8f9">MyInvestor (&euro;)</label>
+                                <label class="lbl">MyInvestor (&euro;)</label>
                                 <input type="number" id="ef_myinvestor" step="any" placeholder="0.00"
-                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()" class="inp">
                             </div>
                         </div>
                         <div>
-                            <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
+                            <label class="lbl">Casa (&euro;)</label>
                             <input type="number" id="ef_casa" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                                oninput="calcEfectivo()" onchange="calcEfectivo()" class="inp">
                         </div>
-                        <div class="pt-3 border-t border-slate-800">
-                            <div id="ef_desglose" class="space-y-1 mb-3 hidden"></div>
-                            <div class="flex justify-between items-center">
-                                <span class="mono text-[9px] text-slate-600 uppercase">Total efectivo</span>
-                                <span id="ef_total" class="mono text-lg font-bold text-cyan-300">&mdash;</span>
-                            </div>
+                        <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+                            <span class="mono text-[10px] text-slate-500 uppercase tracking-widest">Total efectivo</span>
+                            <span id="ef_total" class="mono text-lg font-bold text-cyan-300">&mdash;</span>
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-slate-800 relative h-20">
@@ -350,40 +377,11 @@
                 </div>
             </div>
 
-        </div><!-- end grid -->
-
-        <!-- ══ DISTRIBUCION PATRIMONIO + EVOLUCION ══ -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
-        
-        <!-- ══ DISTRIBUCION PATRIMONIO ══ -->
-        <div class="card p-4" id="card-treemap">
-                <div class="card-header mb-3" onclick="toggleCard('treemap')">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <h2 class="text-sm font-bold text-slate-300 tracking-widest uppercase">&#11835; Distribución del Patrimonio</h2>
-                    <span id="summary-treemap" class="card-summary" style="display:none;"></span>
-                </div>
-                <p id="treemap-total" class="mono text-[9px] text-slate-600"></p>
-                <button class="collapse-btn" onclick="toggleCard('treemap'); event.stopPropagation()">▲</button>
-            </div>
-            <div class="card-body" id="body-treemap">
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <div style="position:relative;flex-shrink:0;">
-                        <svg id="treemap-svg" width="220" height="220" style="display:block;"></svg>
-                        <div id="treemap-tip" class="tooltip"></div>
-                        <div id="donut-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px;">
-                            <p id="donut-center-pct"   class="mono font-bold" style="font-size:22px;color:#e2e8f0;line-height:1;"></p>
-                            <p id="donut-center-label" class="mono"           style="font-size:9px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;"></p>
-                            <p id="donut-center-val"   class="mono"           style="font-size:10px;color:#94a3b8;margin-top:2px;"></p>
-                        </div>
-                    </div>
-                    <div id="treemap-legend" class="flex flex-col gap-3 flex-1 w-full"></div>
-                </div>
-            </div>
-        </div>
+        </div><!-- end grid fila 2 -->
 
         <!-- ══ SECCIÓN GRÁFICA GRANDE ══ -->
-        <div class="card p-4" id="card-total">
-                <div class="card-header mb-4" onclick="toggleCard('evolucion')">
+        <div class="card p-4 mt-3" id="card-total">
+            <div class="card-header mb-4" onclick="toggleCard('evolucion')">
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                     <h2 class="text-sm font-bold text-green-300 tracking-widest uppercase">&#128202; Evolución del Patrimonio</h2>
                     <span id="summary-evolucion" class="card-summary text-green-300" style="display:none;"></span>
@@ -418,102 +416,74 @@
                 </div>
             </div>
         </div>
-        
-        </div><!-- end grid treemap+evolucion -->
 
     </div><!-- end container -->
 
     <!-- ══ MODAL EDITAR VALOR ══ -->
-    <div class="modal-overlay" id="modalBolsa">
+    <div id="modalBolsa" class="modal-overlay">
         <div class="modal-box">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="font-bold text-slate-100 text-base" id="modalTitle">Editar valor</h3>
-                <button onclick="cerrarModal()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">&#x2715;</button>
-            </div>
-            <div class="space-y-3">
+            <h3 class="text-lg font-bold text-blue-300 mb-4 uppercase tracking-widest">Editar Valor</h3>
+            <div class="space-y-4">
                 <div>
-                    <label class="lbl">Nombre</label>
-                    <input type="text" id="m_nombre" class="inp" placeholder="Ej: Apple">
+                    <label class="lbl">Ticker</label>
+                    <input type="text" id="modalTicker" class="inp" readonly>
                 </div>
                 <div>
-                    <label class="lbl">Ticker Yahoo Finance</label>
-                    <input type="text" id="m_ticker" class="inp" placeholder="Ej: AAPL" style="text-transform:uppercase;">
+                    <label class="lbl">Nombre</label>
+                    <input type="text" id="modalNombre" class="inp" placeholder="Ej: Amazon">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="lbl">Moneda</label>
-                        <select id="m_mon" class="inp" style="cursor:pointer;">
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                        </select>
+                        <label class="lbl">Cantidad</label>
+                        <input type="number" id="modalCant" step="any" class="inp" placeholder="0">
                     </div>
                     <div>
-                        <label class="lbl">N&ordm; T&iacute;tulos</label>
-                        <input type="number" id="m_cant" step="any" class="inp" placeholder="0" oninput="modalSyncCantCoste()">
+                        <label class="lbl">Moneda</label>
+                        <select id="modalMoneda" class="inp">
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                        </select>
                     </div>
                 </div>
-                <div class="pt-1 border-t border-slate-800">
-                    <p class="lbl mb-3" style="color:#93c5fd;">Coste (se calculan mutuamente)</p>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="lbl">Coste Medio / t&iacute;tulo</label>
-                            <input type="number" id="m_coste" step="any" class="inp" placeholder="0.00"
-                                oninput="modalSyncCosteToInv()">
-                        </div>
-                        <div>
-                            <label class="lbl">Total Invertido</label>
-                            <input type="number" id="m_inv" step="any" class="inp" placeholder="0.00"
-                                oninput="modalSyncInvToCoste()">
-                        </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="lbl">Coste Medio</label>
+                        <input type="number" id="modalCoste" step="any" class="inp" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="lbl">Inversión</label>
+                        <input type="number" id="modalInv" step="any" class="inp" placeholder="0.00">
                     </div>
                 </div>
             </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="guardarModal()" class="btn-snap flex-1" style="text-align:center;">Guardar</button>
-                <button onclick="eliminarValor()" id="m_eliminar"
-                    style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:10px;padding:10px 18px;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;cursor:pointer;">
-                    Eliminar
-                </button>
-            </div>
-            <input type="hidden" id="m_idx" value="-1">
-        </div>
-    </div>
-
-    <div id="snapToast" class="fixed bottom-6 right-6 bg-green-900 border border-green-600 text-green-300 mono text-[11px] font-bold px-5 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none">
-        ✓ Snapshot registrado
-    </div>
-
-    <!-- ══ MODAL SEGURIDAD (CONTRASEÑA) ══ -->
-    <div class="modal-overlay" id="modalAuth" style="display:flex; backdrop-filter: blur(12px);">
-        <div class="modal-box text-center">
-            <div class="mb-6">
-                <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-                    <span class="text-2xl">🔐</span>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2">Acceso Protegido</h3>
-                <p class="text-slate-400 text-xs mono">Introduce tu clave maestra para descifrar los datos patrimoniales.</p>
-            </div>
-            <div class="space-y-4">
-                <input type="password" id="masterPassword" class="inp text-center text-lg tracking-widest" placeholder="••••••••" autofocus>
-                <!-- Recordar en este dispositivo -->
-                <label class="flex items-center justify-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="rememberKey" style="width:14px;height:14px;accent-color:#6366f1;cursor:pointer;">
-                    <span class="mono text-[10px] text-slate-400">Recordar en este dispositivo</span>
-                </label>
-                <button onclick="App.unlock()" class="btn-snap w-full py-3 text-sm">Desbloquear Patrimonio</button>
-                <p id="authError" class="text-red-400 text-[10px] mono hidden">⚠️ Clave incorrecta o datos corruptos</p>
-            </div>
-            <div class="mt-8 pt-4 border-t border-slate-800 flex flex-col gap-2">
-                <p class="text-[9px] text-slate-600 mono uppercase tracking-tighter">La clave se guarda cifrada solo en este navegador.</p>
-                <button onclick="App.olvidarDispositivo()" class="mono text-[9px] text-slate-600 hover:text-red-400 transition-colors text-center" style="background:none;border:none;cursor:pointer;">
-                    🗑 Olvidar este dispositivo
-                </button>
+            <div class="flex gap-2 mt-6">
+                <button onclick="guardarValor()" class="flex-1 btn-snap">Guardar</button>
+                <button onclick="UI.cerrarModal()" class="flex-1 btn-collapse-all">Cancelar</button>
+                <button id="btnBorrar" onclick="borrarValor()" class="btn-collapse-all" style="color:#f87171;border-color:#450a0a;display:none;">Borrar</button>
             </div>
         </div>
     </div>
 
+    <!-- ══ MODAL AUTENTICACIÓN ══ -->
+    <div id="modalAuth" class="modal-overlay open">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-slate-300 mb-4 uppercase tracking-widest">🔐 Acceso Seguro</h3>
+            <p class="mono text-[10px] text-slate-500 mb-4">Introduce tu contraseña maestra para acceder a tus datos cifrados.</p>
+            <input type="password" id="masterPassword" class="inp mb-4" placeholder="Contraseña maestra">
+            <div id="authError" class="hidden bg-red-950/30 border border-red-700 rounded-lg p-3 mb-4">
+                <p class="mono text-[10px] text-red-400">❌ Contraseña incorrecta</p>
+            </div>
+            <label class="flex items-center gap-2 mb-4 cursor-pointer">
+                <input type="checkbox" id="rememberKey" class="w-4 h-4">
+                <span class="mono text-[10px] text-slate-500">Recuerda esta contraseña en este navegador</span>
+            </label>
+            <button onclick="App.unlock()" class="w-full btn-snap">Desbloquear</button>
+        </div>
+    </div>
 
-    <script src="app.js?v=5"></script>
+    <!-- ══ TOAST NOTIFICACIÓN ══ -->
+    <div id="snapToast" style="position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:12px;border:1px solid;font-family:JetBrains Mono,monospace;font-size:11px;opacity:0;transition:opacity 0.3s;z-index:300;"></div>
+
+    <script src="app.js"></script>
 </body>
 </html>
