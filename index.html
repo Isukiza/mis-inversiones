@@ -278,11 +278,19 @@
                                     class="inp" style="color:#67e8f9; border-color:#164e63;">
                             </div>
                         </div>
-                        <div>
-                            <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
-                            <input type="number" id="ef_casa" step="any" placeholder="0.00"
-                                oninput="calcEfectivo()" onchange="calcEfectivo()"
-                                class="inp" style="color:#67e8f9; border-color:#164e63;">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">Trade Republic (&euro;)</label>
+                                <input type="number" id="ef_traderepublic" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
+                            <div>
+                                <label class="lbl" style="color:#67e8f9">Casa (&euro;)</label>
+                                <input type="number" id="ef_casa" step="any" placeholder="0.00"
+                                    oninput="calcEfectivo()" onchange="calcEfectivo()"
+                                    class="inp" style="color:#67e8f9; border-color:#164e63;">
+                            </div>
                         </div>
                         <div class="pt-3 border-t border-slate-800">
                             <div id="ef_desglose" class="space-y-1 mb-3 hidden"></div>

@@ -105,6 +105,7 @@ const Storage = {
             ef_santander: document.getElementById("ef_santander").value,
             ef_kutxa:     document.getElementById("ef_kutxa").value,
             ef_myinvestor:document.getElementById("ef_myinvestor").value,
+            ef_traderepublic: document.getElementById("ef_traderepublic").value,
             ef_casa:      document.getElementById("ef_casa").value,
             ts:           document.getElementById("fondosTimestamp").innerText
         };
@@ -144,6 +145,7 @@ const Storage = {
         setVal("ef_santander",d.ef_santander);
         setVal("ef_kutxa",    d.ef_kutxa);
         setVal("ef_myinvestor",d.ef_myinvestor);
+        setVal("ef_traderepublic", d.ef_traderepublic);
         setVal("ef_casa",     d.ef_casa);
         setVal("p1",          d.p1  || "1376.6933");
         setVal("p2",          d.p2  || "1975.6095");
@@ -361,11 +363,12 @@ const UI = {
     // ── Efectivo ──
     updateEfectivoDOM() {
         const campos = [
-            { id: "ef_abanca",     label: "Abanca"     },
-            { id: "ef_santander",  label: "Santander"  },
-            { id: "ef_kutxa",      label: "Kutxabank"  },
-            { id: "ef_myinvestor", label: "MyInvestor" },
-            { id: "ef_casa",       label: "Casa"       }
+            { id: "ef_abanca",        label: "Abanca"         },
+            { id: "ef_santander",     label: "Santander"      },
+            { id: "ef_kutxa",         label: "Kutxabank"      },
+            { id: "ef_myinvestor",    label: "MyInvestor"     },
+            { id: "ef_traderepublic", label: "Trade Republic" },
+            { id: "ef_casa",          label: "Casa"           }
         ];
         let total = 0;
         const filas = [];
@@ -872,7 +875,7 @@ const App = {
         const vlp      = parseFloat(document.getElementById("vlp").value) || 0;
         const epsv     = ((parseFloat(document.getElementById("p1").value) || 0)
                        +  (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
-        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"]
+        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_traderepublic", "ef_casa"]
                           .reduce((acc, id) => acc + (parseFloat(document.getElementById(id).value) || 0), 0);
         return { bolsa, fondos: f.tMer, indie, epsv, efectivo, total: bolsa + f.tMer + indie + epsv + efectivo };
     },
@@ -1008,14 +1011,42 @@ const App = {
                 epsv:     parseFloat(s.epsv)      || 0,
                 efectivo: parseFloat(s.efectivo)  || 0
             }));
+
             if (Array.isArray(data)) {
+                // Formato antiguo: array de snapshots
                 State.historial = processHistorial(data);
                 Storage.saveHistorial();
                 UI.showToast("✓ Historial importado");
-            } else {
-                if (data.acciones) State.acciones = data.acciones;
+            } else if (data._version === 2) {
+                // Formato nuevo v2: backup completo
+                if (data.acciones)  State.acciones  = data.acciones;
                 if (data.historial) State.historial = processHistorial(data.historial);
-                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp","ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_casa"];
+                // Rellenar todos los campos del formulario
+                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste",
+                              "indie_mer","indie_inv","indie_ef","p1","p2","vlp",
+                              "ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_traderepublic","ef_casa"];
+                keys.forEach(k => {
+                    if (data[k] !== undefined && data[k] !== null) {
+                        const el = document.getElementById(k);
+                        if (el) el.value = data[k];
+                    }
+                });
+                // Sincronizar VLP
+                const vlpVal = data.vlp || data.p1;
+                if (vlpVal) {
+                    const vlp_m = document.getElementById("vlp_m");
+                    if (vlp_m) vlp_m.value = vlpVal;
+                }
+                Storage.saveData(); Storage.saveHistorial(); Storage.saveAcciones();
+                const fecha = new Date(data._fecha).toLocaleDateString("es-ES");
+                UI.showToast(`✓ Backup completo importado (${fecha})`);
+            } else {
+                // Formato antiguo con objeto
+                if (data.acciones)  State.acciones  = data.acciones;
+                if (data.historial) State.historial = processHistorial(data.historial);
+                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste",
+                              "indie_mer","indie_inv","indie_ef","p1","p2","vlp",
+                              "ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_traderepublic","ef_casa"];
                 keys.forEach(k => { if (data[k] !== undefined) { const el = document.getElementById(k); if (el) el.value = data[k]; } });
                 Storage.saveData(); Storage.saveHistorial(); Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
@@ -1027,14 +1058,41 @@ const App = {
     },
 
     exportarHistorial() {
-        const blob = new Blob([JSON.stringify(State.historial, null, 2)], { type: "application/json" });
+        // Export completo: historial + acciones + datos de fondos/efectivo/epsv/indie
+        const d = Storage._load("isukiza_v4_enc") || {};
+        const exportData = {
+            _version:  2,
+            _fecha:    new Date().toISOString(),
+            historial: State.historial,
+            acciones:  State.acciones,
+            // Datos de fondos, efectivo, EPSV, indie
+            f1_vl:         d.f1_vl,
+            f1_part:       d.f1_part,
+            f1_coste:      d.f1_coste,
+            f2_vl:         d.f2_vl,
+            f2_part:       d.f2_part,
+            f2_coste:      d.f2_coste,
+            indie_mer:     d.indie_mer,
+            indie_inv:     d.indie_inv,
+            indie_ef:      d.indie_ef,
+            p1:            d.p1,
+            p2:            d.p2,
+            vlp:           d.vlp,
+            ef_abanca:     d.ef_abanca,
+            ef_santander:  d.ef_santander,
+            ef_kutxa:      d.ef_kutxa,
+            ef_myinvestor:     d.ef_myinvestor,
+            ef_traderepublic:  d.ef_traderepublic,
+            ef_casa:           d.ef_casa
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
         a.href = url;
-        a.download = `isukiza_historial_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `isukiza_backup_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        UI.showToast("↓ Historial exportado");
+        UI.showToast("↓ Backup completo exportado");
     },
 
     borrarHistorial() {
