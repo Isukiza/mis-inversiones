@@ -154,7 +154,8 @@ const Cloud = {
         }
         UI.setStatus("Cargando desde nube...", "amber");
         try {
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
+            // Añadir timestamp para evitar caché
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) { UI.showToast("Sin datos en la nube todavía", "#1e293b", "#94a3b8"); return; }
             const d       = await r.json();
             const jsonStr = decodeURIComponent(escape(atob(d.content)));
@@ -185,7 +186,7 @@ const Cloud = {
         const headers = this._headers();
         if (!headers) return;
         try {
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) return;
             const d         = await r.json();
             const jsonStr   = decodeURIComponent(escape(atob(d.content)));
