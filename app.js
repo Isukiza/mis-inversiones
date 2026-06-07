@@ -162,6 +162,7 @@ const Cloud = {
             UI.setStatus("✓ Datos cargados desde nube", "green");
             UI.showToast("☁️ Datos sincronizados desde la nube");
             localStorage.setItem("isukiza_last_sync", new Date().toISOString());
+            localStorage.setItem("isukiza_last_loaded", new Date().toISOString());
             this._updateSyncBadge();
         } catch(e) {
             UI.setStatus("Error al cargar desde nube", "red");
@@ -182,22 +183,23 @@ const Cloud = {
 
     async autoSync() {
         const headers = this._headers();
-        if (!headers) return; // Sin token configurado, no hacer autoSync
-        // Al iniciar, comprobar si hay datos más recientes en la nube
+        if (!headers) return;
         try {
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
             if (r.status === 404) return;
-            const d        = await r.json();
-            const jsonStr  = decodeURIComponent(escape(atob(d.content)));
+            const d         = await r.json();
+            const jsonStr   = decodeURIComponent(escape(atob(d.content)));
             const cloudData = JSON.parse(jsonStr);
             const cloudDate = new Date(cloudData._fecha);
-            const lastSync  = localStorage.getItem("isukiza_last_sync");
-            // Si la nube es más reciente que la última sincronización, preguntar
-            if (!lastSync || cloudDate > new Date(lastSync)) {
+            // Comparar con la fecha guardada del último dato cargado desde la nube
+            const lastLoaded = localStorage.getItem("isukiza_last_loaded");
+            const shouldLoad = !lastLoaded || cloudDate > new Date(lastLoaded);
+            if (shouldLoad) {
                 const device = cloudData._device || "otro dispositivo";
                 const fecha  = cloudDate.toLocaleString("es-ES", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
                 if (confirm(`☁️ Hay datos más recientes en la nube (${fecha} desde ${device}).\n\n¿Cargar datos de la nube?`)) {
                     App.importarJSON(jsonStr);
+                    localStorage.setItem("isukiza_last_loaded", cloudData._fecha);
                     localStorage.setItem("isukiza_last_sync", new Date().toISOString());
                     this._updateSyncBadge();
                 }
