@@ -38,6 +38,129 @@ const Config = {
     ]
 };
 
+
+// ══════════════════════════════════════════════════
+// MÓDULO DE SINCRONIZACIÓN EN LA NUBE (GitHub)
+// ══════════════════════════════════════════════════
+const Cloud = {
+    REPO:  "Isukiza/mis-inversiones",
+    FILE:  "isukiza_cloud_data.json",
+    TOKEN: "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",
+
+    _headers() {
+        return {
+            "Authorization": `token ${this.TOKEN}`,
+            "Content-Type":  "application/json",
+            "User-Agent":    "isukiza-app"
+        };
+    },
+
+    async getSHA() {
+        try {
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            if (r.status === 404) return null;
+            const d = await r.json();
+            return d.sha;
+        } catch(e) { return null; }
+    },
+
+    async guardar() {
+        UI.setStatus("Guardando en nube...", "amber");
+        try {
+            const d = Storage._load("isukiza_v4_enc") || {};
+            const exportData = {
+                _version:         2,
+                _fecha:           new Date().toISOString(),
+                _device:          navigator.userAgent.includes("Mobile") ? "móvil" : "escritorio",
+                historial:        State.historial,
+                acciones:         State.acciones,
+                f1_vl:            d.f1_vl,        f1_part:       d.f1_part,
+                f1_coste:         d.f1_coste,      f2_vl:         d.f2_vl,
+                f2_part:          d.f2_part,        f2_coste:      d.f2_coste,
+                indie_mer:        d.indie_mer,      indie_inv:     d.indie_inv,
+                indie_ef:         d.indie_ef,       p1:            d.p1,
+                p2:               d.p2,             vlp:           d.vlp,
+                ef_abanca:        d.ef_abanca,      ef_santander:  d.ef_santander,
+                ef_kutxa:         d.ef_kutxa,       ef_myinvestor: d.ef_myinvestor,
+                ef_traderepublic: d.ef_traderepublic, ef_casa:     d.ef_casa
+            };
+            const sha     = await this.getSHA();
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
+            const body    = { message: `Sync ${new Date().toLocaleString("es-ES")}`, content };
+            if (sha) body.sha = sha;
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, {
+                method:  "PUT",
+                headers: this._headers(),
+                body:    JSON.stringify(body)
+            });
+            if (r.ok) {
+                UI.setStatus("✓ Guardado en nube", "green");
+                UI.showToast("☁️ Sincronizado con la nube");
+                localStorage.setItem("isukiza_last_sync", new Date().toISOString());
+                this._updateSyncBadge();
+            } else {
+                throw new Error(`HTTP ${r.status}`);
+            }
+        } catch(e) {
+            UI.setStatus("Error al guardar en nube", "red");
+            UI.showToast("⚠️ Error de sincronización", "#7c2d12", "#f97316");
+            console.error("[Isukiza] Cloud error:", e);
+        }
+    },
+
+    async cargar() {
+        UI.setStatus("Cargando desde nube...", "amber");
+        try {
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            if (r.status === 404) { UI.showToast("Sin datos en la nube todavía", "#1e293b", "#94a3b8"); return; }
+            const d       = await r.json();
+            const jsonStr = decodeURIComponent(escape(atob(d.content)));
+            App.importarJSON(jsonStr);
+            UI.setStatus("✓ Datos cargados desde nube", "green");
+            UI.showToast("☁️ Datos sincronizados desde la nube");
+            localStorage.setItem("isukiza_last_sync", new Date().toISOString());
+            this._updateSyncBadge();
+        } catch(e) {
+            UI.setStatus("Error al cargar desde nube", "red");
+            console.error("[Isukiza] Cloud load error:", e);
+        }
+    },
+
+    _updateSyncBadge() {
+        const el = document.getElementById("syncBadge");
+        if (!el) return;
+        const last = localStorage.getItem("isukiza_last_sync");
+        if (last) {
+            const d = new Date(last);
+            el.innerText = d.toLocaleString("es-ES", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+            el.style.display = "inline";
+        }
+    },
+
+    async autoSync() {
+        // Al iniciar, comprobar si hay datos más recientes en la nube
+        try {
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            if (r.status === 404) return;
+            const d        = await r.json();
+            const jsonStr  = decodeURIComponent(escape(atob(d.content)));
+            const cloudData = JSON.parse(jsonStr);
+            const cloudDate = new Date(cloudData._fecha);
+            const lastSync  = localStorage.getItem("isukiza_last_sync");
+            // Si la nube es más reciente que la última sincronización, preguntar
+            if (!lastSync || cloudDate > new Date(lastSync)) {
+                const device = cloudData._device || "otro dispositivo";
+                const fecha  = cloudDate.toLocaleString("es-ES", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+                if (confirm(`☁️ Hay datos más recientes en la nube (${fecha} desde ${device}).\n\n¿Cargar datos de la nube?`)) {
+                    App.importarJSON(jsonStr);
+                    localStorage.setItem("isukiza_last_sync", new Date().toISOString());
+                    this._updateSyncBadge();
+                }
+            }
+        } catch(e) { console.warn("[Isukiza] autoSync:", e); }
+    }
+};
+
 // ══════════════════════════════════════════════════
 // 2. ESTADO GLOBAL
 // ══════════════════════════════════════════════════
@@ -823,6 +946,8 @@ const App = {
                     setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
                     window.addEventListener("resize", () => UI.refreshCharts());
                     document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+                    Cloud._updateSyncBadge();
+                    setTimeout(() => Cloud.autoSync(), 1500);
                 }, 50);
                 return;
             }
@@ -1159,6 +1284,7 @@ window.modalSyncCantCoste = () => {
     if (c && n) document.getElementById("m_inv").value = (c * n).toFixed(2);
 };
 
-window.App = App;
-window.UI  = UI;
+window.App   = App;
+window.UI    = UI;
+window.Cloud = Cloud;
 window.olvidarDispositivo = () => App.olvidarDispositivo();
