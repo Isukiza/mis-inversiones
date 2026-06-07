@@ -1224,8 +1224,13 @@ const App = {
                 Storage.saveData(); Storage.saveHistorial(); Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
             }
-            // Recargar todos los campos del DOM desde localStorage
+            // Recargar todos los campos del DOM desde localStorage y recalcular
             Storage.loadAll();
+            UI.updateEfectivoDOM();
+            UI.updateFondoDOM("f1");
+            UI.updateFondoDOM("f2");
+            UI.updateIndieDOM();
+            UI.updateEPSVDOM();
             this.calculateAll(); UI.renderBolsa(); UI.refreshCharts();
             const imp = document.getElementById("importFile");
             if (imp) imp.value = "";
