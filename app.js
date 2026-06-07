@@ -43,13 +43,42 @@ const Config = {
 // MÓDULO DE SINCRONIZACIÓN EN LA NUBE (GitHub)
 // ══════════════════════════════════════════════════
 const Cloud = {
-    REPO:  "Isukiza/mis-inversiones",
-    FILE:  "isukiza_cloud_data.json",
-    TOKEN: "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",
+    REPO: "Isukiza/mis-inversiones",
+    FILE: "isukiza_cloud_data.json",
+
+    getToken() {
+        // Token guardado cifrado en localStorage, nunca en el código
+        const enc = localStorage.getItem("isukiza_cloud_token");
+        if (!enc || !State.masterKey) return null;
+        try {
+            const bytes = CryptoJS.AES.decrypt(enc, State.masterKey);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch(e) { return null; }
+    },
+
+    saveToken(token) {
+        if (!State.masterKey) return;
+        const enc = CryptoJS.AES.encrypt(token, State.masterKey).toString();
+        localStorage.setItem("isukiza_cloud_token", enc);
+    },
+
+    promptToken() {
+        const token = prompt("Introduce tu GitHub Personal Access Token para activar la sincronización en la nube:\n(Se guardará cifrado, no volverá a pedírsete)");
+        if (token && token.startsWith("ghp_")) {
+            this.saveToken(token.trim());
+            UI.showToast("✓ Token guardado — sincronización activada");
+            return token.trim();
+        } else if (token) {
+            alert("Token no válido. Debe empezar por ghp_");
+        }
+        return null;
+    },
 
     _headers() {
+        const token = this.getToken();
+        if (!token) return null;
         return {
-            "Authorization": `token ${this.TOKEN}`,
+            "Authorization": `token ${token}`,
             "Content-Type":  "application/json",
             "User-Agent":    "isukiza-app"
         };
@@ -57,7 +86,9 @@ const Cloud = {
 
     async getSHA() {
         try {
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            const headers = this._headers();
+            if (!headers) return null;
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
             if (r.status === 404) return null;
             const d = await r.json();
             return d.sha;
@@ -65,6 +96,12 @@ const Cloud = {
     },
 
     async guardar() {
+        let headers = this._headers();
+        if (!headers) {
+            const token = this.promptToken();
+            if (!token) return;
+            headers = this._headers();
+        }
         UI.setStatus("Guardando en nube...", "amber");
         try {
             const d = Storage._load("isukiza_v4_enc") || {};
@@ -90,7 +127,7 @@ const Cloud = {
             if (sha) body.sha = sha;
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, {
                 method:  "PUT",
-                headers: this._headers(),
+                headers: headers,
                 body:    JSON.stringify(body)
             });
             if (r.ok) {
@@ -109,9 +146,15 @@ const Cloud = {
     },
 
     async cargar() {
+        let headers = this._headers();
+        if (!headers) {
+            const token = this.promptToken();
+            if (!token) return;
+            headers = this._headers();
+        }
         UI.setStatus("Cargando desde nube...", "amber");
         try {
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
             if (r.status === 404) { UI.showToast("Sin datos en la nube todavía", "#1e293b", "#94a3b8"); return; }
             const d       = await r.json();
             const jsonStr = decodeURIComponent(escape(atob(d.content)));
@@ -138,9 +181,11 @@ const Cloud = {
     },
 
     async autoSync() {
+        const headers = this._headers();
+        if (!headers) return; // Sin token configurado, no hacer autoSync
         // Al iniciar, comprobar si hay datos más recientes en la nube
         try {
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers: this._headers() });
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
             if (r.status === 404) return;
             const d        = await r.json();
             const jsonStr  = decodeURIComponent(escape(atob(d.content)));
