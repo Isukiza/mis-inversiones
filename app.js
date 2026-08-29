@@ -47,7 +47,6 @@ const Cloud = {
     FILE: "isukiza_cloud_data.json",
 
     getToken() {
-        // Token guardado cifrado en localStorage, nunca en el código
         const enc = localStorage.getItem("isukiza_cloud_token");
         if (!enc || !State.masterKey) return null;
         try {
@@ -63,7 +62,7 @@ const Cloud = {
     },
 
     promptToken() {
-        const token = prompt("Introduce tu GitHub Personal Access Token para activar la sincronización en la nube:\n(Se guardará cifrado, no volverá a pedírsete)");
+        const token = prompt("Introduce tu GitHub Personal Access Token:\n(Se guardará cifrado, no volverá a pedírsete)");
         if (token && token.startsWith("ghp_")) {
             this.saveToken(token.trim());
             UI.showToast("✓ Token guardado — sincronización activada");
@@ -88,7 +87,7 @@ const Cloud = {
         try {
             const headers = this._headers();
             if (!headers) return null;
-            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, { headers });
+            const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) return null;
             const d = await r.json();
             return d.sha;
@@ -106,42 +105,33 @@ const Cloud = {
         try {
             const d = Storage._load("isukiza_v4_enc") || {};
             const exportData = {
-                _version:         2,
-                _fecha:           new Date().toISOString(),
-                _device:          navigator.userAgent.includes("Mobile") ? "móvil" : "escritorio",
-                historial:        State.historial,
-                acciones:         State.acciones,
-                f1_vl:            d.f1_vl,        f1_part:       d.f1_part,
-                f1_coste:         d.f1_coste,      f2_vl:         d.f2_vl,
-                f2_part:          d.f2_part,        f2_coste:      d.f2_coste,
-                indie_mer:        d.indie_mer,      indie_inv:     d.indie_inv,
-                indie_ef:         d.indie_ef,       p1:            d.p1,
-                p2:               d.p2,             vlp:           d.vlp,
-                ef_abanca:        d.ef_abanca,      ef_santander:  d.ef_santander,
-                ef_kutxa:         d.ef_kutxa,       ef_myinvestor: d.ef_myinvestor,
-                ef_traderepublic: d.ef_traderepublic, ef_casa:     d.ef_casa
+                _version: 2, _fecha: new Date().toISOString(),
+                _device: navigator.userAgent.includes("Mobile") ? "móvil" : "escritorio",
+                historial: State.historial, acciones: State.acciones,
+                f1_vl: d.f1_vl, f1_part: d.f1_part, f1_coste: d.f1_coste,
+                f2_vl: d.f2_vl, f2_part: d.f2_part, f2_coste: d.f2_coste,
+                indie_mer: d.indie_mer, indie_inv: d.indie_inv, indie_ef: d.indie_ef,
+                p1: d.p1, p2: d.p2, vlp: d.vlp,
+                ef_abanca: d.ef_abanca, ef_santander: d.ef_santander,
+                ef_kutxa: d.ef_kutxa, ef_myinvestor: d.ef_myinvestor,
+                ef_traderepublic: d.ef_traderepublic, ef_casa: d.ef_casa
             };
             const sha     = await this.getSHA();
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
-            const body    = { message: `Sync ${new Date().toLocaleString("es-ES")}`, content };
+            const ct      = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
+            const body    = { message: `Sync ${new Date().toLocaleString("es-ES")}`, content: ct };
             if (sha) body.sha = sha;
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, {
-                method:  "PUT",
-                headers: headers,
-                body:    JSON.stringify(body)
+                method: "PUT", headers, body: JSON.stringify(body)
             });
             if (r.ok) {
                 UI.setStatus("✓ Guardado en nube", "green");
                 UI.showToast("☁️ Sincronizado con la nube");
                 localStorage.setItem("isukiza_last_sync", new Date().toISOString());
                 this._updateSyncBadge();
-            } else {
-                throw new Error(`HTTP ${r.status}`);
-            }
+            } else { throw new Error(`HTTP ${r.status}`); }
         } catch(e) {
             UI.setStatus("Error al guardar en nube", "red");
             UI.showToast("⚠️ Error de sincronización", "#7c2d12", "#f97316");
-            console.error("[Isukiza] Cloud error:", e);
         }
     },
 
@@ -154,7 +144,6 @@ const Cloud = {
         }
         UI.setStatus("Cargando desde nube...", "amber");
         try {
-            // Añadir timestamp para evitar caché
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) { UI.showToast("Sin datos en la nube todavía", "#1e293b", "#94a3b8"); return; }
             const d       = await r.json();
@@ -167,7 +156,7 @@ const Cloud = {
             this._updateSyncBadge();
         } catch(e) {
             UI.setStatus("Error al cargar desde nube", "red");
-            console.error("[Isukiza] Cloud load error:", e);
+            UI.showToast("⚠️ Error al cargar", "#7c2d12", "#f97316");
         }
     },
 
@@ -192,10 +181,8 @@ const Cloud = {
             const jsonStr   = decodeURIComponent(escape(atob(d.content)));
             const cloudData = JSON.parse(jsonStr);
             const cloudDate = new Date(cloudData._fecha);
-            // Comparar con la fecha guardada del último dato cargado desde la nube
             const lastLoaded = localStorage.getItem("isukiza_last_loaded");
-            const shouldLoad = !lastLoaded || cloudDate > new Date(lastLoaded);
-            if (shouldLoad) {
+            if (!lastLoaded || cloudDate > new Date(lastLoaded)) {
                 const device = cloudData._device || "otro dispositivo";
                 const fecha  = cloudDate.toLocaleString("es-ES", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
                 if (confirm(`☁️ Hay datos más recientes en la nube (${fecha} desde ${device}).\n\n¿Cargar datos de la nube?`)) {
@@ -276,7 +263,6 @@ const Storage = {
             ef_santander: document.getElementById("ef_santander").value,
             ef_kutxa:     document.getElementById("ef_kutxa").value,
             ef_myinvestor:document.getElementById("ef_myinvestor").value,
-            ef_traderepublic: document.getElementById("ef_traderepublic").value,
             ef_casa:      document.getElementById("ef_casa").value,
             ts:           document.getElementById("fondosTimestamp").innerText
         };
@@ -316,7 +302,6 @@ const Storage = {
         setVal("ef_santander",d.ef_santander);
         setVal("ef_kutxa",    d.ef_kutxa);
         setVal("ef_myinvestor",d.ef_myinvestor);
-        setVal("ef_traderepublic", d.ef_traderepublic);
         setVal("ef_casa",     d.ef_casa);
         setVal("p1",          d.p1  || "1376.6933");
         setVal("p2",          d.p2  || "1975.6095");
@@ -335,42 +320,87 @@ const Storage = {
 // ══════════════════════════════════════════════════
 const Finance = {
     async fetchPrice(ticker) {
+        // Intentar Yahoo Finance directamente primero (sin proxy)
+        const directUrls = [
+            `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
+            `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
+        ];
+        for (const url of directUrls) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) continue;
+                const data = await response.json();
+                const result = this.extractPrice(data);
+                if (result && result.price > 0) return result;
+            } catch (e) { /* intentar siguiente */ }
+        }
+        // Si falla, intentar con proxies
         const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
         for (let i = 0; i < Config.PROXIES.length; i++) {
             try {
                 const proxyUrl = Config.PROXIES[i](yahooUrl);
-                const response = await fetch(proxyUrl);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                return this.extractPrice(data);
-            } catch (e) { console.warn(`Proxy ${i} falló para ${ticker}:`, e.message); }
+                const result = this.extractPrice(data);
+                if (result && result.price > 0) return result;
+            } catch (e) {
+                console.warn(`Proxy ${i} falló para ${ticker}:`, e.message);
+            }
         }
         throw new Error(`Fallo total para ${ticker}`);
     },
     extractPrice(data) {
-        let contents = data.contents ? JSON.parse(data.contents) : data;
-        const meta  = contents.chart.result[0].meta;
-        const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
-        const prev  = meta.chartPreviousClose || meta.previousClose || 0;
-        // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
-        const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
-        return { price, changePct };
+        try {
+            let contents = data.contents ? JSON.parse(data.contents) : data;
+            if (!contents.chart || !contents.chart.result || !contents.chart.result[0]) {
+                throw new Error('Estructura de datos inválida');
+            }
+            const meta  = contents.chart.result[0].meta;
+            const price = meta.regularMarketPrice || meta.previousClose || meta.chartPreviousClose || 0;
+            const prev  = meta.chartPreviousClose || meta.previousClose || 0;
+            // Calcular siempre desde precio y cierre anterior para evitar ambigüedad de formato
+            const changePct = (prev > 0 && price > 0) ? (price - prev) / prev * 100 : 0;
+            return { price, changePct };
+        } catch (e) {
+            console.error('Error extrayendo precio:', e);
+            throw e;
+        }
     },
     async updateAllPrices() {
+        console.log("[Isukiza] updateAllPrices iniciado");
         UI.setStatus("Actualizando bolsa...", "amber");
         try {
             const r = await this.fetchPrice("EURUSD=X");
             State.usd_eur = 1 / (r.price || 1);
-        } catch (e) { State.usd_eur = 0.92; }
+            console.log("[Isukiza] Tipo de cambio EUR/USD:", State.usd_eur);
+        } catch (e) { 
+            console.warn('[Isukiza] Error obteniendo EURUSD:', e);
+            State.usd_eur = 0.92; 
+        }
         const promises = State.acciones.map(async a => {
             try {
+                console.log(`[Isukiza] Obteniendo precio para ${a.ticker}...`);
                 const r = await this.fetchPrice(a.ticker);
                 State.precios[a.ticker] = r.price;
                 State.cambios[a.ticker] = r.changePct;
-            } catch (e) {}
+                console.log(`[Isukiza] ${a.ticker}: ${r.price}eur (${r.changePct.toFixed(2)}%)`);
+            } catch (e) {
+                console.warn(`[Isukiza] No se pudo obtener precio para ${a.ticker}:`, e);
+                State.precios[a.ticker] = 0;
+            }
         });
         await Promise.all(promises);
-        document.getElementById("bolsaStatus").innerText = "live";
+        const bolsaStatusEl = document.getElementById("bolsaStatus");
+        if (bolsaStatusEl) bolsaStatusEl.innerText = "live";
         UI.setStatus(`Bolsa actualizada ${new Date().toLocaleTimeString("es-ES")}`, "green");
+        console.log("[Isukiza] updateAllPrices completado");
         UI.renderBolsa();
         App.calculateAll();
     }
@@ -534,12 +564,11 @@ const UI = {
     // ── Efectivo ──
     updateEfectivoDOM() {
         const campos = [
-            { id: "ef_abanca",        label: "Abanca"         },
-            { id: "ef_santander",     label: "Santander"      },
-            { id: "ef_kutxa",         label: "Kutxabank"      },
-            { id: "ef_myinvestor",    label: "MyInvestor"     },
-            { id: "ef_traderepublic", label: "Trade Republic" },
-            { id: "ef_casa",          label: "Casa"           }
+            { id: "ef_abanca",     label: "Abanca"     },
+            { id: "ef_santander",  label: "Santander"  },
+            { id: "ef_kutxa",      label: "Kutxabank"  },
+            { id: "ef_myinvestor", label: "MyInvestor" },
+            { id: "ef_casa",       label: "Casa"       }
         ];
         let total = 0;
         const filas = [];
@@ -592,6 +621,8 @@ const UI = {
                     ${dayStr}
                 </div>` : "";
 
+            // Peso de esta acción sobre el total de bolsa (se calcula después del bucle)
+            // Lo guardamos para usarlo en el HTML
             const rentHTML = invEur > 0 ? `
                 <div class="flex justify-between items-center bg-slate-800/50 rounded-lg px-3 py-1 mt-2">
                     <span class="mono text-[11px] text-slate-500">Rentabilidad</span>
@@ -599,10 +630,10 @@ const UI = {
                         ${esG ? "+" : ""}${this.fmt(gan)} € (${esG ? "+" : ""}${ganPct.toFixed(2)}%)
                     </span>
                 </div>` : "";
-            return `
+            return { subEur, invEur, html: `
                 <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 hover:border-blue-700/40 transition-all">
                     <div class="flex justify-between items-center">
-                        <div>
+                        <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <a href="https://finance.yahoo.com/quote/${a.ticker}" target="_blank" class="font-bold text-slate-200 hover:text-blue-400 text-sm">
                                     ${a.nombre} <span class="text-blue-500 text-[9px]">&#8599;</span>
@@ -610,8 +641,9 @@ const UI = {
                                 ${badgeHTML}
                             </div>
                             <p class="mono text-[9px] text-slate-500 mt-0.5">${a.cant} uds · ${price.toFixed(2)} ${a.mon}</p>
+                            <div class="peso-bar-placeholder mt-1" data-valor="${subEur.toFixed(2)}"></div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 ml-3">
                             <div class="text-right">
                                 <p class="mono text-base font-bold text-blue-300">${this.fmt(subEur)} &euro;</p>
                                 ${a.mon === "USD" ? `<p class="mono text-[8px] text-slate-600">${this.fmt(sub)} ${a.mon}</p>` : ""}
@@ -620,8 +652,31 @@ const UI = {
                         </div>
                     </div>
                     ${rentHTML}
-                </div>`;
+                </div>`};
+        });
+
+        // Calcular totales reales para las barras de peso
+        const totalBolsaReal = items.reduce((s, i) => s + i.subEur, 0);
+        
+        // Construir HTML con barras de peso
+        list.innerHTML = items.map(item => {
+            const pesoPct = totalBolsaReal > 0 ? (item.subEur / totalBolsaReal * 100) : 0;
+            const pesoStr = pesoPct.toFixed(1);
+            // Sustituir placeholder por la barra real
+            return item.html.replace(
+                '<div class="peso-bar-placeholder mt-1" data-valor="' + item.subEur.toFixed(2) + '"></div>',
+                `<div class="flex items-center gap-2 mt-1">
+                    <div style="flex:1;height:3px;background:#1e293b;border-radius:2px;overflow:hidden;">
+                        <div style="height:100%;width:${pesoPct}%;background:#3b82f6;border-radius:2px;opacity:0.7;transition:width 0.4s;"></div>
+                    </div>
+                    <span class="mono" style="font-size:9px;color:#3b82f6;font-weight:700;flex-shrink:0;">${pesoStr}%</span>
+                </div>`
+            );
         }).join("");
+
+        // Restaurar totales
+        totalBolsaMer = totalBolsaReal;
+        totalBolsaInv = items.reduce((s, i) => s + i.invEur, 0);
 
         const ganT = totalBolsaMer - totalBolsaInv;
         const esGT = ganT >= 0;
@@ -655,7 +710,6 @@ const UI = {
     cerrarModal() { document.getElementById("modalBolsa").classList.remove("open"); },
 
     refreshCharts() {
-        Charts.drawHeaderDonut();
         Charts.drawTreemap();
         Charts.drawSparkline("spark-fondos", "fondos",   Config.COLORES.fondos,    "tip-fondos");
         Charts.drawSparkline("spark-indie",  "indie",    Config.COLORES.indie,     "tip-indie");
@@ -875,67 +929,6 @@ const Charts = {
         if (xaxis) xaxis.innerHTML = labels.join("");
     },
 
-    drawHeaderDonut() {
-        const svg    = document.getElementById('header-donut-svg');
-        const legend = document.getElementById('header-donut-legend');
-        if (!svg) return;
-        svg.innerHTML = '';
-        if (legend) legend.innerHTML = '';
-        const v = App.getValues();
-        const total = v.total;
-        if (total <= 0) return;
-        const items = Config.TREEMAP_CATS
-            .map(c => ({ ...c, value: v[c.key] || 0 }))
-            .filter(i => i.value > 0);
-        const CX = 80, CY = 80, R = 68, ri = 44, GAP = 0.025;
-        let angle = -Math.PI / 2;
-        const tipEl = document.getElementById('header-donut-tip');
-        items.forEach(item => {
-            const slice = (item.value / total) * Math.PI * 2;
-            const end   = angle + slice - GAP;
-            const x1 = CX + R  * Math.cos(angle), y1 = CY + R  * Math.sin(angle);
-            const x2 = CX + R  * Math.cos(end),   y2 = CY + R  * Math.sin(end);
-            const x3 = CX + ri * Math.cos(end),   y3 = CY + ri * Math.sin(end);
-            const x4 = CX + ri * Math.cos(angle), y4 = CY + ri * Math.sin(angle);
-            const lg  = slice > Math.PI ? 1 : 0;
-            const d   = `M ${x1} ${y1} A ${R} ${R} 0 ${lg} 1 ${x2} ${y2} L ${x3} ${y3} A ${ri} ${ri} 0 ${lg} 0 ${x4} ${y4} Z`;
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', d);
-            path.setAttribute('fill', item.color);
-            path.setAttribute('fill-opacity', '0.82');
-            path.style.cursor = 'pointer';
-            path.style.transition = 'fill-opacity 0.15s';
-            const pct  = (item.value / total * 100).toFixed(1);
-            const midA = angle + slice / 2;
-            path.addEventListener('mouseenter', () => {
-                path.setAttribute('fill-opacity', '1');
-                const cp = document.getElementById('header-donut-pct');
-                const cl = document.getElementById('header-donut-label');
-                if (cp) { cp.style.color = item.color; cp.innerText = pct + '%'; }
-                if (cl) cl.innerText = item.label;
-            });
-            path.addEventListener('mouseleave', () => {
-                path.setAttribute('fill-opacity', '0.82');
-                const cp = document.getElementById('header-donut-pct');
-                const cl = document.getElementById('header-donut-label');
-                if (cp) cp.innerText = '';
-                if (cl) cl.innerText = '';
-            });
-            svg.appendChild(path);
-            angle += slice;
-            // Leyenda compacta
-            if (legend) {
-                const item_el = document.createElement('div');
-                item_el.className = 'flex items-center gap-1';
-                item_el.innerHTML = `
-                    <span style="width:7px;height:7px;border-radius:2px;background:${item.color};display:inline-block;flex-shrink:0;"></span>
-                    <span class="mono" style="font-size:9px;color:#94a3b8;">${item.label}</span>
-                    <span class="mono font-bold" style="font-size:9px;color:${item.color};">${pct}%</span>`;
-                legend.appendChild(item_el);
-            }
-        });
-    },
-
     drawSnapTable() {
         const el = document.getElementById("snapTable");
         if (!el) return;
@@ -976,32 +969,46 @@ const Charts = {
 // ══════════════════════════════════════════════════
 const App = {
     init() {
+        console.log("[Isukiza] Inicializando...");
         const pw = document.getElementById("masterPassword");
         if (pw) pw.addEventListener("keypress", e => { if (e.key === "Enter") this.unlock(); });
 
         const savedKey = localStorage.getItem("isukiza_master_key");
         if (savedKey) {
+            console.log("[Isukiza] Clave guardada detectada, desbloqueando automaticamente...");
             State.masterKey = savedKey;
             const hasEncData = localStorage.getItem("isukiza_v4_enc");
             if (!hasEncData || Storage._load("isukiza_v4_enc") !== null) {
-                Storage.loadAll();
-                document.getElementById("modalAuth").style.display = "none";
-                setTimeout(() => {
-                    this.calculateAll();
-                    UI.updateGlobalBtn();
-                    Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
-                    Finance.updateAllPrices();
-                    setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
-                    window.addEventListener("resize", () => UI.refreshCharts());
-                    document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
-                    Cloud._updateSyncBadge();
-                    setTimeout(() => Cloud.autoSync(), 1500);
-                }, 50);
+                try {
+                    Storage.loadAll();
+                    const modalAuth = document.getElementById("modalAuth");
+                    if (modalAuth) modalAuth.style.display = "none";
+                    console.log("[Isukiza] Datos cargados, iniciando UI...");
+                    setTimeout(() => {
+                        try {
+                            this.calculateAll();
+                            UI.updateGlobalBtn();
+                            Object.keys(Config.CARDS).forEach(id => UI.applyCollapse(id));
+                            console.log("[Isukiza] Iniciando descarga de precios...");
+                            Finance.updateAllPrices().catch(e => console.error("[Isukiza] Error en updateAllPrices:", e));
+                            setInterval(() => Finance.updateAllPrices(), 5 * 60 * 1000);
+                            window.addEventListener("resize", () => UI.refreshCharts());
+                            document.addEventListener("click", e => { if (e.target.id === "modalBolsa") UI.cerrarModal(); });
+                        } catch (e) {
+                            console.error("[Isukiza] Error en inicializacion:", e);
+                        }
+                    }, 50);
+                } catch (e) {
+                    console.error("[Isukiza] Error cargando datos:", e);
+                    localStorage.removeItem("isukiza_master_key");
+                    State.masterKey = null;
+                }
                 return;
             }
             localStorage.removeItem("isukiza_master_key");
             State.masterKey = null;
         }
+        console.log("[Isukiza] Esperando desbloqueo manual...");
     },
 
     unlock() {
@@ -1048,7 +1055,7 @@ const App = {
         const vlp      = parseFloat(document.getElementById("vlp").value) || 0;
         const epsv     = ((parseFloat(document.getElementById("p1").value) || 0)
                        +  (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
-        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_traderepublic", "ef_casa"]
+        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"]
                           .reduce((acc, id) => acc + (parseFloat(document.getElementById(id).value) || 0), 0);
         return { bolsa, fondos: f.tMer, indie, epsv, efectivo, total: bolsa + f.tMer + indie + epsv + efectivo };
     },
@@ -1184,42 +1191,14 @@ const App = {
                 epsv:     parseFloat(s.epsv)      || 0,
                 efectivo: parseFloat(s.efectivo)  || 0
             }));
-
             if (Array.isArray(data)) {
-                // Formato antiguo: array de snapshots
                 State.historial = processHistorial(data);
                 Storage.saveHistorial();
                 UI.showToast("✓ Historial importado");
-            } else if (data._version === 2) {
-                // Formato nuevo v2: backup completo
-                if (data.acciones)  State.acciones  = data.acciones;
-                if (data.historial) State.historial = processHistorial(data.historial);
-                // Rellenar todos los campos del formulario
-                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste",
-                              "indie_mer","indie_inv","indie_ef","p1","p2","vlp",
-                              "ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_traderepublic","ef_casa"];
-                keys.forEach(k => {
-                    if (data[k] !== undefined && data[k] !== null) {
-                        const el = document.getElementById(k);
-                        if (el) el.value = data[k];
-                    }
-                });
-                // Sincronizar VLP
-                const vlpVal = data.vlp || data.p1;
-                if (vlpVal) {
-                    const vlp_m = document.getElementById("vlp_m");
-                    if (vlp_m) vlp_m.value = vlpVal;
-                }
-                Storage.saveData(); Storage.saveHistorial(); Storage.saveAcciones();
-                const fecha = new Date(data._fecha).toLocaleDateString("es-ES");
-                UI.showToast(`✓ Backup completo importado (${fecha})`);
             } else {
-                // Formato antiguo con objeto
-                if (data.acciones)  State.acciones  = data.acciones;
+                if (data.acciones) State.acciones = data.acciones;
                 if (data.historial) State.historial = processHistorial(data.historial);
-                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste",
-                              "indie_mer","indie_inv","indie_ef","p1","p2","vlp",
-                              "ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_traderepublic","ef_casa"];
+                const keys = ["f1_vl","f1_part","f1_coste","f2_vl","f2_part","f2_coste","indie_mer","indie_inv","indie_ef","p1","p2","vlp","ef_abanca","ef_santander","ef_kutxa","ef_myinvestor","ef_casa"];
                 keys.forEach(k => { if (data[k] !== undefined) { const el = document.getElementById(k); if (el) el.value = data[k]; } });
                 Storage.saveData(); Storage.saveHistorial(); Storage.saveAcciones();
                 UI.showToast("✓ Configuración importada");
@@ -1238,41 +1217,14 @@ const App = {
     },
 
     exportarHistorial() {
-        // Export completo: historial + acciones + datos de fondos/efectivo/epsv/indie
-        const d = Storage._load("isukiza_v4_enc") || {};
-        const exportData = {
-            _version:  2,
-            _fecha:    new Date().toISOString(),
-            historial: State.historial,
-            acciones:  State.acciones,
-            // Datos de fondos, efectivo, EPSV, indie
-            f1_vl:         d.f1_vl,
-            f1_part:       d.f1_part,
-            f1_coste:      d.f1_coste,
-            f2_vl:         d.f2_vl,
-            f2_part:       d.f2_part,
-            f2_coste:      d.f2_coste,
-            indie_mer:     d.indie_mer,
-            indie_inv:     d.indie_inv,
-            indie_ef:      d.indie_ef,
-            p1:            d.p1,
-            p2:            d.p2,
-            vlp:           d.vlp,
-            ef_abanca:     d.ef_abanca,
-            ef_santander:  d.ef_santander,
-            ef_kutxa:      d.ef_kutxa,
-            ef_myinvestor:     d.ef_myinvestor,
-            ef_traderepublic:  d.ef_traderepublic,
-            ef_casa:           d.ef_casa
-        };
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify(State.historial, null, 2)], { type: "application/json" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
         a.href = url;
-        a.download = `isukiza_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `isukiza_historial_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        UI.showToast("↓ Backup completo exportado");
+        UI.showToast("↓ Historial exportado");
     },
 
     borrarHistorial() {
