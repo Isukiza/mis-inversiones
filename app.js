@@ -565,11 +565,12 @@ const UI = {
     // ── Efectivo ──
     updateEfectivoDOM() {
         const campos = [
-            { id: "ef_abanca",     label: "Abanca"     },
-            { id: "ef_santander",  label: "Santander"  },
-            { id: "ef_kutxa",      label: "Kutxabank"  },
-            { id: "ef_myinvestor", label: "MyInvestor" },
-            { id: "ef_casa",       label: "Casa"       }
+            { id: "ef_abanca",        label: "Abanca"         },
+            { id: "ef_santander",     label: "Santander"      },
+            { id: "ef_kutxa",         label: "Kutxabank"      },
+            { id: "ef_myinvestor",    label: "MyInvestor"     },
+            { id: "ef_traderepublic", label: "Trade Republic" },
+            { id: "ef_casa",          label: "Casa"           }
         ];
         let total = 0;
         const filas = [];
@@ -1056,7 +1057,7 @@ const App = {
         const vlp      = parseFloat(document.getElementById("vlp").value) || 0;
         const epsv     = ((parseFloat(document.getElementById("p1").value) || 0)
                        +  (parseFloat(document.getElementById("p2").value) || 0)) * vlp;
-        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_casa"]
+        const efectivo = ["ef_abanca", "ef_santander", "ef_kutxa", "ef_myinvestor", "ef_traderepublic", "ef_casa"]
                           .reduce((acc, id) => acc + (parseFloat(document.getElementById(id).value) || 0), 0);
         return { bolsa, fondos: f.tMer, indie, epsv, efectivo, total: bolsa + f.tMer + indie + epsv + efectivo };
     },
