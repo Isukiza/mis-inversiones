@@ -32,9 +32,11 @@ const Config = {
         { key: 'efectivo', label: 'Efectivo', color: '#06b6d4' }
     ],
     PROXIES: [
+        url => `https://api.cors.lol/url=${encodeURIComponent(url)}`,
+        url => `https://proxy.corsfix.com/?${encodeURIComponent(url)}`,
         url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-        url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-        url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+        url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
     ]
 };
 
