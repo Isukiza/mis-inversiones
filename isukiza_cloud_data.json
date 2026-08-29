@@ -1,6 +1,6 @@
 {
   "_version": 2,
-  "_fecha": "2026-06-07T17:32:39.105Z",
+  "_fecha": "2026-08-29T09:19:28.724Z",
   "_device": "escritorio",
   "historial": [
     {
@@ -110,6 +110,51 @@
       "indie": 13291.94,
       "epsv": 83731.3903604685,
       "efectivo": 148944.21
+    },
+    {
+      "fecha": "2026-07-31T15:32:14.180Z",
+      "total": 295773.68333593116,
+      "bolsa": 25477.780678851173,
+      "fondos": 24739.52184,
+      "indie": 13609.740000000002,
+      "epsv": 83503.47081707999,
+      "efectivo": 148443.16999999998
+    },
+    {
+      "fecha": "2026-08-09T18:45:54.795Z",
+      "total": 300824.77043786494,
+      "bolsa": 29296.235177304967,
+      "fondos": 26221.778829999996,
+      "indie": 14420.67,
+      "epsv": 86614.66643056,
+      "efectivo": 144271.42
+    },
+    {
+      "fecha": "2026-08-13T19:26:43.512Z",
+      "total": 301176.141852606,
+      "bolsa": 29190.905533685942,
+      "fondos": 26322.89204,
+      "indie": 14441.35,
+      "epsv": 87019.06427892,
+      "efectivo": 144201.93
+    },
+    {
+      "fecha": "2026-08-15T12:27:04.026Z",
+      "total": 302254.3812426756,
+      "bolsa": 29068.560210835563,
+      "fondos": 26615.02826,
+      "indie": 14535.66,
+      "epsv": 87644.04277184,
+      "efectivo": 144391.09000000003
+    },
+    {
+      "fecha": "2026-08-19T18:14:28.671Z",
+      "total": 300355.3823100473,
+      "bolsa": 28311.693891887255,
+      "fondos": 26306.637579999995,
+      "indie": 14363.66,
+      "epsv": 86982.30083816001,
+      "efectivo": 144391.09000000003
     }
   ],
   "acciones": [
@@ -146,14 +191,6 @@
       "inv": 4871
     },
     {
-      "nombre": "Microsoft",
-      "ticker": "MSFT",
-      "mon": "USD",
-      "cant": 10,
-      "coste": 379.54,
-      "inv": 3795.4
-    },
-    {
       "nombre": "QNITY ELECTRONICS",
       "ticker": "Q",
       "mon": "USD",
@@ -162,46 +199,53 @@
       "inv": 1143.76
     },
     {
-      "nombre": "VanEck Vectors Semiconductor UCITS",
-      "ticker": "VVSM.DE",
-      "mon": "EUR",
-      "cant": 50,
-      "coste": 85.9,
-      "inv": 4295
-    },
-    {
-      "nombre": "ONTO INNOVATION",
-      "ticker": "ONTO",
-      "mon": "USD",
-      "cant": 4,
-      "coste": 302.35,
-      "inv": 1209.4
-    },
-    {
       "nombre": "AUTODESK",
       "ticker": "ADSK",
       "mon": "USD",
       "cant": 4,
       "coste": 250.17,
       "inv": 1000.68
+    },
+    {
+      "nombre": "META PLATFORMS",
+      "ticker": "META",
+      "mon": "USD",
+      "cant": 2,
+      "coste": 596.36,
+      "inv": 1192.72
+    },
+    {
+      "nombre": "Mercado Libre",
+      "ticker": "MELI",
+      "mon": "USD",
+      "cant": 1,
+      "coste": 1796.06,
+      "inv": 1796.06
+    },
+    {
+      "nombre": "RYANAIR HOLDINGS PLC",
+      "ticker": "RYA.IR",
+      "mon": "EUR",
+      "cant": 10,
+      "coste": 25.94,
+      "inv": 259.4
     }
   ],
-  "f1_vl": "11.84",
-  "f1_part": "1391.9",
-  "f1_coste": "10.96",
-  "f2_vl": "14.147",
-  "f2_part": "603.77",
-  "f2_coste": "12.01",
-  "indie_mer": "13225.09",
-  "indie_inv": "12433.15",
-  "indie_ef": "66.85",
-  "p1": "1383.3028",
-  "p2": "1982.2420515",
-  "vlp": "24.879",
-  "ef_abanca": "91026.98",
-  "ef_santander": "2756",
-  "ef_kutxa": "40513.76",
-  "ef_myinvestor": "9647.47",
-  "ef_traderepublic": "",
+  "f1_vl": "12.215",
+  "f1_part": "1432.86",
+  "f1_coste": "10.99",
+  "f2_vl": "13.756",
+  "f2_part": "640.03",
+  "f2_coste": "12.11",
+  "indie_mer": "14293",
+  "indie_inv": "13429.34",
+  "indie_ef": "70.66",
+  "p1": "1519.861107",
+  "p2": "2156.482969",
+  "vlp": "23.66",
+  "ef_abanca": "82993.33",
+  "ef_santander": "2802.63",
+  "ef_kutxa": "15199.21",
+  "ef_myinvestor": "17185.45",
   "ef_casa": "5000"
 }
