@@ -1,6 +1,6 @@
 {
   "_version": 2,
-  "_fecha": "2026-08-29T09:19:28.724Z",
+  "_fecha": "2026-08-29T13:39:37.926Z",
   "_device": "escritorio",
   "historial": [
     {
@@ -229,23 +229,31 @@
       "cant": 10,
       "coste": 25.94,
       "inv": 259.4
+    },
+    {
+      "nombre": "Nvida",
+      "ticker": "NVDA",
+      "mon": "USD",
+      "cant": 20,
+      "coste": 210.7,
+      "inv": 4214
     }
   ],
-  "f1_vl": "12.215",
+  "f1_vl": "12.205",
   "f1_part": "1432.86",
   "f1_coste": "10.99",
-  "f2_vl": "13.756",
+  "f2_vl": "13.92",
   "f2_part": "640.03",
   "f2_coste": "12.11",
-  "indie_mer": "14293",
+  "indie_mer": "14308.21",
   "indie_inv": "13429.34",
   "indie_ef": "70.66",
   "p1": "1519.861107",
   "p2": "2156.482969",
-  "vlp": "23.66",
-  "ef_abanca": "82993.33",
+  "vlp": "23.48",
+  "ef_abanca": "85645.14",
   "ef_santander": "2802.63",
-  "ef_kutxa": "15199.21",
-  "ef_myinvestor": "17185.45",
+  "ef_kutxa": "14990.86",
+  "ef_myinvestor": "13562.75",
   "ef_casa": "5000"
 }
