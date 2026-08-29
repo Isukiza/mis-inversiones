@@ -592,7 +592,7 @@ const UI = {
             return;
         }
         let totalBolsaInv = 0, totalBolsaMer = 0;
-        list.innerHTML = State.acciones.map((a, idx) => {
+        const items = State.acciones.map((a, idx) => {
             const price     = State.precios[a.ticker] || 0;
             const changePct = State.cambios[a.ticker] || 0;
             const sub       = price * a.cant;
@@ -657,7 +657,7 @@ const UI = {
         });
 
         // Calcular totales reales para las barras de peso
-        const totalBolsaReal = items.reduce((s, i) => s + i.subEur, 0);
+        const totalBolsaReal = items.reduce((s, i) => s + (i.subEur || 0), 0);
         
         // Construir HTML con barras de peso
         list.innerHTML = items.map(item => {
