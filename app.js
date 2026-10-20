@@ -40,12 +40,64 @@ const Config = {
 };
 
 // ══════════════════════════════════════════════════
-// MÓDULO DE SINCRONIZACIÓN EN LA NUBE (GitHub)
+// MÓDULO DE SINCRONIZACIÓN EN LA NUBE (GitHub) — CON CIFRADO
+// Sustituye por completo el bloque "const Cloud = { ... };" de app.js
 // ══════════════════════════════════════════════════
 const Cloud = {
+    // Repo y fichero donde se guardan los datos.
+    // Recomendado: un repo PRIVADO aparte (p. ej. "Isukiza/isukiza-data").
     REPO: "Isukiza/mis-inversiones",
     FILE: "isukiza_cloud_data.json",
 
+    // ── Cifrado ────────────────────────────────────
+    KDF_ITER: 100000,
+
+    _deriveKey(pass, salt) {
+        return CryptoJS.PBKDF2(pass, salt, {
+            keySize: 256 / 32,
+            iterations: this.KDF_ITER,
+            hasher: CryptoJS.algo.SHA256
+        });
+    },
+    _encrypt(obj) {
+        const salt = CryptoJS.lib.WordArray.random(16);
+        const iv   = CryptoJS.lib.WordArray.random(16);
+        const key  = this._deriveKey(State.masterKey, salt);
+        const ct   = CryptoJS.AES.encrypt(JSON.stringify(obj), key, {
+            iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7
+        });
+        // _fecha y _device quedan en claro para que autoSync compare sin descifrar
+        return {
+            _enc: 1,
+            _kdf: "pbkdf2-sha256-" + this.KDF_ITER,
+            _fecha: obj._fecha,
+            _device: obj._device,
+            salt: salt.toString(CryptoJS.enc.Base64),
+            iv:   iv.toString(CryptoJS.enc.Base64),
+            data: ct.ciphertext.toString(CryptoJS.enc.Base64)
+        };
+    },
+    _decrypt(env) {
+        const salt  = CryptoJS.enc.Base64.parse(env.salt);
+        const iv    = CryptoJS.enc.Base64.parse(env.iv);
+        const key   = this._deriveKey(State.masterKey, salt);
+        const bytes = CryptoJS.AES.decrypt(
+            { ciphertext: CryptoJS.enc.Base64.parse(env.data) }, key,
+            { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+        );
+        const txt = bytes.toString(CryptoJS.enc.Utf8);
+        if (!txt) throw new Error("Clave incorrecta o datos corruptos");
+        return JSON.parse(txt);
+    },
+    // Devuelve el JSON en claro (string) listo para App.importarJSON.
+    // Si el fichero está en el formato antiguo (texto plano), lo deja pasar tal cual.
+    _unwrap(jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed._enc) return jsonStr;
+        return JSON.stringify(this._decrypt(parsed));
+    },
+
+    // ── Token de GitHub (sin cambios) ──────────────
     getToken() {
         const enc = localStorage.getItem("isukiza_cloud_token");
         if (!enc || !State.masterKey) return null;
@@ -83,14 +135,17 @@ const Cloud = {
             return d.sha;
         } catch(e) { return null; }
     },
+
+    // ── Guardar (cifrado) ──────────────────────────
     async guardar() {
         let headers = this._headers();
         if (!headers) { const token = this.promptToken(); if (!token) return; headers = this._headers(); }
-        UI.setStatus("Guardando en nube...", "amber");
+        if (!State.masterKey) { UI.showToast("Falta la clave maestra", "#7c2d12", "#f97316"); return; }
+        UI.setStatus("Cifrando y guardando en nube...", "amber");
         try {
             const d = Storage._load("isukiza_v4_enc") || {};
             const exportData = {
-                _version: 2, _fecha: new Date().toISOString(),
+                _version: 3, _fecha: new Date().toISOString(),
                 _device: navigator.userAgent.includes("Mobile") ? "movil" : "escritorio",
                 historial: State.historial, acciones: State.acciones,
                 f1_vl: d.f1_vl, f1_part: d.f1_part, f1_coste: d.f1_coste,
@@ -101,8 +156,9 @@ const Cloud = {
                 ef_kutxa: d.ef_kutxa, ef_myinvestor: d.ef_myinvestor,
                 ef_traderepublic: d.ef_traderepublic, ef_casa: d.ef_casa
             };
+            const envelope = this._encrypt(exportData);
             const sha  = await this.getSHA();
-            const ct   = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
+            const ct   = btoa(unescape(encodeURIComponent(JSON.stringify(envelope, null, 2))));
             const body = { message: `Sync ${new Date().toLocaleString("es-ES")}`, content: ct };
             if (sha) body.sha = sha;
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`, {
@@ -110,15 +166,18 @@ const Cloud = {
             });
             if (r.ok) {
                 UI.setStatus("Guardado en nube", "green");
-                UI.showToast("Sincronizado con la nube");
+                UI.showToast("Sincronizado con la nube (cifrado)");
                 localStorage.setItem("isukiza_last_sync", new Date().toISOString());
                 this._updateSyncBadge();
             } else { throw new Error(`HTTP ${r.status}`); }
         } catch(e) {
+            console.warn("[Isukiza] Cloud.guardar:", e);
             UI.setStatus("Error al guardar en nube", "red");
             UI.showToast("Error de sincronizacion", "#7c2d12", "#f97316");
         }
     },
+
+    // ── Cargar (descifra; acepta también el formato antiguo) ──
     async cargar() {
         let headers = this._headers();
         if (!headers) { const token = this.promptToken(); if (!token) return; headers = this._headers(); }
@@ -127,7 +186,8 @@ const Cloud = {
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) { UI.showToast("Sin datos en la nube todavia", "#1e293b", "#94a3b8"); return; }
             const d       = await r.json();
-            const jsonStr = decodeURIComponent(escape(atob(d.content)));
+            const raw     = decodeURIComponent(escape(atob(d.content)));
+            const jsonStr = this._unwrap(raw);
             App.importarJSON(jsonStr);
             UI.setStatus("Datos cargados desde nube", "green");
             UI.showToast("Datos sincronizados desde la nube");
@@ -135,10 +195,12 @@ const Cloud = {
             localStorage.setItem("isukiza_last_loaded", new Date().toISOString());
             this._updateSyncBadge();
         } catch(e) {
+            console.warn("[Isukiza] Cloud.cargar:", e);
             UI.setStatus("Error al cargar desde nube", "red");
-            UI.showToast("Error al cargar", "#7c2d12", "#f97316");
+            UI.showToast("Error al cargar (¿clave maestra distinta?)", "#7c2d12", "#f97316");
         }
     },
+
     _updateSyncBadge() {
         const el = document.getElementById("syncBadge");
         if (!el) return;
@@ -149,6 +211,7 @@ const Cloud = {
             el.style.display = "inline";
         }
     },
+
     async autoSync() {
         const headers = this._headers();
         if (!headers) return;
@@ -156,16 +219,16 @@ const Cloud = {
             const r = await fetch(`https://api.github.com/repos/${this.REPO}/contents/${this.FILE}?t=${Date.now()}`, { headers });
             if (r.status === 404) return;
             const d         = await r.json();
-            const jsonStr   = decodeURIComponent(escape(atob(d.content)));
-            const cloudData = JSON.parse(jsonStr);
-            const cloudDate = new Date(cloudData._fecha);
+            const raw       = decodeURIComponent(escape(atob(d.content)));
+            const cloudMeta = JSON.parse(raw);               // _fecha y _device están en claro
+            const cloudDate = new Date(cloudMeta._fecha);
             const lastLoaded = localStorage.getItem("isukiza_last_loaded");
             if (!lastLoaded || cloudDate > new Date(lastLoaded)) {
-                const device = cloudData._device || "otro dispositivo";
+                const device = cloudMeta._device || "otro dispositivo";
                 const fecha  = cloudDate.toLocaleString("es-ES", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
                 if (confirm("Hay datos mas recientes en la nube (" + fecha + " desde " + device + ").\n\nCargar datos de la nube?")) {
-                    App.importarJSON(jsonStr);
-                    localStorage.setItem("isukiza_last_loaded", cloudData._fecha);
+                    App.importarJSON(this._unwrap(raw));
+                    localStorage.setItem("isukiza_last_loaded", cloudMeta._fecha);
                     localStorage.setItem("isukiza_last_sync", new Date().toISOString());
                     this._updateSyncBadge();
                 }
