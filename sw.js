@@ -1,4 +1,4 @@
-const CACHE_NAME = 'isukiza-v2';
+const CACHE_NAME = 'isukiza-v3';
 const ASSETS = [
   '/mis-inversiones/',
   '/mis-inversiones/index.html',
@@ -9,14 +9,22 @@ const ASSETS = [
   'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap'
 ];
 
+// Hosts externos que sí se sirven desde caché (librerías y fuentes)
+const CDN_HOSTS = [
+  'cdn.tailwindcss.com',
+  'cdnjs.cloudflare.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
+];
+
 // Instalación: cachear recursos estáticos
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS).catch(err => {
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll(ASSETS).catch(err => {
         console.warn('[SW] Algunos recursos no se pudieron cachear:', err);
-      });
-    })
+      })
+    )
   );
   self.skipWaiting();
 });
@@ -31,35 +39,51 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: network first para APIs de precios, cache first para el resto
 self.addEventListener('fetch', event => {
-  const url = event.request.url;
+  const req = event.request;
 
-  // Para llamadas a Yahoo Finance y proxies — siempre red (precios en tiempo real)
-  if (url.includes('finance.yahoo.com') ||
-      url.includes('corsproxy.io') ||
-      url.includes('allorigins.win') ||
-      url.includes('codetabs.com')) {
-    event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503 })));
+  // Solo GET. Los PUT/POST (p. ej. sincronización con GitHub) pasan directos.
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const isCDN = CDN_HOSTS.includes(url.hostname);
+
+  // Todo lo demás (Yahoo, proxies, workers.dev, api.github.com...) va siempre a la red
+  if (!sameOrigin && !isCDN) return;
+
+  // Archivos propios (index, app.js, styles...): red primero, caché solo si no hay conexión
+  if (sameOrigin) {
+    event.respondWith(
+      fetch(req, { cache: 'no-cache' })
+        .then(response => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(req).then(cached => {
+            if (cached) return cached;
+            if (req.destination === 'document') return caches.match('/mis-inversiones/index.html');
+            return Response.error();
+          })
+        )
+    );
     return;
   }
 
-  // Para el resto — cache first, fallback a red
+  // Librerías y fuentes: caché primero (cambian muy poco)
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
-      return fetch(event.request).then(response => {
-        // Cachear respuestas válidas
+      return fetch(req).then(response => {
         if (response && response.status === 200 && response.type !== 'opaque') {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
         }
         return response;
-      }).catch(() => {
-        // Sin conexión y sin caché: devolver página principal
-        if (event.request.destination === 'document') {
-          return caches.match('/mis-inversiones/index.html');
-        }
       });
     })
   );
