@@ -1,4 +1,4 @@
-const CACHE_NAME = 'isukiza-v3';
+const CACHE_NAME = 'isukiza-v4';
 const ASSETS = [
   '/mis-inversiones/',
   '/mis-inversiones/index.html',
