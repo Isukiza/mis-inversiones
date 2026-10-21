@@ -11,15 +11,12 @@ const Config = {
         { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR", coste: 0, inv: 0 },
         { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR", coste: 0, inv: 0 }
     ],
+    // Tarjetas que se pueden contraer (ahora solo la gráfica de evolución)
     CARDS: {
-        bolsa:     { body: "body-bolsa",     card: "card-bolsa"    },
-        fondos:    { body: "body-fondos",    card: "card-fondos"   },
-        indie:     { body: "body-indie",     card: "card-indie"    },
-        efectivo:  { body: "body-efectivo",  card: "card-efectivo" },
-        epsv:      { body: "body-epsv",      card: "card-epsv"     },
-        treemap:   { body: "body-treemap",   card: "card-treemap"  },
         evolucion: { body: "body-evolucion", card: "card-total"    }
     },
+    // Carteras del selector lateral: al elegir una, su detalle sustituye al donut
+    PANELS: ["bolsa", "fondos", "indie", "efectivo", "epsv"],
     COLORES: {
         total: "#4ade80", efectivo: "#22d3ee", fondos: "#a78bfa",
         indie: "#34d399", epsv: "#fb7185", bolsa: "#3b82f6"
@@ -248,6 +245,7 @@ let State = {
     historial: [],
     tabActiva: "total",
     colapsado: {},
+    panelActivo: null,
     _modalEditIdx: -1,
     masterKey: null
 };
@@ -467,9 +465,7 @@ const UI = {
             setTimeout(() => this.refreshCharts(), 50);
         }
     },
-    updateSummary(id) {
-        const el = document.getElementById(`summary-${id}`);
-        if (!el) return;
+    summaryText(id) {
         const v = App.getValues();
         let txt = "";
         switch (id) {
@@ -486,7 +482,34 @@ const UI = {
             case "treemap":   txt = v.total    > 0 ? this.fmt(v.total)    + " € total" : "—"; break;
             case "evolucion": txt = `${State.historial.length} snapshot${State.historial.length !== 1 ? "s" : ""}`; break;
         }
-        el.textContent = txt;
+        return txt;
+    },
+    updateSummary(id) {
+        const txt = this.summaryText(id);
+        const el  = document.getElementById(`summary-${id}`);
+        if (el) el.textContent = txt;
+        const nav = document.getElementById(`nav-val-${id}`);
+        if (nav) nav.textContent = txt;
+    },
+    updateNav() { Config.PANELS.forEach(id => this.updateSummary(id)); },
+    selectPanel(id) {
+        if (id && !Config.PANELS.includes(id)) id = null;
+        if (id && State.panelActivo === id) id = null;      // pulsar la activa = deseleccionar
+        State.panelActivo = id;
+        Config.PANELS.forEach(p => {
+            const card = document.getElementById(`card-${p}`);
+            const nav  = document.getElementById(`nav-${p}`);
+            if (card) card.classList.toggle("is-hidden", p !== id);
+            if (nav)  { nav.classList.toggle("active", p === id); nav.setAttribute("aria-pressed", p === id ? "true" : "false"); }
+        });
+        const dist = document.getElementById("card-treemap");
+        if (dist) dist.classList.toggle("is-hidden", !!id);
+        // los gráficos medían 0 de ancho mientras estaban ocultos: se redibujan ya visibles
+        requestAnimationFrame(() => this.refreshCharts());
+        if (id && window.matchMedia && window.matchMedia("(max-width: 1023px)").matches) {
+            const card = document.getElementById(`card-${id}`);
+            if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     },
     updateGlobalBtn() {
         const btn = document.getElementById("btnCollapseAll");
@@ -623,7 +646,7 @@ const UI = {
             footer.className = "mt-3 pt-3 border-t border-slate-800 flex justify-between items-center";
             footer.innerHTML = `<span class="mono text-[9px] text-slate-600 uppercase">Total bolsa</span><div class="text-right"><p class="mono text-base font-bold text-blue-300">${this.fmt(totalBolsaMer)} €</p>${totalBolsaInv > 0 ? `<p class="mono text-[9px] ${esGT ? "gain" : "loss"}">${esGT ? "+" : ""}${this.fmt(ganT)} € (${esGT ? "+" : ""}${(ganT / totalBolsaInv * 100).toFixed(2)}%)</p>` : ""}</div>`;
         }
-        if (State.colapsado["bolsa"]) this.updateSummary("bolsa");
+        this.updateSummary("bolsa");
     },
 
     abrirModal(idx) {
@@ -909,7 +932,8 @@ const App = {
             rEl.innerText = `Fondos: ${ganF>=0?"+":""}${UI.fmt(ganF)} € (${(ganF/f.tInv*100).toFixed(2)}%)`;
         } else { rEl.className = "mono text-[10px] mt-1 text-slate-600"; rEl.innerText = "Introduce VL y participaciones"; }
         UI.refreshCharts();
-        Object.keys(Config.CARDS).forEach(id => { if (State.colapsado[id]) UI.updateSummary(id); });
+        UI.updateNav();
+        if (State.colapsado["evolucion"]) UI.updateSummary("evolucion");
         Storage.saveData();
     },
 
@@ -1001,6 +1025,7 @@ window.onload = () => App.init();
 
 window.toggleCard        = id  => UI.toggleCard(id);
 window.toggleAll         = ()  => UI.toggleAll();
+window.selectPanel       = id  => UI.selectPanel(id);
 window.registrarSnapshot = ()  => App.registrarSnapshot();
 window.abrirModal        = idx => UI.abrirModal(idx);
 window.cerrarModal       = ()  => UI.cerrarModal();
@@ -1021,3 +1046,11 @@ window.App   = App;
 window.UI    = UI;
 window.Cloud = Cloud;
 window.olvidarDispositivo = () => App.olvidarDispositivo();
+
+// Esc cierra la cartera abierta y vuelve a mostrar la distribución
+document.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || !State.panelActivo) return;
+    if (document.querySelector(".modal-overlay.open")) return;
+    if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    UI.selectPanel(null);
+});
