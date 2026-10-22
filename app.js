@@ -794,7 +794,7 @@ const Charts = {
         const xs = data.map((_, i) => pad + i * (W - pad*2) / (data.length-1));
         const ys = data.map(v => pad + h - (v - min) / rng * h);
         let gridSvg = "";
-        for (let g = 0; g <= 4; g++) { const yg = pad + h/4*g, val = max - (max-min)/4*g; gridSvg += `<line x1="${pad}" y1="${yg}" x2="${W-pad}" y2="${yg}" stroke="#1e293b" stroke-width="1"/><text x="${pad+2}" y="${yg-3}" fill="#334155" font-family="JetBrains Mono" font-size="8">${UI.fmtK(val)}</text>`; }
+        for (let g = 0; g <= 4; g++) { const yg = pad + h/4*g, val = max - (max-min)/4*g; gridSvg += `<line x1="${pad}" y1="${yg}" x2="${W-pad}" y2="${yg}" stroke="#1e293b" stroke-width="1"/><text x="${pad+2}" y="${yg-3}" fill="#64748b" font-family="JetBrains Mono" font-size="10">${UI.fmtK(val)}</text>`; }
         svg.innerHTML = gridSvg;
         let d = `M ${xs[0]} ${ys[0]}`; for (let i = 1; i < xs.length; i++) { const mx = (xs[i-1]+xs[i])/2; d += ` C ${mx} ${ys[i-1]} ${mx} ${ys[i]} ${xs[i]} ${ys[i]}`; }
         svg.innerHTML += `<path d="${d} L ${xs[xs.length-1]} ${pad+h} L ${xs[0]} ${pad+h} Z" fill="${color}" fill-opacity="0.07"/>`;
@@ -823,12 +823,16 @@ const Charts = {
             const refAt = d => { for (let i = H.length - 1; i >= 0; i--) if (nowT - new Date(H[i].fecha) >= d * DAY) return H[i]; return null; };
             const sgn = n => n >= 0 ? "+" : "−";
             const cls = n => n >= 0 ? "gain" : "loss";
-            const row = (label, ref) => {
+            const ageOf = r => Math.round((nowT - new Date(r.fecha)) / DAY);
+            const row = (label, ref, target) => {
                 if (!ref || !(ref.total > 0)) return `<div class="pulse-row"><span>${label}</span><b>—</b></div>`;
+                const age = ageOf(ref);
+                if (target && age > target * 2) return `<div class="pulse-row"><span>${label}</span><small>sin snapshot</small></div>`;
+                if (target && age > target * 1.25) label = `~${age} días`;
                 const d = now.total - ref.total, p = d / ref.total * 100;
                 return `<div class="pulse-row"><span>${label}</span><span class="${cls(d)}"><b>${sgn(d)}${UI.fmt(Math.abs(d))} €</b><small>${sgn(p)}${UI.fmt(Math.abs(p))}%</small></span></div>`;
             };
-            let html = row("7 días", refAt(7)) + row("30 días", refAt(30)) + row("Desde inicio", H[0]);
+            let html = row("7 días", refAt(7), 7) + row("30 días", refAt(30), 30) + row("Desde inicio", H[0]);
 
             // Motor y lastre: qué cartera ha movido más el saldo en el periodo
             const ref = refAt(30) || H[0];
