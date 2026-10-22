@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <link rel="stylesheet" href="styles.css?v=9">
+    <link rel="stylesheet" href="styles.css?v=10">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#080e1a">
@@ -23,7 +23,7 @@
          style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%221%22/></svg>')">
     </div>
 
-    <div class="max-w-screen-2xl mx-auto relative">
+    <div class="max-w-[1800px] mx-auto relative">
 
         <!-- ══ HEADER ══ -->
         <header class="grid grid-cols-1 md:grid-cols-2 items-center mb-8 border-b border-slate-800 pb-8 gap-6">
@@ -113,6 +113,11 @@
                     </span>
                     <span class="nav-chev" aria-hidden="true">&#8250;</span>
                 </button>
+                <!-- ══ PULSO (resumen bajo las carteras) ══ -->
+                <section id="pulse-card" class="card p-5" aria-label="Pulso del patrimonio">
+                    <p class="mono text-[10px] text-slate-400 tracking-[0.2em] mb-2">PULSO</p>
+                    <div id="pulse-body"></div>
+                </section>
             </aside>
 
             <!-- ══ PANEL CENTRAL ══ -->
@@ -581,7 +586,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=10"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

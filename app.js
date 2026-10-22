@@ -673,6 +673,7 @@ const UI = {
         Charts.drawSparkline("spark-ef",     "efectivo", Config.COLORES.efectivo, "tip-ef");
         Charts.drawBigChart();
         Charts.drawSnapTable();
+        Charts.drawPulse();
     }
 };
 
@@ -811,6 +812,51 @@ const Charts = {
             const step = Math.max(1, Math.floor(State.historial.length / 5));
             xaxis.innerHTML = State.historial.map((s, j) => (j === 0 || j === State.historial.length-1 || j%step === 0) ? `<span class="mono text-[8px] text-slate-600">${new Date(s.fecha).toLocaleDateString("es-ES", { day:"2-digit", month:"2-digit" })}</span>` : "<span></span>").join("");
         }
+    },
+
+    drawPulse() {
+        const el = document.getElementById("pulse-body"); if (!el) return;
+        try {
+            const H = State.historial;
+            if (!H || H.length < 2) { el.innerHTML = '<p class="pulse-note">Registra al menos 2 snapshots para ver el pulso.</p>'; return; }
+            const now = App.getValues(), nowT = Date.now(), DAY = 864e5;
+            const refAt = d => { for (let i = H.length - 1; i >= 0; i--) if (nowT - new Date(H[i].fecha) >= d * DAY) return H[i]; return null; };
+            const sgn = n => n >= 0 ? "+" : "−";
+            const cls = n => n >= 0 ? "gain" : "loss";
+            const row = (label, ref) => {
+                if (!ref || !(ref.total > 0)) return `<div class="pulse-row"><span>${label}</span><b>—</b></div>`;
+                const d = now.total - ref.total, p = d / ref.total * 100;
+                return `<div class="pulse-row"><span>${label}</span><span class="${cls(d)}"><b>${sgn(d)}${UI.fmt(Math.abs(d))} €</b><small>${sgn(p)}${UI.fmt(Math.abs(p))}%</small></span></div>`;
+            };
+            let html = row("7 días", refAt(7)) + row("30 días", refAt(30)) + row("Desde inicio", H[0]);
+
+            // Motor y lastre: qué cartera ha movido más el saldo en el periodo
+            const ref = refAt(30) || H[0];
+            const dias = Math.max(1, Math.round((nowT - new Date(ref.fecha)) / DAY));
+            const labels = { bolsa: "Bolsa", fondos: "Fondos", indie: "Indie", epsv: "EPSV", efectivo: "Efectivo" };
+            const deltas = Object.keys(labels).filter(k => ref[k] > 0).map(k => ({ k, d: (now[k] || 0) - ref[k] }));
+            if (deltas.length) {
+                deltas.sort((a, b) => b.d - a.d);
+                const best = deltas[0], worst = deltas[deltas.length - 1];
+                const chip = x => `<span class="${cls(x.d)}"><span class="pulse-dot" style="background:${Config.COLORES[x.k]}"></span>${labels[x.k]} <b>${sgn(x.d)}${UI.fmtK(Math.abs(x.d))} €</b></span>`;
+                html += '<div class="pulse-sep"></div>';
+                html += `<div class="pulse-row"><span>Motor · ${dias} d</span>${best.d > 0 ? chip(best) : "<b>—</b>"}</div>`;
+                html += `<div class="pulse-row"><span>Lastre · ${dias} d</span>${worst.d < 0 ? chip(worst) : "<b>—</b>"}</div>`;
+            }
+
+            // Distancia al máximo histórico
+            const peak = H.reduce((m, s) => s.total > m.total ? s : m, H[0]);
+            html += '<div class="pulse-sep"></div>';
+            if (now.total >= peak.total) {
+                html += '<div class="pulse-row"><span>Máximo</span><span class="gain"><b>▲ En máximos</b></span></div>';
+            } else {
+                const gap = (now.total - peak.total) / peak.total * 100;
+                const f = new Date(peak.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" });
+                html += `<div class="pulse-row"><span>Máximo</span><span><b class="loss">${UI.fmt(gap)}%</b><small>${UI.fmtK(peak.total)} · ${f}</small></span></div>`;
+            }
+            html += '<p class="pulse-note">Variación del saldo: incluye aportaciones y retiradas, no solo rentabilidad.</p>';
+            el.innerHTML = html;
+        } catch (e) { console.error("[Isukiza] drawPulse:", e); }
     },
 
     drawSnapTable() {
