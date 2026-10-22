@@ -681,15 +681,23 @@ const UI = {
 // 7. MÓDULO DE GRÁFICAS (Charts)
 // ══════════════════════════════════════════════════
 const Charts = {
-    makePath(data, W, H, color, filled) {
+    makePath(data, W, H, color, filled, times) {
         if (data.length < 2) return "";
         const min = Math.min(...data), max = Math.max(...data), rng = max - min || 1, pad = 4, h = H - pad * 2;
-        const xs = data.map((_, i) => pad + i * (W - pad * 2) / (data.length - 1));
+        let xs;
+        if (times && times.length === data.length) {
+            const tmin = Math.min(...times), tr = (Math.max(...times) - tmin) || 1;
+            xs = times.map(t => pad + (t - tmin) / tr * (W - pad * 2));
+        } else {
+            xs = data.map((_, i) => pad + i * (W - pad * 2) / (data.length - 1));
+        }
         const ys = data.map(v => pad + h - (v - min) / rng * h);
-        let d = `M ${xs[0]} ${ys[0]}`;
-        for (let i = 1; i < xs.length; i++) { const mx = (xs[i-1]+xs[i])/2; d += ` C ${mx} ${ys[i-1]} ${mx} ${ys[i]} ${xs[i]} ${ys[i]}`; }
+        const order = data.map((_, i) => i).sort((a, b) => xs[a] - xs[b]);
+        const px = order.map(i => xs[i]), py = order.map(i => ys[i]);
+        let d = `M ${px[0]} ${py[0]}`;
+        for (let i = 1; i < px.length; i++) { const mx = (px[i-1]+px[i])/2; d += ` C ${mx} ${py[i-1]} ${mx} ${py[i]} ${px[i]} ${py[i]}`; }
         let path = `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/>`;
-        if (filled) { const area = `${d} L ${xs[xs.length-1]} ${H-pad} L ${xs[0]} ${H-pad} Z`; path = `<path d="${area}" fill="${color}" fill-opacity="0.08"/>${path}`; }
+        if (filled) { const area = `${d} L ${px[px.length-1]} ${H-pad} L ${px[0]} ${H-pad} Z`; path = `<path d="${area}" fill="${color}" fill-opacity="0.08"/>${path}`; }
         return { svg: path, xs, ys };
     },
 
@@ -704,7 +712,7 @@ const Charts = {
             svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="9">Sin datos</text>';
             return;
         }
-        const r = this.makePath(data, W, H, color, true);
+        const r = this.makePath(data, W, H, color, true, State.historial.map(s => new Date(s.fecha).getTime()));
         if (!r) return;
         svg.innerHTML = r.svg;
         r.xs.forEach((x, i) => {
@@ -782,22 +790,47 @@ const Charts = {
         });
     },
 
+    timeTicks(tmin, tmax) {
+        const DAY = 864e5; let out = [];
+        if ((tmax - tmin) / DAY >= 75) {
+            const d = new Date(tmin); d.setDate(1); d.setHours(0, 0, 0, 0);
+            if (d.getTime() <= tmin) d.setMonth(d.getMonth() + 1);
+            while (d.getTime() < tmax) {
+                const lbl = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+                out.push({ t: d.getTime(), label: d.getMonth() === 0 ? `${lbl} '${String(d.getFullYear()).slice(2)}` : lbl });
+                d.setMonth(d.getMonth() + 1);
+            }
+            if (out.length > 12) { const k = Math.ceil(out.length / 12); out = out.filter((_, i) => i % k === 0); }
+        } else {
+            for (let i = 1; i <= 4; i++) { const t = tmin + (tmax - tmin) * i / 5; out.push({ t, label: new Date(t).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }) }); }
+        }
+        return out;
+    },
+
     drawBigChart() {
         const svg = document.getElementById("chart-big"), tip = document.getElementById("tip-big");
         if (!svg) return;
+        const xaxis = document.getElementById("chart-xaxis");
         const W = svg.clientWidth || svg.parentElement.clientWidth || 600, H = 200;
         svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = "";
         const data = State.historial.map(s => s[State.tabActiva] || 0);
-        if (data.length < 2) { svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="11">Registra al menos 2 snapshots</text>'; const ax = document.getElementById("chart-xaxis"); if (ax) ax.innerHTML = ""; return; }
-        const color = Config.COLORES[State.tabActiva], pad = 8;
+        if (data.length < 2) { svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#334155" font-family="JetBrains Mono" font-size="11">Registra al menos 2 snapshots</text>'; if (xaxis) xaxis.innerHTML = ""; return; }
+        const color = Config.COLORES[State.tabActiva], pad = 8, padL = 44, padR = 12;
+        const times = State.historial.map(s => new Date(s.fecha).getTime());
+        const tmin = Math.min(...times), tmax = Math.max(...times), trng = (tmax - tmin) || 1;
         const min = Math.min(...data), max = Math.max(...data), rng = max - min || 1, h = H - pad*2 - 20;
-        const xs = data.map((_, i) => pad + i * (W - pad*2) / (data.length-1));
+        const xOf = t => padL + (t - tmin) / trng * (W - padL - padR);
+        const xs = times.map(xOf);
         const ys = data.map(v => pad + h - (v - min) / rng * h);
+        const order = data.map((_, i) => i).sort((a, b) => times[a] - times[b]);
+        const px = order.map(i => xs[i]), py = order.map(i => ys[i]);
+        const ticks = this.timeTicks(tmin, tmax);
         let gridSvg = "";
-        for (let g = 0; g <= 4; g++) { const yg = pad + h/4*g, val = max - (max-min)/4*g; gridSvg += `<line x1="${pad}" y1="${yg}" x2="${W-pad}" y2="${yg}" stroke="#1e293b" stroke-width="1"/><text x="${pad+2}" y="${yg-3}" fill="#64748b" font-family="JetBrains Mono" font-size="10">${UI.fmtK(val)}</text>`; }
+        ticks.forEach(tk => { const x = xOf(tk.t); gridSvg += `<line x1="${x}" y1="${pad}" x2="${x}" y2="${pad+h}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2 4"/>`; });
+        for (let g = 0; g <= 4; g++) { const yg = pad + h/4*g, val = max - (max-min)/4*g; gridSvg += `<line x1="${padL}" y1="${yg}" x2="${W-padR}" y2="${yg}" stroke="#1e293b" stroke-width="1"/><text x="${padL-6}" y="${yg+3}" text-anchor="end" fill="#64748b" font-family="JetBrains Mono" font-size="10">${UI.fmtK(val)}</text>`; }
         svg.innerHTML = gridSvg;
-        let d = `M ${xs[0]} ${ys[0]}`; for (let i = 1; i < xs.length; i++) { const mx = (xs[i-1]+xs[i])/2; d += ` C ${mx} ${ys[i-1]} ${mx} ${ys[i]} ${xs[i]} ${ys[i]}`; }
-        svg.innerHTML += `<path d="${d} L ${xs[xs.length-1]} ${pad+h} L ${xs[0]} ${pad+h} Z" fill="${color}" fill-opacity="0.07"/>`;
+        let d = `M ${px[0]} ${py[0]}`; for (let i = 1; i < px.length; i++) { const mx = (px[i-1]+px[i])/2; d += ` C ${mx} ${py[i-1]} ${mx} ${py[i]} ${px[i]} ${py[i]}`; }
+        svg.innerHTML += `<path d="${d} L ${px[px.length-1]} ${pad+h} L ${px[0]} ${pad+h} Z" fill="${color}" fill-opacity="0.07"/>`;
         svg.innerHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`;
         xs.forEach((x, i) => {
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -807,10 +840,15 @@ const Charts = {
             circle.addEventListener("mouseleave", () => { if (tip) tip.style.display = "none"; });
             svg.appendChild(circle);
         });
-        const xaxis = document.getElementById("chart-xaxis");
         if (xaxis) {
-            const step = Math.max(1, Math.floor(State.historial.length / 5));
-            xaxis.innerHTML = State.historial.map((s, j) => (j === 0 || j === State.historial.length-1 || j%step === 0) ? `<span class="mono text-[8px] text-slate-600">${new Date(s.fecha).toLocaleDateString("es-ES", { day:"2-digit", month:"2-digit" })}</span>` : "<span></span>").join("");
+            xaxis.classList.remove("flex", "justify-between");
+            xaxis.style.position = "relative"; xaxis.style.height = "16px";
+            const lab = (x, txt) => `<span class="mono text-[8px] text-slate-600" style="position:absolute;top:0;left:${x}px;transform:translateX(-50%);white-space:nowrap;">${txt}</span>`;
+            const fD = t => new Date(t).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
+            const x0 = xOf(tmin), x1 = xOf(tmax);
+            let html = lab(x0, fD(tmin)) + lab(x1, fD(tmax));
+            ticks.forEach(tk => { const x = xOf(tk.t); if (x - x0 > 34 && x1 - x > 34) html += lab(x, tk.label); });
+            xaxis.innerHTML = html;
         }
     },
 
@@ -1104,3 +1142,15 @@ document.addEventListener("keydown", e => {
     if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
     UI.selectPanel(null);
 });
+
+// ── Historial de snapshots plegable (se recuerda la preferencia) ──
+window.toggleHistorial = function (force) {
+    const el = document.getElementById("snapTable"), b = document.getElementById("histToggle");
+    if (!el || !b) return;
+    const open = typeof force === "boolean" ? force : el.classList.contains("is-hidden");
+    el.classList.toggle("is-hidden", !open);
+    b.classList.toggle("closed", !open);
+    b.setAttribute("aria-expanded", String(open));
+    try { localStorage.setItem("isukiza_hist_open", open ? "1" : "0"); } catch (e) {}
+};
+try { if (localStorage.getItem("isukiza_hist_open") === "0") window.toggleHistorial(false); } catch (e) {}

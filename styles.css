@@ -264,3 +264,15 @@
 .pulse-sep { height: 1px; background: rgba(100,116,139,0.2); margin: 6px 0; }
 .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 3px; margin-right: 6px; }
 .pulse-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b; margin-top: 8px; line-height: 1.4; }
+
+/* ══ HISTORIAL PLEGABLE ══ */
+.hist-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; margin-bottom: 12px; padding: 0;
+    background: none; border: none; cursor: pointer; color: #64748b;
+}
+.hist-toggle:hover { color: #a5b4fc; }
+.hist-chev { font-size: 14px; line-height: 1; transition: transform 0.2s; }
+.hist-toggle.closed { margin-bottom: 0; }
+.hist-toggle.closed .hist-chev { transform: rotate(-90deg); }
+.hist-toggle:focus-visible { outline: 2px solid #6366f1; outline-offset: 4px; border-radius: 4px; }

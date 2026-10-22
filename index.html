@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=11">
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#080e1a">
@@ -483,7 +483,10 @@
 
                     <!-- Lista de registros -->
                     <div class="mt-6 pt-4 border-t border-slate-800">
-                        <p class="mono text-[9px] text-slate-600 uppercase tracking-widest mb-3">Registros</p>
+                        <button type="button" id="histToggle" class="hist-toggle" onclick="toggleHistorial()" aria-expanded="true" aria-controls="snapTable">
+                            <span class="mono text-[9px] text-slate-600 uppercase tracking-widest">Registros</span>
+                            <span class="hist-chev" aria-hidden="true">▾</span>
+                        </button>
                         <div id="snapTable" class="space-y-2" style="max-height:260px;overflow-y:auto;"></div>
                     </div>
                 </div>
@@ -586,7 +589,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
