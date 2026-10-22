@@ -906,11 +906,12 @@ const Charts = {
         const histCount = document.getElementById("histCount");
         if (State.historial.length === 0) { el.innerHTML = '<p class="mono text-[9px] text-slate-700">Ningun registro todavia.</p>'; if (histCount) histCount.innerText = "0 registros guardados"; return; }
         if (histCount) histCount.innerText = `${State.historial.length} registro${State.historial.length !== 1 ? "s" : ""} guardado${State.historial.length !== 1 ? "s" : ""}`;
-        el.innerHTML = State.historial.slice().reverse().map((s, idx) => {
+        const cell = (v, c) => `<span class="snap-cell mono ${c}">${v > 0 ? UI.fmtK(v) : "—"}</span>`;
+        const head = '<div class="snap-row snap-head"><span class="snap-date">Fecha</span><span>Efectivo</span><span>Bolsa</span><span>Fondos</span><span>Indie</span><span>EPSV</span><span>Total</span><span></span></div>';
+        el.innerHTML = head + State.historial.slice().reverse().map((s, idx) => {
             const realIdx = State.historial.length - 1 - idx;
             const fStr = new Date(s.fecha).toLocaleString("es-ES", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" });
-            const bolsaHtml = (s.bolsa > 0) ? `<span class="mono text-[11px] text-blue-400">B: ${UI.fmtK(s.bolsa)}</span>` : "";
-            return `<div class="flex items-center bg-slate-900/40 px-3 py-2 rounded-lg gap-2"><span class="mono text-[9px] text-slate-500 flex-shrink-0">${fStr}</span><div class="flex gap-3 flex-wrap flex-1 justify-end"><span class="mono text-[11px] text-cyan-400">C: ${UI.fmtK(s.efectivo||0)}</span>${bolsaHtml}<span class="mono text-[11px] text-violet-400">F: ${UI.fmtK(s.fondos)}</span><span class="mono text-[11px] text-emerald-400">I: ${UI.fmtK(s.indie)}</span><span class="mono text-[11px] text-rose-400">E: ${UI.fmtK(s.epsv)}</span><span class="mono text-[11px] text-green-400 font-bold">${UI.fmtK(s.total)} €</span></div><button onclick="App.borrarSnapshot(${realIdx})" style="background:transparent;border:1px solid #450a0a;color:#f87171;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:JetBrains Mono,monospace;flex-shrink:0;">×</button></div>`;
+            return `<div class="snap-row"><span class="snap-date mono">${fStr}</span>${cell(s.efectivo, "text-cyan-400")}${cell(s.bolsa, "text-blue-400")}${cell(s.fondos, "text-violet-400")}${cell(s.indie, "text-emerald-400")}${cell(s.epsv, "text-rose-400")}<span class="snap-cell snap-total mono text-green-400">${UI.fmtK(s.total)} €</span><button class="snap-del" onclick="App.borrarSnapshot(${realIdx})" title="Borrar registro">×</button></div>`;
         }).join("");
     }
 };

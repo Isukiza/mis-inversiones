@@ -276,3 +276,32 @@
 .hist-toggle.closed { margin-bottom: 0; }
 .hist-toggle.closed .hist-chev { transform: rotate(-90deg); }
 .hist-toggle:focus-visible { outline: 2px solid #6366f1; outline-offset: 4px; border-radius: 4px; }
+
+/* ══ REGISTROS EN COLUMNAS ══ */
+#snapTable { overflow-x: auto; }
+.snap-row {
+    display: grid;
+    grid-template-columns: 112px repeat(5, minmax(56px, 1fr)) minmax(84px, 1.1fr) 30px;
+    align-items: center; column-gap: 8px;
+    min-width: 560px; padding: 8px 12px; border-radius: 8px;
+    background: rgba(15,23,42,0.4);
+}
+.snap-row > span { text-align: right; }
+.snap-row > span.snap-date { text-align: left; }
+.snap-date { font-size: 10px; color: #94a3b8; }
+.snap-cell { font-size: 11px; font-variant-numeric: tabular-nums; }
+.snap-total { font-weight: 700; }
+.snap-head {
+    position: sticky; top: 0; z-index: 1;
+    background: #0c1325; border-radius: 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #64748b;
+    border-bottom: 1px solid rgba(100,116,139,0.2);
+}
+.snap-del {
+    background: transparent; border: 1px solid #450a0a; color: #f87171;
+    border-radius: 6px; padding: 2px 0; font-size: 10px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; width: 26px;
+}
+.snap-del:hover { background: rgba(248,113,113,0.12); }
+@media (min-width: 1600px) { .snap-cell { font-size: 12px; } .snap-date { font-size: 11px; } }
