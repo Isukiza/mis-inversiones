@@ -6,11 +6,7 @@
 // 1. CONFIGURACIÓN Y CONSTANTES
 // ══════════════════════════════════════════════════
 const Config = {
-    ACCIONES_DEFAULT: [
-        { ticker: "AMZN",    nombre: "Amazon",    cant: 20,   mon: "USD", coste: 0, inv: 0 },
-        { ticker: "SAN.MC",  nombre: "Santander", cant: 1080, mon: "EUR", coste: 0, inv: 0 },
-        { ticker: "OHLA.MC", nombre: "OHLA",      cant: 300,  mon: "EUR", coste: 0, inv: 0 }
-    ],
+    ACCIONES_DEFAULT: [],
     // Tarjetas que se pueden contraer (ahora solo la gráfica de evolución)
     CARDS: {
         evolucion: { body: "body-evolucion", card: "card-total"    }
@@ -38,28 +34,28 @@ const Config = {
 
 // ══════════════════════════════════════════════════
 // MÓDULO DE SINCRONIZACIÓN EN LA NUBE (GitHub) — CON CIFRADO
-// Sustituye por completo el bloque "const Cloud = { ... };" de app.js
+// Datos en un repo PRIVADO aparte. Token fine-grained (github_pat_...).
 // ══════════════════════════════════════════════════
 const Cloud = {
-    // Repo y fichero donde se guardan los datos.
-    // Recomendado: un repo PRIVADO aparte (p. ej. "Isukiza/isukiza-data").
-    REPO: "Isukiza/mis-inversiones",
+    // Repo PRIVADO y fichero donde se guardan los datos cifrados.
+    REPO: "Isukiza/isukiza-datos",
     FILE: "isukiza_cloud_data.json",
 
     // ── Cifrado ────────────────────────────────────
-    KDF_ITER: 100000,
+    // Los ficheros antiguos (100000) se siguen leyendo: la cifra va en _kdf.
+    KDF_ITER: 300000,
 
-    _deriveKey(pass, salt) {
+    _deriveKey(pass, salt, iter) {
         return CryptoJS.PBKDF2(pass, salt, {
             keySize: 256 / 32,
-            iterations: this.KDF_ITER,
+            iterations: iter || this.KDF_ITER,
             hasher: CryptoJS.algo.SHA256
         });
     },
     _encrypt(obj) {
         const salt = CryptoJS.lib.WordArray.random(16);
         const iv   = CryptoJS.lib.WordArray.random(16);
-        const key  = this._deriveKey(State.masterKey, salt);
+        const key  = this._deriveKey(State.masterKey, salt, this.KDF_ITER);
         const ct   = CryptoJS.AES.encrypt(JSON.stringify(obj), key, {
             iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7
         });
@@ -77,7 +73,8 @@ const Cloud = {
     _decrypt(env) {
         const salt  = CryptoJS.enc.Base64.parse(env.salt);
         const iv    = CryptoJS.enc.Base64.parse(env.iv);
-        const key   = this._deriveKey(State.masterKey, salt);
+        const iter  = parseInt(String(env._kdf || "").split("-").pop(), 10) || 100000;
+        const key   = this._deriveKey(State.masterKey, salt, iter);
         const bytes = CryptoJS.AES.decrypt(
             { ciphertext: CryptoJS.enc.Base64.parse(env.data) }, key,
             { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
@@ -94,9 +91,9 @@ const Cloud = {
         return JSON.stringify(this._decrypt(parsed));
     },
 
-    // ── Token de GitHub (sin cambios) ──────────────
+    // ── Token de GitHub (fine-grained, clave nueva en localStorage) ──
     getToken() {
-        const enc = localStorage.getItem("isukiza_cloud_token");
+        const enc = localStorage.getItem("isukiza_cloud_token_v2");
         if (!enc || !State.masterKey) return null;
         try {
             const bytes = CryptoJS.AES.decrypt(enc, State.masterKey);
@@ -106,15 +103,17 @@ const Cloud = {
     saveToken(token) {
         if (!State.masterKey) return;
         const enc = CryptoJS.AES.encrypt(token, State.masterKey).toString();
-        localStorage.setItem("isukiza_cloud_token", enc);
+        localStorage.setItem("isukiza_cloud_token_v2", enc);
+        // elimina el token clásico antiguo de este dispositivo
+        localStorage.removeItem("isukiza_cloud_token");
     },
     promptToken() {
-        const token = prompt("Introduce tu GitHub Personal Access Token:\n(Se guardará cifrado, no volverá a pedírsete)");
-        if (token && token.startsWith("ghp_")) {
+        const token = prompt("Introduce tu token fine-grained de GitHub (empieza por github_pat_):\n(Se guardará cifrado, no volverá a pedírsete)");
+        if (token && token.trim().startsWith("github_pat_")) {
             this.saveToken(token.trim());
             UI.showToast("Token guardado — sincronización activada");
             return token.trim();
-        } else if (token) { alert("Token no válido. Debe empezar por ghp_"); }
+        } else if (token) { alert("Token no válido. Debe ser un token fine-grained (github_pat_...)"); }
         return null;
     },
     _headers() {
@@ -335,8 +334,8 @@ const Storage = {
         setVal("ef_myinvestor",    d.ef_myinvestor);
         setVal("ef_traderepublic", d.ef_traderepublic);
         setVal("ef_casa",          d.ef_casa);
-        setVal("p1",               d.p1  || "1376.6933");
-        setVal("p2",               d.p2  || "1975.6095");
+        setVal("p1",               d.p1);
+        setVal("p2",               d.p2);
         setVal("vlp",              d.vlp);
         const vlp_m = document.getElementById("vlp_m");
         if (vlp_m) vlp_m.value = d.vlp || "";
